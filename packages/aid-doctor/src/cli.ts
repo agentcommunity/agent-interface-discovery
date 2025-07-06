@@ -17,8 +17,8 @@ program
 /**
  * Format the discovery result for human-readable output
  */
-function formatDiscoveryResult(result: DiscoveryResult): string {
-  const { record, domain, queryName } = result;
+function formatDiscoveryResult(result: DiscoveryResult, domain: string): string {
+  const { record, queryName } = result;
 
   const lines = [
     chalk.green(`✅ AID Record Found for ${domain}`),
@@ -87,7 +87,7 @@ program
         }
 
         spinner.stop();
-        console.log(formatDiscoveryResult(result));
+        console.log(formatDiscoveryResult(result, domain));
 
         // Exit with success code
         process.exit(0);
