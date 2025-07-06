@@ -61,9 +61,8 @@ locals {
 resource "vercel_dns_record" "showcase" {
   for_each = local.records
 
-  zone      = var.zone
+  domain    = var.zone
   name      = each.value.name
   type      = "TXT"
   value     = each.value.value
-  ttl       = 3600
 } 
