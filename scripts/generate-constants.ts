@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'node:path';
 import { parse } from 'yaml';
+import prettier from 'prettier';
 
 /**
  * Code generation script for AID protocol constants
@@ -167,33 +168,38 @@ ${constants.aidRecord.optional.map((field) => `  '${field}',`).join('\n')}
 
 export const FIELD_ALIASES = {
 ${Object.entries(constants.aidRecord.aliases)
-  .map(([alias, field]) => `  '${alias}': '${field}',`)
+  .map(([alias, field]) => `  ${alias}: '${field}',`)
   .join('\n')}
 } as const;
 `;
 }
 
-function main() {
-  try {
-    // Read and parse YAML file
-    const yamlPath = path.resolve(process.cwd(), 'protocol/constants.yml');
-    const yamlContent = readFileSync(yamlPath, 'utf8');
-    const constants = parse(yamlContent) as ProtocolConstants;
+// --- Top-level script execution ---
 
-    // Generate TypeScript constants
-    const tsContent = generateTypeScriptConstants(constants);
+try {
+  // Read and parse YAML file
+  const yamlPath = path.resolve(process.cwd(), 'protocol/constants.yml');
+  const yamlContent = readFileSync(yamlPath, 'utf8');
+  const constants = parse(yamlContent) as ProtocolConstants;
 
-    // Write to the aid package constants file
-    const outputPath = path.resolve(process.cwd(), 'packages/aid/src/constants.ts');
-    writeFileSync(outputPath, tsContent);
+  // Generate TypeScript constants
+  const tsContent = generateTypeScriptConstants(constants);
 
-    console.log('✅ Generated constants.ts from protocol/constants.yml');
-    console.log(`   Output: ${outputPath}`);
-  } catch (error) {
-    console.error('❌ Failed to generate constants:', error);
-    process.exit(1);
-  }
+  // Write to the aid package constants file (formatted with Prettier)
+  const outputPath = path.resolve(process.cwd(), 'packages/aid/src/constants.ts');
+
+  // Use project's prettier configuration for consistency
+  const prettierOptions = await prettier.resolveConfig(process.cwd());
+  const formatted = await prettier.format(tsContent, {
+    ...prettierOptions,
+    parser: 'typescript',
+  });
+
+  writeFileSync(outputPath, formatted);
+
+  console.log('✅ Generated constants.ts from protocol/constants.yml');
+  console.log(`   Output: ${outputPath}`);
+} catch (error) {
+  console.error('❌ Failed to generate constants:', error);
+  process.exit(1);
 }
-
-// Execute when run as a standalone script (tsx / node)
-main();
