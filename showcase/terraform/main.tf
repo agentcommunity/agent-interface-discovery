@@ -21,7 +21,7 @@ variable "zone" {
 }
 
 variable "team_id" {
-  description = "Vercel team ID (e.g., team_xxxxxxxxxxxxxxxxxxxx)"
+  description = "Vercel team ID"
   type        = string
 }
 
@@ -30,33 +30,39 @@ variable "team_id" {
 ########################
 
 locals {
+  # We will define the common prefix here to keep the records clean
+  record_prefix = "_agent"
+
   records = {
     simple = {
-      name  = "_agent.simple.showcase.aid"   # FQDN relative to apex zone
+      # The name is now just the unique part of the subdomain.
+      # The full name will be constructed by Vercel as:
+      # _agent.simple.showcase.aid.agentcommunity.org
+      name  = "${local.record_prefix}.simple.showcase.aid"
       value = "v=aid1;uri=https://api.example.com/mcp;p=mcp"
     }
     local_docker = {
-      name  = "_agent.local-docker.showcase.aid"
+      name  = "${local.record_prefix}.local-docker.showcase.aid"
       value = "v=aid1;uri=docker://myimage;proto=local;desc=Local Docker Agent"
     }
     messy = {
-      name  = "_agent.messy.showcase.aid"
+      name  = "${local.record_prefix}.messy.showcase.aid"
       value = " v=aid1 ; uri=https://api.example.com/mcp ; p=mcp ; extra=ignored "
     }
     multi_string = {
-      name  = "_agent.multi-string.showcase.aid"
-      value = "v=aid1;uri=https://api.example.com/mcp;p=mcp;desc=Multi string part 1" # Note: Vercel supports single-line only; concatenation handled by client
+      name  = "${local.record_prefix}.multi-string.showcase.aid"
+      value = "v=aid1;uri=https://api.example.com/mcp;p=mcp;desc=Multi string part 1"
     }
     supabase = {
-      name  = "_agent.supabase.showcase.aid"
+      name  = "${local.record_prefix}.supabase.showcase.aid"
       value = "v=aid1;uri=https://api.supabase.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
     auth0 = {
-      name  = "_agent.auth0.showcase.aid"
+      name  = "${local.record_prefix}.auth0.showcase.aid"
       value = "v=aid1;uri=https://ai.auth0.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
     openai = {
-      name  = "_agent.openai.showcase.aid"
+      name  = "${local.record_prefix}.openai.showcase.aid"
       value = "v=aid1;uri=https://api.openai.com/v1/assistants;proto=openapi;desc=OpenAI Assistants API"
     }
   }
