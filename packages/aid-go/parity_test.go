@@ -1,0 +1,59 @@
+package aidgo
+
+import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"reflect"
+	"testing"
+)
+
+type parityRecord struct {
+	Name     string                 `json:"name"`
+	Raw      string                 `json:"raw"`
+	Expected map[string]interface{} `json:"expected"`
+}
+
+type parityRoot struct {
+	Records []parityRecord `json:"records"`
+}
+
+func TestParity(t *testing.T) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	fixturePath := filepath.Join(cwd, "..", "..", "test-fixtures", "golden.json")
+	data, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	var fx parityRoot
+	if err := json.Unmarshal(data, &fx); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	for _, rec := range fx.Records {
+		parsed, err := Parse(rec.Raw)
+		if err != nil {
+			t.Errorf("%s: parse error %v", rec.Name, err)
+			continue
+		}
+		got := map[string]interface{}{
+			"v":     parsed.V,
+			"uri":   parsed.URI,
+			"proto": parsed.Proto,
+		}
+		if parsed.Auth != "" {
+			got["auth"] = parsed.Auth
+		}
+		if parsed.Desc != "" {
+			got["desc"] = parsed.Desc
+		}
+		if !reflect.DeepEqual(got, rec.Expected) {
+			jg, _ := json.Marshal(got)
+			je, _ := json.Marshal(rec.Expected)
+			t.Errorf("%s: mismatch\n got %s\nwant %s", rec.Name, string(jg), string(je))
+		}
+	}
+}

@@ -115,8 +115,8 @@ A full, community-maintained list is available at the [**Token Registry**](https
 | :--------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------- |
 | **`@agentcommunity/aid`**                      | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid.svg)](https://www.npmjs.com/package/@agentcommunity/aid)               | Core TypeScript library (Node/Browser) |
 | **`@agentcommunity/aid-doctor`**               | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid-doctor.svg)](https://www.npmjs.com/package/@agentcommunity/aid-doctor) | The official CLI tool                  |
-| [`aid-discovery` (Python)](./packages/aid-py/) | _Coming soon_                                                                                                                           | The official Python library            |
-| [`aid-go` (Go)](./packages/aid-go/)            | _Coming soon_                                                                                                                           | The official Go library                |
+| [`aid-discovery` (Python)](./packages/aid-py/) | _Beta_                                                                                                                                  | The official Python library            |
+| [`aid-go` (Go)](./packages/aid-go/)            | _Beta_                                                                                                                                  | The official Go library                |
 
 ## 🏗️ Development
 
@@ -134,8 +134,10 @@ pnpm gen
 # Build all packages (includes Node.js + browser bundles)
 pnpm build
 
-# Run all tests (25 tests across packages)
-pnpm test
+# Run all tests (across all languages)
+pnpm test           # Node/TypeScript tests
+python -m pytest    # Python tests
+cd packages/aid-go && go test ./...
 
 # Lint all code
 pnpm lint
@@ -152,8 +154,8 @@ agent-interface-discovery/
 ├── packages/
 │   ├── aid/                   # Core TypeScript library (Node.js + Browser)
 │   ├── aid-doctor/            # CLI tool
-│   ├── aid-py/                # Python library (coming soon)
-│   ├── aid-go/                # Go library (coming soon)
+│   ├── aid-py/                # Python library (beta)
+│   ├── aid-go/                # Go library (beta)
 │   └── docs/                  # Specification documents
 ├── tracking/                  # Development progress tracking
 └── ...

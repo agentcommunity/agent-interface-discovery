@@ -1,0 +1,5 @@
+dnspython>=2.6.0
+idna>=3.6
+
+[dev]
+pytest>=8

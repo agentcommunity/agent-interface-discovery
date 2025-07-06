@@ -40,3 +40,39 @@ jobs:
 
       - name: Test
         run: pnpm test || true # allow no tests initially
+
+      # --- Phase 2 additions: cross-lang tests & SBOM ---
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e './packages/aid-py[dev]' pytest
+
+      - name: Test (Python)
+        run: python -m pytest packages/aid-py
+
+      - name: Setup Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Test (Go)
+        run: |
+          cd packages/aid-go
+          go test ./...
+
+      - name: Generate SBOM (CycloneDX)
+        uses: CycloneDX/gh-node-module-generatebom@v1
+        with:
+          output: ./sbom.xml
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.xml

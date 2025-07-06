@@ -1,0 +1,38 @@
+# Phase 2 - Multi-Language Support & Ecosystem Expansion
+
+Started: 2025-07-06
+
+- **[2025-07-06]** Phase 2 initiated – multi-language support (Python & Go) and showcase zone work has begun.
+- **[2025-07-06]** Python package scaffolded (`packages/aid-py`): added `pyproject.toml`, README, and initial `aid_py` module with API stubs. Updated monorepo README and verified tests/lint remain green.
+- **[2025-07-06]** Implemented full Python parser (`aid_py/parser.py`) + constants, added pytest suite (6 tests) – all tests pass.
+- **[2025-07-06]** Added DNS-based `discover()` in Python using dnspython; wrote 2 unit tests (total Python tests now 8) – all pass.
+- **[2025-07-06]** Ported Go implementation (`packages/aid-go`): constants, `AidError`, parser, DNS-based `Discover`, and 5 unit tests – all pass (`go test ./...`).
+- **[2025-07-06]** Added CycloneDX SBOM generation step to CI workflow (`ci.yml`) covering Node, Python & Go dependencies.
+- **[2025-07-06]** Added cross-language parity tests (`parity.*`) reading shared `test-fixtures/golden.json`; implemented in TypeScript, Python & Go – all pass locally.
+- **[2025-07-06]** Scaffolded Vercel DNS IaC: added `showcase/terraform/main.tf` (Terraform + vercel provider) and GitHub Actions workflow `showcase-dns.yml` for plan/apply.
+- **[2025-07-06]** Finalised showcase TXT records (7 total) in `showcase/terraform/main.tf` – simple, local-docker, messy, multi-string, supabase, auth0, openai.
+
+## Next Milestones (Planned)
+
+1. **Showcase DNS Zone (`showcase.aid.agentcommunity.org`)**
+   - Register / configure sub-domain in DNS provider.
+   - Publish the 6 planned reference records (simple, local-docker, messy, multi-string, supabase, auth0).
+   - Add Terraform (or Cloudflare) infrastructure-as-code so records are version-controlled.
+2. **E2E Test Suite (`e2e/` workspace)**
+   - New Turbo pipeline: `turbo run e2e`.
+   - Tests invoke CLI (`aid-doctor`) against live showcase records and assert `exit 0`.
+   - Run nightly in CI; fail build on regression.
+3. **Cross-Language Parity Checks** ✅ **Done (initial set)**
+   - Added shared JSON fixtures under `test-fixtures/`.
+   - Implemented parity tests across TS (`vitest`), Python (`pytest`), and Go (`go test`).
+4. **Packaging & Release Prep**
+   - Python: wheel + sdist via `build` / `twine check`.
+   - Go: `go mod tidy`; set semantic import version if v1 tag prepped.
+   - TypeScript: bump to `0.2.0-beta` with Changeset.
+5. **Documentation Sync**
+   - Update `packages/docs/*` to include multi-language examples.
+   - Run `spec sync` to regenerate constants (sanity guard).
+6. **Automated SBOM generation (security rule §6)** ✅ **Done**
+   - CycloneDX GitHub Action configured in `ci.yml`; outputs `sbom.xml` as build artifact.
+7. **Progress Gates**
+   - Mark each bullet complete in this file + open a Phase 2 PR checklist.

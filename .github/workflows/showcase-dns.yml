@@ -1,0 +1,52 @@
+name: Showcase DNS
+
+on:
+  pull_request:
+    paths: ['showcase/terraform/**']
+  push:
+    branches: [main]
+    paths: ['showcase/terraform/**']
+  workflow_dispatch: {}
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: showcase/terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Cache Terraform dir
+        uses: actions/cache@v4
+        with:
+          path: showcase/terraform/.terraform
+          key: terraform-${{ hashFiles('showcase/terraform/**/*.tf') }}
+
+      - name: Terraform Init
+        env:
+          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
+        run: terraform init
+
+      - name: Terraform Plan
+        env:
+          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
+        run: terraform plan -var="zone=aid.agentcommunity.org"
+
+      - name: Terraform Apply (auto main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
+        run: terraform apply -auto-approve -var="zone=aid.agentcommunity.org"
+
+      - name: Terraform Apply (manual)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
+        run: terraform apply -auto-approve -var="zone=aid.agentcommunity.org"
