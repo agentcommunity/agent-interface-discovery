@@ -13,6 +13,8 @@ Started: 2025-07-06
 - **[2025-07-06]** Finalised showcase TXT records (7 total) in `showcase/terraform/main.tf` – simple, local-docker, messy, multi-string, supabase, auth0, openai.
 - **[2025-07-07]** Deployed live showcase DNS records to production on `agentcommunity.org` using Terraform and GitHub Actions after resolving Vercel provider issues. All 7 showcase records are now live and verifiable via `dig`.
 - **[2025-07-07]** Added live E2E test suite (`packages/e2e-tests`) and integrated into Turbo + CI. All 7 showcase domains validated successfully.
+- **[2025-07-07]** Terraform TTL set to 360 s for all showcase records; spec updated with DNSSEC guidance.
+- **[2025-07-07]** Hardened parser & discovery client: trims whitespace, ignores unknown keys, duplicate-key detection. E2E suite now fully green in CI.
 
 ## Next Milestones (Planned)
 
