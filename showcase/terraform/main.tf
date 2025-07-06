@@ -79,5 +79,6 @@ resource "vercel_dns_record" "showcase" {
   
   type      = "TXT"
   value     = each.value.value
+  ttl       = 360
   team_id   = var.team_id
 } 

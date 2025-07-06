@@ -119,7 +119,7 @@ A client seeking a specific protocol **SHOULD** first query the protocol-specifi
 
 ## **3. Security Rules**
 
-- **DNSSEC:** Providers are **STRONGLY ENCOURAGED** to sign their DNS records with DNSSEC. Clients **SHOULD** validate the signature when present.
+- **DNSSEC:** Providers are **STRONGLY ENCOURAGED** to sign their DNS records with DNSSEC. Vercel-registered apex domains (including `agentcommunity.org`) are DNSSEC-signed by default. Clients **SHOULD** validate the `RRSIG` when the zone advertises it for the `_agent` record.
 - **HTTPS:** A `remote` agent's `uri` **MUST** use `https://`. Clients **MUST** perform standard TLS certificate and hostname validation.
 - **No Secrets:** The TXT record is public and **MUST NOT** contain any secrets.
 - **Local Execution (`proto=local`) Safeguards:** Clients that support local execution **MUST** implement the following:
