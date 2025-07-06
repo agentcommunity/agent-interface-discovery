@@ -191,7 +191,11 @@ try {
   // Use project's prettier configuration for consistency
   const prettierOptions = await prettier.resolveConfig(process.cwd());
   const formatted = await prettier.format(tsContent, {
-    ...prettierOptions,
+    // Use project's prettier config with explicit fallbacks
+    semi: prettierOptions?.semi ?? true,
+    singleQuote: prettierOptions?.singleQuote ?? true,
+    trailingComma: (prettierOptions?.trailingComma as 'all' | 'es5' | 'none') ?? 'all',
+    printWidth: prettierOptions?.printWidth ?? 100,
     parser: 'typescript',
   });
 
