@@ -15,7 +15,8 @@
     "docs:sync": "turbo run sync:docs",
     "dev": "turbo run dev --parallel",
     "clean": "turbo run clean",
-    "gen": "tsx scripts/generate-constants.ts"
+    "gen": "tsx scripts/generate-constants.ts",
+    "e2e": "turbo run e2e"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",

@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { discover, AidError, type DiscoveryResult } from '@agentcommunity/aid';
-import { enforceRedirectPolicy } from '@agentcommunity/aid/src/security.js';
+import {
+  discover,
+  AidError,
+  enforceRedirectPolicy,
+  type DiscoveryResult,
+} from '@agentcommunity/aid';
 import chalk from 'chalk';
 import ora from 'ora';
 

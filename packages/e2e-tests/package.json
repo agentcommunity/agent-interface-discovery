@@ -1,0 +1,14 @@
+{
+  "name": "@agentcommunity/e2e-tests",
+  "private": true,
+  "version": "0.0.0",
+  "description": "End-to-End tests for live showcase AID records",
+  "scripts": {
+    "e2e": "tsx src/e2e.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@agentcommunity/aid-doctor": "workspace:*",
+    "tsx": "^4.20.3"
+  }
+}

@@ -19,6 +19,11 @@
     "clean": {
       "cache": false,
       "outputs": []
+    },
+    "e2e": {
+      "dependsOn": ["build", "^build"],
+      "cache": false,
+      "outputs": []
     }
   }
 }

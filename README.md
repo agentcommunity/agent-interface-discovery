@@ -14,13 +14,13 @@ It uses a single DNS `TXT` record to make any agent service—whether it speaks 
 
 ```bash
 # A user wants to use Supabase's agent. They only know the domain.
-$ npx @agentcommunity/aid-doctor check supabase.com
+$ npx @agentcommunity/aid-doctor check supabase.agentcommunity.org
 
-✅ AID Record Found for _agent.supabase.com
+✅ AID Record Found for _agent.supabase.agentcommunity.org
    Protocol:    mcp
    URI:         https://api.supabase.com/mcp
    Auth Hint:   pat
-   Description: Supabase Database Tools
+   Description: (Community Showcase)
 ```
 
 **Zero configuration. Universal compatibility. Just DNS.**
@@ -57,11 +57,11 @@ import { discover, AidError } from '@agentcommunity/aid';
 
 try {
   // Discover any agent by domain
-  const { record, ttl } = await discover('supabase.com');
+  const { record, ttl } = await discover('supabase.agentcommunity.org');
   console.log(`Found ${record.proto} agent at ${record.uri}`);
   console.log(`Record TTL: ${ttl} seconds`);
   //=> Found mcp agent at https://api.supabase.com/mcp
-  //=> Record TTL: 300 seconds
+  //=> Record TTL: 60 seconds
 } catch (error) {
   if (error instanceof AidError) {
     // Handle specific errors like NoRecordFound, InvalidRecord, etc.
@@ -77,7 +77,7 @@ import { discover, AidError } from '@agentcommunity/aid/browser';
 
 try {
   // Uses DNS-over-HTTPS for browser compatibility
-  const { record } = await discover('supabase.com');
+  const { record } = await discover('supabase.agentcommunity.org');
   console.log(`Found ${record.proto} agent at ${record.uri}`);
 } catch (error) {
   if (error instanceof AidError) {
@@ -91,7 +91,7 @@ try {
 AID uses a well-known DNS `TXT` record at `_agent.<domain>`.
 
 ```dns
-_agent.example.com. 300 IN TXT "v=aid1;uri=https://api.example.com/mcp;p=mcp;auth=pat;desc=AI Tools"
+_agent.supabase.agentcommunity.org. 60 IN TXT "v=aid1;uri=https://api.supabase.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
 ```
 
 The client queries this record, parses the `key=value` pairs, and uses the `uri` to connect. That's it. For full details, see the [**Full Specification**](./packages/docs/specification.md).
@@ -141,6 +141,9 @@ cd packages/aid-go && go test ./...
 
 # Lint all code
 pnpm lint
+
+# Run end-to-end tests against live showcase records
+pnpm e2e
 ```
 
 ### Project Structure
