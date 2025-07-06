@@ -58,26 +58,26 @@ function generateTypeScriptConstants(constants: ProtocolConstants): string {
   return `${GENERATED_WARNING}
 
 // Specification version
-export const SPEC_VERSION = "${constants.specVersion}" as const;
+export const SPEC_VERSION = '${constants.specVersion}' as const;
 
 // Protocol tokens
 ${sortedProtocolTokens
-  .map((token) => `export const PROTO_${token.toUpperCase()} = "${token}" as const;`)
+  .map((token) => `export const PROTO_${token.toUpperCase()} = '${token}' as const;`)
   .join('\n')}
 
 export const PROTOCOL_TOKENS = {
-${sortedProtocolTokens.map((token) => `  ${token}: "${token}",`).join('\n')}
+${sortedProtocolTokens.map((token) => `  ${token}: '${token}',`).join('\n')}
 } as const;
 
 export type ProtocolToken = keyof typeof PROTOCOL_TOKENS;
 
 // Authentication tokens
 ${sortedAuthTokens
-  .map((token) => `export const AUTH_${token.toUpperCase()} = "${token}" as const;`)
+  .map((token) => `export const AUTH_${token.toUpperCase()} = '${token}' as const;`)
   .join('\n')}
 
 export const AUTH_TOKENS = {
-${sortedAuthTokens.map((token) => `  ${token}: "${token}",`).join('\n')}
+${sortedAuthTokens.map((token) => `  ${token}: '${token}',`).join('\n')}
 } as const;
 
 export type AuthToken = keyof typeof AUTH_TOKENS;
@@ -99,7 +99,7 @@ export const ERROR_MESSAGES = {
 ${sortedErrorCodes
   .map(
     (errorName) =>
-      `  ${errorName}: "${constants.errorCodes[errorName].description ?? constants.errorCodes[errorName].message ?? ''}",`,
+      `  ${errorName}: '${constants.errorCodes[errorName].description ?? constants.errorCodes[errorName].message ?? ''}',`,
   )
   .join('\n')}
 } as const;
@@ -145,29 +145,29 @@ export interface RawAidRecord {
 }
 
 // DNS configuration
-export const DNS_SUBDOMAIN = "${constants.dns.subdomain}" as const;
+export const DNS_SUBDOMAIN = '${constants.dns.subdomain}' as const;
 export const DNS_TTL_MIN = ${constants.dns.ttlRecommendation.min} as const;
 export const DNS_TTL_MAX = ${constants.dns.ttlRecommendation.max} as const;
 
 // Local URI schemes
 export const LOCAL_URI_SCHEMES = [
-${constants.localUriSchemes.map((scheme) => `  "${scheme}",`).join('\n')}
+${constants.localUriSchemes.map((scheme) => `  '${scheme}',`).join('\n')}
 ] as const;
 
 export type LocalUriScheme = typeof LOCAL_URI_SCHEMES[number];
 
 // Validation helpers
 export const REQUIRED_FIELDS = [
-${constants.aidRecord.required.map((field) => `  "${field}",`).join('\n')}
+${constants.aidRecord.required.map((field) => `  '${field}',`).join('\n')}
 ] as const;
 
 export const OPTIONAL_FIELDS = [
-${constants.aidRecord.optional.map((field) => `  "${field}",`).join('\n')}
+${constants.aidRecord.optional.map((field) => `  '${field}',`).join('\n')}
 ] as const;
 
 export const FIELD_ALIASES = {
 ${Object.entries(constants.aidRecord.aliases)
-  .map(([alias, field]) => `  "${alias}": "${field}",`)
+  .map(([alias, field]) => `  '${alias}': '${field}',`)
   .join('\n')}
 } as const;
 `;
