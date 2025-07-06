@@ -14,18 +14,24 @@
     "format": "prettier --write .",
     "docs:sync": "turbo run sync:docs",
     "dev": "turbo run dev --parallel",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "gen": "tsx scripts/generate-constants.ts"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
+    "@eslint/js": "^9.30.1",
+    "@types/node": "^24.0.10",
     "@typescript-eslint/eslint-plugin": "^8.35.1",
     "@typescript-eslint/parser": "^8.35.1",
     "eslint": "^9.30.1",
     "eslint-plugin-unicorn": "^59.0.1",
+    "globals": "^16.3.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
+    "tsx": "^4.20.3",
     "turbo": "^2.5.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "yaml": "^2.8.0"
   }
 }

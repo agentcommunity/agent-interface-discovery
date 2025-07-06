@@ -1,0 +1,70 @@
+# AID Protocol Constants - Single Source of Truth
+# This file defines all constants, types, and tokens used in the AID v1.0.0 specification
+# Generated code in all languages should derive from this file
+
+schemaVersion: '1.0.0'
+
+# Specification version that must be present in all AID records
+specVersion: 'aid1'
+
+# Protocol tokens (proto/p field)
+protocolTokens:
+  mcp: 'Model Context Protocol'
+  a2a: 'Agent-to-Agent Protocol'
+  openapi: 'URI points to an OpenAPI specification document'
+  local: 'The agent runs locally on the client machine'
+
+# Authentication scheme tokens (auth field)
+authTokens:
+  none: 'No authentication required'
+  pat: 'Personal Access Token'
+  apikey: 'API Key authentication'
+  basic: 'HTTP Basic Authentication'
+  oauth2_device: 'OAuth 2.0 Device Flow'
+  oauth2_code: 'OAuth 2.0 Authorization Code Flow'
+  mtls: 'Mutual TLS'
+  custom: 'Custom authentication scheme'
+
+# Standard client error codes
+errorCodes:
+  ERR_NO_RECORD:
+    code: 1000
+    description: 'No _agent TXT record was found for the domain'
+  ERR_INVALID_TXT:
+    code: 1001
+    description: 'A record was found but is malformed or missing required keys'
+  ERR_UNSUPPORTED_PROTO:
+    code: 1002
+    message: 'The record is valid, but the client does not support the specified protocol'
+  ERR_SECURITY:
+    code: 1003
+    message: 'Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied)'
+  ERR_DNS_LOOKUP_FAILED:
+    code: 1004
+    message: 'The DNS query failed for a network-related reason'
+
+# AID Record structure - required and optional fields
+aidRecord:
+  required:
+    - v # Version (must be "aid1")
+    - uri # Absolute https:// URL or package URI
+    - proto # Protocol token (or alias 'p')
+  optional:
+    - auth # Authentication hint token
+    - desc # Human-readable description (≤ 60 UTF-8 bytes)
+
+  aliases:
+    p: proto # Shorthand alias for proto field
+
+# URI schemes allowed for local protocol
+localUriSchemes:
+  - docker
+  - npx
+  - pip
+
+# DNS configuration recommendations
+dns:
+  subdomain: '_agent'
+  ttlRecommendation:
+    min: 300 # 5 minutes
+    max: 900 # 15 minutes
