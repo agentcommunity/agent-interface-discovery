@@ -75,15 +75,16 @@ export async function discover(
         // Data can be a buffer or an array of buffers. Standardize to array.
         const parts = Array.isArray(answer.data) ? answer.data : [answer.data];
         const raw = parts.map((p) => p.toString()).join('');
+        const rawTrimmed = raw.trim();
 
-        // Check if it looks like an AID record before trying to parse
-        if (raw.toLowerCase().startsWith(`v=${SPEC_VERSION}`)) {
+        // Check if it looks like an AID record before trying to parse (ignore leading whitespace)
+        if (rawTrimmed.toLowerCase().startsWith(`v=${SPEC_VERSION}`)) {
           try {
-            const record = parse(raw);
+            const record = parse(rawTrimmed);
             // Success! Return the parsed record, raw string, and TTL.
             return {
               record,
-              raw,
+              raw: rawTrimmed,
               ttl: answer.ttl ?? DNS_TTL_MIN,
               queryName,
             };
