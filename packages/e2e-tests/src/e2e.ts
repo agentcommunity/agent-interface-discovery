@@ -9,7 +9,10 @@ import { fileURLToPath } from 'node:url';
  * `locals.records` entries in `showcase/terraform/main.tf` (minus the _agent prefix).
  */
 const DOMAINS: readonly string[] = [
+  'simple.agentcommunity.org',
   'local-docker.agentcommunity.org',
+  'messy.agentcommunity.org',
+  'multi-string.agentcommunity.org',
   'supabase.agentcommunity.org',
   'auth0.agentcommunity.org',
   'openai.agentcommunity.org',
