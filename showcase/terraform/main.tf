@@ -16,7 +16,7 @@ provider "vercel" {}
 ########################
 
 variable "zone" {
-  description = "Root DNS zone for showcase records (e.g., aid.agentcommunity.org)"
+  description = "Apex DNS zone managed in Vercel (e.g., agentcommunity.org)"
   type        = string
 }
 
@@ -32,31 +32,31 @@ variable "team_id" {
 locals {
   records = {
     simple = {
-      name  = "_agent.simple.showcase"   # FQDN relative to `var.zone`
+      name  = "_agent.simple.showcase.aid"   # FQDN relative to apex zone
       value = "v=aid1;uri=https://api.example.com/mcp;p=mcp"
     }
     local_docker = {
-      name  = "_agent.local-docker.showcase"
+      name  = "_agent.local-docker.showcase.aid"
       value = "v=aid1;uri=docker://myimage;proto=local;desc=Local Docker Agent"
     }
     messy = {
-      name  = "_agent.messy.showcase"
+      name  = "_agent.messy.showcase.aid"
       value = " v=aid1 ; uri=https://api.example.com/mcp ; p=mcp ; extra=ignored "
     }
     multi_string = {
-      name  = "_agent.multi-string.showcase"
+      name  = "_agent.multi-string.showcase.aid"
       value = "v=aid1;uri=https://api.example.com/mcp;p=mcp;desc=Multi string part 1" # Note: Vercel supports single-line only; concatenation handled by client
     }
     supabase = {
-      name  = "_agent.supabase.showcase"
+      name  = "_agent.supabase.showcase.aid"
       value = "v=aid1;uri=https://api.supabase.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
     auth0 = {
-      name  = "_agent.auth0.showcase"
+      name  = "_agent.auth0.showcase.aid"
       value = "v=aid1;uri=https://ai.auth0.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
     openai = {
-      name  = "_agent.openai.showcase"
+      name  = "_agent.openai.showcase.aid"
       value = "v=aid1;uri=https://api.openai.com/v1/assistants;proto=openapi;desc=OpenAI Assistants API"
     }
   }
