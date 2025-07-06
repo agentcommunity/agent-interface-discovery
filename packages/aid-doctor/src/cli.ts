@@ -84,8 +84,8 @@ program
           timeout: Number.parseInt(options.timeout),
         });
 
-        // Enforce redirect security for remote protocols
-        if (result.record.proto !== 'local') {
+        // Enforce redirect security unless explicitly skipped (CI placeholder URIs)
+        if (result.record.proto !== 'local' && process.env.AID_SKIP_SECURITY !== '1') {
           spinner.text = 'Validating redirect policy...';
           await enforceRedirectPolicy(result.record.uri, Number.parseInt(options.timeout));
         }
