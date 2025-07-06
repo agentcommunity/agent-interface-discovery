@@ -187,6 +187,18 @@ describe('AID Parser', () => {
       expect(() => parse(longUnicodeRecord)).toThrow(AidError);
       expect(() => parse(longUnicodeRecord)).toThrow('Description field must be ≤ 60 UTF-8 bytes');
     });
+
+    it('should parse messy record with whitespace and unknown keys', () => {
+      const messy = ' v=aid1 ; uri=https://api.example.com/mcp ; p=mcp ; extra=ignored ';
+      const result = parse(messy);
+      expect(result).toEqual({ v: 'aid1', uri: 'https://api.example.com/mcp', proto: 'mcp' });
+    });
+
+    it('should throw error when duplicate keys are present', () => {
+      const dup = 'v=aid1;v=aid1;uri=https://api.example.com/mcp;proto=mcp';
+      expect(() => parse(dup)).toThrow(AidError);
+      expect(() => parse(dup)).toThrow('Duplicate key: v');
+    });
   });
 
   describe('isValidProto', () => {
