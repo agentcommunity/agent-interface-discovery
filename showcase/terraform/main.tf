@@ -11,12 +11,12 @@ terraform {
 # Provider config expects `VERCEL_API_TOKEN` env var supplied via GitHub Actions secret
 provider "vercel" {}
 
-########################
+#####################
 # Variables
-########################
+#####################
 
 variable "zone" {
-  description = "Apex DNS zone managed in Vercel (e.g., agentcommunity.org)"
+  description = "Delegated zone managed in Vercel (e.g. showcase.aid.agentcommunity.org)"
   type        = string
 }
 
@@ -25,44 +25,41 @@ variable "team_id" {
   type        = string
 }
 
-########################
-# Ideal-spec reference records
-########################
+#####################
+# Showcase records
+#####################
 
 locals {
-  # We will define the common prefix here to keep the records clean
   record_prefix = "_agent"
 
   records = {
     simple = {
-      # The name is now just the unique part of the subdomain.
-      # The full name will be constructed by Vercel as:
-      # _agent.simple.showcase.aid.agentcommunity.org
-      name  = "${local.record_prefix}.simple.showcase.aid"
+      # becomes _agent.simple.showcase.aid.agentcommunity.org in DNS
+      name  = "${local.record_prefix}.simple"
       value = "v=aid1;uri=https://api.example.com/mcp;p=mcp"
     }
     local_docker = {
-      name  = "${local.record_prefix}.local-docker.showcase.aid"
+      name  = "${local.record_prefix}.local-docker"
       value = "v=aid1;uri=docker://myimage;proto=local;desc=Local Docker Agent"
     }
     messy = {
-      name  = "${local.record_prefix}.messy.showcase.aid"
+      name  = "${local.record_prefix}.messy"
       value = " v=aid1 ; uri=https://api.example.com/mcp ; p=mcp ; extra=ignored "
     }
     multi_string = {
-      name  = "${local.record_prefix}.multi-string.showcase.aid"
+      name  = "${local.record_prefix}.multi-string"
       value = "v=aid1;uri=https://api.example.com/mcp;p=mcp;desc=Multi string part 1"
     }
     supabase = {
-      name  = "${local.record_prefix}.supabase.showcase.aid"
+      name  = "${local.record_prefix}.supabase"
       value = "v=aid1;uri=https://api.supabase.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
     auth0 = {
-      name  = "${local.record_prefix}.auth0.showcase.aid"
+      name  = "${local.record_prefix}.auth0"
       value = "v=aid1;uri=https://ai.auth0.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
     openai = {
-      name  = "${local.record_prefix}.openai.showcase.aid"
+      name  = "${local.record_prefix}.openai"
       value = "v=aid1;uri=https://api.openai.com/v1/assistants;proto=openapi;desc=OpenAI Assistants API"
     }
   }
@@ -72,8 +69,8 @@ locals {
 resource "vercel_dns_record" "showcase" {
   for_each = local.records
 
-  domain    = var.zone
-  name      = each.value.name
+  domain    = var.zone              # <= showcase.aid.agentcommunity.org
+  name      = each.value.name       # just the left-hand label(s)
   type      = "TXT"
   value     = each.value.value
   team_id   = var.team_id
