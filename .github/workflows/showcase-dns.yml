@@ -31,22 +31,26 @@ jobs:
 
       - name: Terraform Init
         env:
-          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
-        run: terraform init
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: terraform init -backend-config=""
 
       - name: Terraform Plan
         env:
-          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
-        run: terraform plan -var="zone=aid.agentcommunity.org"
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: terraform plan -var="zone=aid.agentcommunity.org" -var="team_id=${{ secrets.VERCEL_TEAM_ID }}"
 
       - name: Terraform Apply (auto main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
-        run: terraform apply -auto-approve -var="zone=aid.agentcommunity.org"
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: terraform apply -auto-approve -var="zone=aid.agentcommunity.org" -var="team_id=${{ secrets.VERCEL_TEAM_ID }}"
 
       - name: Terraform Apply (manual)
         if: github.event_name == 'workflow_dispatch'
         env:
-          VERCEL_API_TOKEN: '${{ secrets.VERCEL_TOKEN }}'
-        run: terraform apply -auto-approve -var="zone=aid.agentcommunity.org"
+          VERCEL_API_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: terraform apply -auto-approve -var="zone=aid.agentcommunity.org" -var="team_id=${{ secrets.VERCEL_TEAM_ID }}"
