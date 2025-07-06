@@ -10,6 +10,7 @@ Started: 2025-07-06
 - **[2025-07-06]** Added CycloneDX SBOM generation step to CI workflow (`ci.yml`) covering Node, Python & Go dependencies.
 - **[2025-07-06]** Added cross-language parity tests (`parity.*`) reading shared `test-fixtures/golden.json`; implemented in TypeScript, Python & Go – all pass locally.
 - **[2025-07-06]** Scaffolded Vercel DNS IaC: added `showcase/terraform/main.tf` (Terraform + vercel provider) and GitHub Actions workflow `showcase-dns.yml` for plan/apply.
+- **[2025-07-06]** Finalised showcase TXT records (7 total) in `showcase/terraform/main.tf` – simple, local-docker, messy, multi-string, supabase, auth0, openai.
 
 ## Next Milestones (Planned)
 
