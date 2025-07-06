@@ -1,0 +1,69 @@
+{
+  "name": "@agentcommunity/aid",
+  "version": "0.1.0",
+  "description": "Agent Interface Discovery (AID) - DNS-based discovery protocol for AI agents",
+  "keywords": [
+    "agent",
+    "discovery",
+    "dns",
+    "mcp",
+    "a2a",
+    "ai"
+  ],
+  "author": "Agent Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentcommunity/agent-interface-discovery.git",
+    "directory": "packages/aid"
+  },
+  "homepage": "https://aid.agentcommunity.org",
+  "bugs": {
+    "url": "https://github.com/agentcommunity/agent-interface-discovery/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "import": "./dist/browser.js",
+      "require": "./dist/browser.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.30.1",
+    "tsup": "^8.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "dns-query": "^0.11.2"
+  }
+}

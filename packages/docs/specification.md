@@ -20,7 +20,7 @@ _Minimal, DNS-only agent bootstrap standard_
 
 ## **Abstract**
 
-Agent Interface Discovery (AID) answers one question: **“Given a domain, where is the agent and which protocol should I speak?”** It does so with a single DNS TXT record at a well-known subdomain: `_agent.<domain>`.
+Agent Interface Discovery (AID) answers one question: **"Given a domain, where is the agent and which protocol should I speak?"** It does so with a single DNS TXT record at a well-known subdomain: `_agent.<domain>`.
 
 This protocol is an intentionally minimal discovery layer. After a client uses AID to find the correct endpoint or package, richer protocols such as the Model Context Protocol (MCP) or the Agent-to-Agent Protocol (A2A) take over for communication and capability negotiation.
 
@@ -128,6 +128,9 @@ A client seeking a specific protocol **SHOULD** first query the protocol-specifi
   3.  **No Shell Interpretation:** Arguments derived from the `uri` **MUST** be passed atomically to the underlying OS execution call to prevent command injection.
   4.  **No Nested Discovery:** Clients **MUST** reject a `local` execution `uri` that could be interpreted as a command initiating another AID discovery request.
   5.  **Sandboxing:** Clients **SHOULD** run local agents within a sandboxed environment with minimum necessary permissions.
+- **Redirect Handling:** If an initial request to the discovered `uri` returns an HTTP redirect (`301`, `302`, `307`, or `308`) **to a different origin** (hostname or port), the client **SHOULD** treat this as a potential security risk. Clients **MUST NOT** follow such cross-origin redirects automatically. Implementations MAY either  
+  a. terminate with `ERR_SECURITY`, or  
+  b. require explicit user confirmation before proceeding.
 
 ---
 
@@ -174,7 +177,7 @@ _All scheme tokens are case-sensitive and defined in lowercase ASCII._
 
 _All protocol tokens are case-sensitive and defined in lowercase ASCII._
 
-| Token     | Meaning                                         | `uri` Scheme(s)           |
+| Token     | Meaning                                         | Allowed `uri` scheme(s)   |
 | --------- | ----------------------------------------------- | ------------------------- |
 | `mcp`     | Model Context Protocol                          | `https://`                |
 | `a2a`     | Agent-to-Agent Protocol                         | `https://`                |
