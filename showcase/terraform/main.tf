@@ -9,10 +9,7 @@ terraform {
 }
 
 # Provider config expects `VERCEL_API_TOKEN` env var supplied via GitHub Actions secret
-provider "vercel" {
-  # Allow overriding the team via variable so CI can target BlockSpace
-  team_id = var.team_id
-}
+provider "vercel" {}
 
 ########################
 # Variables
@@ -73,4 +70,5 @@ resource "vercel_dns_record" "showcase" {
   name      = each.value.name
   type      = "TXT"
   value     = each.value.value
+  team_id   = var.team_id
 } 
