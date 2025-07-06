@@ -66,6 +66,9 @@ jobs:
           cd packages/aid-go
           go test ./...
 
+      - name: E2E Tests
+        run: pnpm e2e
+
       - name: Generate SBOM (CycloneDX)
         uses: CycloneDX/gh-node-module-generatebom@v1
         with:
