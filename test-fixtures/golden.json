@@ -1,0 +1,23 @@
+{
+  "records": [
+    {
+      "name": "simple",
+      "raw": "v=aid1;uri=https://api.example.com/mcp;p=mcp",
+      "expected": {
+        "v": "aid1",
+        "uri": "https://api.example.com/mcp",
+        "proto": "mcp"
+      }
+    },
+    {
+      "name": "local-docker",
+      "raw": "v=aid1;uri=docker://myimage;proto=local;desc=Local Docker Agent",
+      "expected": {
+        "v": "aid1",
+        "uri": "docker://myimage",
+        "proto": "local",
+        "desc": "Local Docker Agent"
+      }
+    }
+  ]
+}

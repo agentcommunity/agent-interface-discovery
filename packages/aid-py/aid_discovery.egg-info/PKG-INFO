@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: aid-discovery
+Version: 0.0.1
+Summary: Python library for Agent Interface Discovery (AID)
+Author-email: Agent Community <maintainers@agentcommunity.org>
+License: MIT
+Project-URL: Homepage, https://github.com/agent-community/agent-interface-discovery
+Project-URL: Repository, https://github.com/agent-community/agent-interface-discovery
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: dnspython>=2.6.0
+Requires-Dist: idna>=3.6
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+
+# aid-discovery (Python)
+
+> Work-in-progress Python implementation of the Agent Interface Discovery (AID) specification.
+
+This package will provide:
+
+* `discover(domain: str)` – DNS lookup helper to fetch a domain's `_agent` TXT record.
+* `parse(txt: str)` – deterministic parser that validates and returns an `AidRecord`.
+* `AidError` – rich error class mapping spec error codes.
+
+**Status:** In development – targeting feature parity with the TypeScript reference implementation. 

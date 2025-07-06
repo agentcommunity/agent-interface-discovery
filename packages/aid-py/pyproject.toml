@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aid-discovery"
+version = "0.0.1"
+description = "Python library for Agent Interface Discovery (AID)"
+authors = [{ name = "Agent Community", email = "maintainers@agentcommunity.org" }]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+dependencies = ["dnspython>=2.6.0", "idna>=3.6"]
+
+[project.urls]
+Homepage = "https://github.com/agent-community/agent-interface-discovery"
+Repository = "https://github.com/agent-community/agent-interface-discovery"
+
+[project.optional-dependencies]
+dev = ["pytest>=8"] 
