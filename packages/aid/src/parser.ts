@@ -53,6 +53,10 @@ export function parseRawRecord(txtRecord: string): RawAidRecord {
       throw new AidError('ERR_INVALID_TXT', `Empty key or value in pair: ${pair}`);
     }
 
+    if (key in record) {
+      throw new AidError('ERR_INVALID_TXT', `Duplicate key: ${key}`);
+    }
+
     // Handle known keys (case-insensitive)
     switch (key) {
       case 'v':

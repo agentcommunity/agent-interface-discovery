@@ -58,8 +58,10 @@ export async function discover(
         {
           question: { type: 'TXT', name: queryName },
         },
-        // Use system DNS
-        { endpoints: ['dns'] },
+        // Use public resolvers for CI environments where the special "dns" alias may be unavailable
+        {
+          endpoints: ['1.1.1.1', '8.8.8.8'],
+        },
       );
 
       if (response.rcode !== 'NOERROR' || !response.answers || response.answers.length === 0) {

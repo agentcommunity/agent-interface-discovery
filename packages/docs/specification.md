@@ -56,7 +56,7 @@ A provider **MUST** advertise its agent service by publishing a single DNS TXT r
 
 ### **2.1. Format**
 
-The record's content **MUST** be a single string of semicolon-delimited `key=value` pairs. If a DNS server splits the record into multiple 255-octet strings, the AID Client **MUST** concatenate them into a single string before parsing. The total length of the record content **SHOULD** be kept under 255 bytes to ensure efficiency.
+The record's content **MUST** be a single string of semicolon-delimited `key=value` pairs. Clients **SHOULD** `trim()` leading/trailing whitespace from both keys and values when parsing, and **MUST** silently ignore unknown keys so future extensions are forward-compatible. If a DNS server splits the record into multiple 255-octet strings, the AID Client **MUST** concatenate them into a single string before parsing. The total length of the record content **SHOULD** be kept under 255 bytes to ensure efficiency.
 
 | Key     | Alias | Requirement  | Description                                                                                         | Example                           |
 | ------- | ----- | ------------ | --------------------------------------------------------------------------------------------------- | --------------------------------- |
@@ -119,7 +119,7 @@ A client seeking a specific protocol **SHOULD** first query the protocol-specifi
 
 ## **3. Security Rules**
 
-- **DNSSEC:** Providers are **STRONGLY ENCOURAGED** to sign their DNS records with DNSSEC. Clients **SHOULD** validate the signature when present.
+- **DNSSEC:** Providers are **STRONGLY ENCOURAGED** to sign their DNS records with DNSSEC. Vercel-registered apex domains (including `agentcommunity.org`) are DNSSEC-signed by default. Clients **SHOULD** validate the `RRSIG` when the zone advertises it for the `_agent` record.
 - **HTTPS:** A `remote` agent's `uri` **MUST** use `https://`. Clients **MUST** perform standard TLS certificate and hostname validation.
 - **No Secrets:** The TXT record is public and **MUST NOT** contain any secrets.
 - **Local Execution (`proto=local`) Safeguards:** Clients that support local execution **MUST** implement the following:

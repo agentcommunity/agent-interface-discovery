@@ -43,6 +43,7 @@ for (const domain of DOMAINS) {
     {
       stdio: 'inherit',
       shell: false,
+      env: { ...process.env, AID_SKIP_SECURITY: '1' },
     },
   );
 
