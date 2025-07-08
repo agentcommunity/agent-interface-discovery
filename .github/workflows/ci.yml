@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ---- static checks ----------------------------------------------------
+      # ---- Static Checks (Phase 1: Code Generation) ---------------------
       - name: Generate constants
         run: pnpm gen
 
@@ -36,17 +36,23 @@ jobs:
           git diff --exit-code || \
           (echo "::error::Generated code is out of date. Run 'pnpm gen' and commit." && exit 1)
 
+      # ---- Build Phase (Critical) ---------------------------------------
+      # Build all packages FIRST. This creates the necessary .js and .d.ts
+      # files in the 'dist' directories that linting and testing depend on.
+      - name: Build All Packages
+        run: pnpm build
+
+      # ---- Static Checks (Phase 2: Linting) -----------------------------
+      # Now that all packages are built, the linter can find the type
+      # declarations and will work correctly.
       - name: Lint (ESLint flat config)
         run: pnpm lint
 
-      # ---- build & JS/TS tests ---------------------------------------------
-      - name: Build
-        run: pnpm build || true # allow packages without build yet
-
+      # ---- Testing Phase ------------------------------------------------
       - name: Test (JS/TS)
         run: pnpm test || true # allow zero tests early on
 
-      # ---- cross-language phase-2 checks -----------------------------------
+      # ---- Cross-Language Checks ----------------------------------------
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
