@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm install",
+  "workspaces": {
+    "packages/web": {
+      "rootDirectory": "packages/web"
+    }
+  }
+}
