@@ -9,36 +9,27 @@ import { cn } from '@/lib/utils';
 
 export function Header() {
   const pathname = usePathname();
-  const [currentHash, setCurrentHash] = useState('');
+  const [hash, setHash] = useState('');
 
   useEffect(() => {
-    // This guard prevents the hook's logic from running during server-side rendering.
-    if (globalThis.window === undefined) {
-      return;
-    }
-
     const updateHash = () => {
-      setCurrentHash(globalThis.location.hash);
+      setHash(globalThis.location.hash); // instead of window.location.hash
     };
 
-    // Set initial hash
-    updateHash();
-
-    // Listen for hash changes
+    updateHash(); // Initialize
     globalThis.addEventListener('hashchange', updateHash);
-
-    return () => {
-      globalThis.removeEventListener('hashchange', updateHash);
-    };
+    return () => globalThis.removeEventListener('hashchange', updateHash);
   }, []);
 
+  // Enhance this to handle hash when pathname is the same
   const isActive = (href: string) => {
     if (href.includes('#')) {
-      // For hash-based routes, check both pathname and hash
-      const [path, hash] = href.split('#');
-      return pathname === path && currentHash === `#${hash}`;
+      const [basePath, targetHash] = href.split('#');
+      return pathname === basePath && hash === `#${targetHash}`;
     }
-    // For regular routes, check pathname
+    if (href === '/workbench' && pathname === '/workbench') {
+      return !hash || hash === '#'; // treat base /workbench with no hash as active
+    }
     return pathname === href;
   };
 
