@@ -51,6 +51,12 @@ A successful standard is defined as much by the problems it _doesn't_ solve as b
   - **What it does NOT do:** It does not provide tokens, keys, or cryptographic proof of the agent's identity.
   - **Rationale:** Authentication is a transport- and application-layer concern. The `auth` hint simply tells the client which mechanism to use (e.g., "prepare for an OAuth flow" or "prompt the user for a PAT"). The actual security and identity verification happens during the connection over TLS and within the subsequent protocol handshake.
 
+!!! note
+**Interoperability note:**  
+ Some early MCP servers – notably Supabase’s TypeScript build – still rely on a Personal Access Token (`SUPABASE_ACCESS_TOKEN`) instead of the OAuth metadata flow mandated by MCP.  
+ Clients can work around this by publishing `auth=pat` in their AID record and prompting the user for the PAT.  
+ This workaround is temporary and _not_ part of the normative AID behaviour.
+
 - **It is NOT a Rich Configuration Management System.**
   - **What it does:** AID provides a single URI.
   - **What it does NOT do:** It does not provide a complex set of environment variables, command-line arguments, or other configuration parameters.

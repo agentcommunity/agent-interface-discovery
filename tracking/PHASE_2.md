@@ -15,6 +15,7 @@ Started: 2025-07-06
 - **[2025-07-07]** Added live E2E test suite (`packages/e2e-tests`) and integrated into Turbo + CI. All 7 showcase domains validated successfully.
 - **[2025-07-07]** Terraform TTL set to 360 s for all showcase records; spec updated with DNSSEC guidance.
 - **[2025-07-07]** Hardened parser & discovery client: trims whitespace, ignores unknown keys, duplicate-key detection. E2E suite now fully green in CI.
+- **[2025-07-07]** **Phase 2 Live Handshake Capability Complete**: Implemented real MCP handshake proxy at `/api/handshake` using `@modelcontextprotocol/sdk`. Added WebSocket & HTTP transport support with SSRF guards. Updated web UI to bypass mocks for Supabase/Auth0/Firecrawl/Playwright domains and perform live DNS + handshake. Verified working with live showcase endpoints (supabase.agentcommunity.org → api.supabase.com/mcp returns 401 as expected, auth0.agentcommunity.org → ai.auth0.com/mcp returns 404 as expected). Phase 2 handshake capability fully operational.
 
 ## Next Milestones (Planned)
 

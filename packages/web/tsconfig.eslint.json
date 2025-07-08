@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+
+  /* --  include patterns MUST be plain globs, no brace expansion  -- */
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.d.ts",
+    "next-env.d.ts" // keeps Next’s auto-gen file in the program
+  ],
+
+  "exclude": ["node_modules", ".next", "dist"]
+}
