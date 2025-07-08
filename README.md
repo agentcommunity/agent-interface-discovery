@@ -86,6 +86,31 @@ try {
 }
 ```
 
+### Try the Interactive Workbench
+
+Experience AID in your browser with our dual-mode interactive workbench:
+
+**🌐 [aid.agentcommunity.org](https://aid.agentcommunity.org)**
+
+#### **Resolver Mode** ([/workbench](https://aid.agentcommunity.org/workbench))
+
+- **Instant Discovery**: Test any domain's AID record in real-time
+- **Live Examples**: Explore showcase agents from Supabase, Auth0, and more
+- **Protocol Testing**: Validate actual connections with security warnings
+- **Copy-Paste Ready**: Get code snippets for your favorite language
+- **Live Handshake Testing:** Performs real MCP `initialize` requests for supported showcase domains, surfacing actual capability lists or detailed error diagnostics
+- **Auth-aware handshake:** Detects spec-compliant servers (shows OAuth metadata) or gracefully falls back to PAT prompt for legacy endpoints
+
+#### **Generator Mode** ([/workbench#generator](https://aid.agentcommunity.org/workbench#generator))
+
+- **Interactive TXT Record Creator**: Build valid AID records with a guided form interface
+- **Live Validation**: Real-time spec compliance checking using the core AID library
+- **Protocol Selection**: Choose from MCP, A2A, OpenAPI, or local execution protocols
+- **Copy-to-Clipboard**: Generate and copy DNS-ready TXT record strings
+- **Spec Compliance**: 100% validation accuracy with detailed error feedback
+
+Perfect for developers who want to see AID in action before integrating it into their projects.
+
 ## 📖 How It Works
 
 AID uses a well-known DNS `TXT` record at `_agent.<domain>`.
@@ -111,12 +136,13 @@ A full, community-maintained list is available at the [**Token Registry**](https
 
 ## 📦 Packages in This Monorepo
 
-| Package                                        | Version                                                                                                                                 | Description                            |
-| :--------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------- |
-| **`@agentcommunity/aid`**                      | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid.svg)](https://www.npmjs.com/package/@agentcommunity/aid)               | Core TypeScript library (Node/Browser) |
-| **`@agentcommunity/aid-doctor`**               | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid-doctor.svg)](https://www.npmjs.com/package/@agentcommunity/aid-doctor) | The official CLI tool                  |
-| [`aid-discovery` (Python)](./packages/aid-py/) | _Beta_                                                                                                                                  | The official Python library            |
-| [`aid-go` (Go)](./packages/aid-go/)            | _Beta_                                                                                                                                  | The official Go library                |
+| Package                                        | Version                                                                                                                                 | Description                                    |
+| :--------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------- |
+| **`@agentcommunity/aid`**                      | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid.svg)](https://www.npmjs.com/package/@agentcommunity/aid)               | Core TypeScript library (Node/Browser)         |
+| **`@agentcommunity/aid-doctor`**               | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid-doctor.svg)](https://www.npmjs.com/package/@agentcommunity/aid-doctor) | The official CLI tool                          |
+| **`@agentcommunity/aid-web`**                  | [![Vercel Status](https://img.shields.io/badge/Deployed-Live-green)](https://aid.agentcommunity.org)                                    | Interactive dual-mode workbench & landing page |
+| [`aid-discovery` (Python)](./packages/aid-py/) | _Beta_                                                                                                                                  | The official Python library                    |
+| [`aid-go` (Go)](./packages/aid-go/)            | _Beta_                                                                                                                                  | The official Go library                        |
 
 ## 🏗️ Development
 
@@ -159,6 +185,7 @@ agent-interface-discovery/
 │   ├── aid-doctor/            # CLI tool
 │   ├── aid-py/                # Python library (beta)
 │   ├── aid-go/                # Go library (beta)
+│   ├── web/                   # Interactive web workbench & landing page
 │   └── docs/                  # Specification documents
 ├── tracking/                  # Development progress tracking
 └── ...

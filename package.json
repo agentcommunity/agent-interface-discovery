@@ -2,21 +2,24 @@
   "name": "agent-interface-discovery",
   "private": true,
   "version": "0.0.0",
+  "type": "commonjs",
   "packageManager": "pnpm@8.15.0",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "prepare": "husky install",
+    "one-shot": "eslint --cache --max-warnings 0 .",
+    "lint": "eslint --cache --max-warnings 0 .",
     "format": "prettier --write .",
-    "docs:sync": "turbo run sync:docs",
-    "dev": "turbo run dev --parallel",
-    "clean": "turbo run clean",
     "gen": "tsx scripts/generate-constants.ts",
-    "e2e": "turbo run e2e"
+    "turbo": "turbo run dev --parallel",
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "docs:sync": "turbo run sync:docs",
+    "e2e": "turbo run e2e",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",

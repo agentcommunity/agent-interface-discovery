@@ -9,9 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup PNPM
         uses: pnpm/action-setup@v2
@@ -27,34 +27,41 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Check code generation
-        run: |
-          pnpm gen
-          git diff --exit-code || (echo "Generated code is out of date. Please run 'pnpm gen' and commit the changes." && exit 1)
+      # ---- Static Checks (Phase 1: Code Generation) ---------------------
+      - name: Generate constants
+        run: pnpm gen
 
-      - name: Lint
+      - name: Verify generated code committed
+        run: |
+          git diff --exit-code || \
+          (echo "::error::Generated code is out of date. Run 'pnpm gen' and commit." && exit 1)
+
+      # ---- Build Phase (Critical) ---------------------------------------
+      # Build all packages FIRST. This creates the necessary .js and .d.ts
+      # files in the 'dist' directories that linting and testing depend on.
+      - name: Build All Packages
+        run: pnpm build
+
+      # ---- Static Checks (Phase 2: Linting) -----------------------------
+      # Now that all packages are built, the linter can find the type
+      # declarations and will work correctly.
+      - name: Lint (ESLint flat config)
         run: pnpm lint
 
-      - name: Build
-        run: pnpm build || true # allow missing build tasks early phases
+      # ---- Testing Phase ------------------------------------------------
+      - name: Test (JS/TS)
+        run: pnpm test || true # allow zero tests early on
 
-      - name: Test
-        run: pnpm test || true # allow no tests initially
-
-      # --- Phase 2 additions: cross-lang tests & SBOM ---
-
+      # ---- Cross-Language Checks ----------------------------------------
       - name: Setup Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e './packages/aid-py[dev]' pytest
-
       - name: Test (Python)
-        run: python -m pytest packages/aid-py
+        run: |
+          python -m pip install -e './packages/aid-py[dev]' pytest
+          python -m pytest packages/aid-py
 
       - name: Setup Go 1.22
         uses: actions/setup-go@v5
@@ -69,6 +76,7 @@ jobs:
       - name: E2E Tests
         run: pnpm e2e
 
+      # ---- SBOM ------------------------------------------------------------
       - name: Generate SBOM (CycloneDX)
         uses: CycloneDX/gh-node-module-generatebom@v1
         with:

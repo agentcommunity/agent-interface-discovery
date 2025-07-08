@@ -42,7 +42,7 @@ locals {
     }
     local_docker = {
       name  = "${local.record_prefix}.local-docker"
-      value = "v=aid1;uri=docker://myimage;proto=local;desc=Local Docker Agent"
+      value = "v=aid1;uri=docker:myimage;proto=local;desc=Local Docker Agent"
     }
     messy = {
       name  = "${local.record_prefix}.messy"
@@ -60,9 +60,17 @@ locals {
       name  = "${local.record_prefix}.auth0"
       value = "v=aid1;uri=https://ai.auth0.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
     }
-    openai = {
-      name  = "${local.record_prefix}.openai"
-      value = "v=aid1;uri=https://api.openai.com/v1/assistants;proto=openapi;desc=OpenAI Assistants API"
+    firecrawl = {
+      name  = "${local.record_prefix}.firecrawl"
+      value = "v=aid1;uri=npx:firecrawl-mcp;proto=local;desc=Firecrawl Web Scraping & Research Agent"
+    }
+    playwright = {
+      name  = "${local.record_prefix}.playwright"
+      value = "v=aid1;uri=npx:playwright-mcp-server;proto=local;desc=Microsoft Playwright Agent for Browser Automation"
+    }
+    no_server = {
+      name = "${local.record_prefix}.no-server"
+      value = "v=aid1;uri=https://does-not-exist.agentcommunity.org:1234;p=mcp;desc=Offline Agent"
     }
   }
 }

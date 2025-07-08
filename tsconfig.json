@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "ESNext", // back to the classic pair
     "moduleResolution": "Node",
     "strict": true,
     "exactOptionalPropertyTypes": true,
@@ -10,8 +10,8 @@
     "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "types": []
+    "skipLibCheck": true
   },
-  "include": ["packages/**/*"]
+  "include": ["packages/**/*"],
+  "exclude": ["packages/web"] // 👈 keeps JSX & alias magic out of root build
 }
