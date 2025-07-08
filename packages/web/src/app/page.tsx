@@ -4,6 +4,7 @@ import { Problem } from '@/components/landing/features';
 import { Solution } from '@/components/landing/solution';
 import { Toolkit } from '@/components/landing/showcase';
 import { Vision } from '@/components/landing/vision';
+import { Footer } from '@/components/layout/footer';
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Solution />
       <Toolkit />
       <Vision />
+      <Footer />
     </div>
   );
 }
