@@ -86,7 +86,7 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
       statusText={getStatusText()}
       codeSnippets={getCodeSnippets()}
     >
-      {result && <DiscoveryDetailsView result={result} />}
+      {result && status !== 'success' && <DiscoveryDetailsView result={result} />}
     </ToolCallBlock>
   );
 }

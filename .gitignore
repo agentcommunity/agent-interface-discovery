@@ -73,7 +73,6 @@ dist/
 
 # Gatsby build outputs
 .cache/
-public/
 
 # SvelteKit build outputs
 .svelte-kit/

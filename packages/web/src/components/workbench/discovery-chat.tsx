@@ -3,39 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Send, Bot } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { useChatEngine, type ChatLogMessage } from '@/hooks/use-chat-engine';
 import { DiscoveryToolBlock, ConnectionToolBlock } from '@/components/workbench/tool-blocks';
 import { ToolListSummary } from '@/components/workbench/tool-list-summary';
 import { Typewriter } from '@/components/ui/typewriter';
 import { TitleSection } from '@/components/workbench/title-section';
-
-const EXAMPLE_DOMAINS = [
-  // Test/Demo Examples
-  { domain: 'simple.agentcommunity.org', label: 'Simple', icon: <Bot /> },
-  { domain: 'messy.agentcommunity.org', label: 'Messy', icon: <Bot /> },
-  {
-    domain: 'local-docker.agentcommunity.org',
-    label: 'Local Docker',
-    icon: <Bot />,
-  },
-  {
-    domain: 'multi-string.agentcommunity.org',
-    label: 'Multi String',
-    icon: <Bot />,
-  },
-  // Real-world Examples
-  { domain: 'supabase.agentcommunity.org', label: 'Supabase', icon: '⚡' },
-  { domain: 'auth0.agentcommunity.org', label: 'Auth0', icon: '🔐' },
-  { domain: 'firecrawl.agentcommunity.org', label: 'Firecrawl', icon: '🔥' },
-  { domain: 'playwright.agentcommunity.org', label: 'Playwright', icon: '🎭' },
-  { domain: 'example.invalid', label: 'Not Found', icon: '❌' },
-  {
-    domain: 'no-server.agentcommunity.org',
-    label: 'Offline Agent',
-    icon: '👻',
-  },
-];
+import { ExamplePicker } from './example-picker';
+import { DiscoverySuccessBlock } from './discovery-success-block';
 
 /**
  * Defines the contract for commands sent to the chat engine.
@@ -44,31 +19,6 @@ const EXAMPLE_DOMAINS = [
 type ChatEngineCommand =
   | { type: 'SUBMIT_DOMAIN'; payload: string }
   | { type: 'PROVIDE_AUTH'; payload: string };
-
-function ExampleButtons({
-  onSelect,
-  disabled,
-}: {
-  onSelect: (domain: string) => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2 mb-2 justify-center">
-      {EXAMPLE_DOMAINS.map((ex) => (
-        <Button
-          key={ex.domain}
-          variant="outline"
-          className="flex gap-2 items-center text-sm px-3 py-1 h-auto"
-          onClick={() => onSelect(ex.domain)}
-          disabled={disabled}
-        >
-          <span>{ex.icon}</span>
-          <span className="truncate">{ex.label}</span>
-        </Button>
-      ))}
-    </div>
-  );
-}
 
 function Message({
   message,
@@ -89,6 +39,10 @@ function Message({
         );
       case 'tool_call':
         if (message.toolId === 'discovery') {
+          // Use the new success block for successful discoveries
+          if (message.status === 'success' && message.result?.success) {
+            return <DiscoverySuccessBlock result={message.result} />;
+          }
           return (
             <DiscoveryToolBlock
               status={message.status}
@@ -153,7 +107,7 @@ function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative w-full">
+    <form onSubmit={handleSubmit} className="relative w-full pb-4">
       <div className="flex items-center gap-2 p-2 bg-white rounded-full border border-gray-200 shadow-sm">
         <Input
           ref={inputRef}
@@ -193,28 +147,26 @@ export function DiscoveryChat() {
 
   return (
     <div className="h-full bg-gray-50 flex flex-col">
-      <div className="flex-1 overflow-y-auto pb-32">
-        <div className="max-w-3xl mx-auto px-4">
-          <TitleSection mode="resolver" />
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <TitleSection mode="resolver" />
 
-          {state.messages.length === 0 && (
-            <div className="text-center text-gray-500 pt-8">
-              <p>Enter a domain or select an example below to start.</p>
-            </div>
-          )}
-
-          <div className="mt-8">
-            {state.messages.map((message) => (
-              <Message key={message.id} message={message} dispatch={dispatch} />
-            ))}
-            <div ref={messagesEndRef} />
+        {state.messages.length === 0 && (
+          <div className="text-center text-gray-500 pt-8">
+            <p>Enter a domain or select an example below to start.</p>
           </div>
+        )}
+
+        <div className="max-w-3xl mx-auto w-full">
+          {state.messages.map((message) => (
+            <Message key={message.id} message={message} dispatch={dispatch} />
+          ))}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4">
+      <div className="bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4">
         <div className="max-w-3xl mx-auto px-4 space-y-4">
-          <ExampleButtons onSelect={handleSubmit} disabled={isLoading} />
+          <ExamplePicker variant="buttons" onSelect={handleSubmit} disabled={isLoading} />
           <ChatInput onSubmit={handleSubmit} isLoading={isLoading} autoFocus />
         </div>
       </div>
