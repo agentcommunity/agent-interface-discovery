@@ -48,7 +48,8 @@
     "lint": "eslint src/**/*.ts",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepare": "pnpm build"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

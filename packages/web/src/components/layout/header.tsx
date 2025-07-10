@@ -7,6 +7,7 @@ import { Bot, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
+
 // This function handles the click, updates the URL, and manually fires the event.
 // Moved to the outer scope to fix the 'unicorn/consistent-function-scoping' lint error.
 const handleModeChange = (newMode: 'resolver' | 'generator') => {
@@ -59,6 +60,7 @@ function WorkbenchModeSwitcher() {
 export function Header() {
   const pathname = usePathname();
   const isWorkbench = pathname === '/workbench';
+
 
   const navigation = [
     { name: 'Docs', href: 'https://docs.agentcommunity.org', external: true },

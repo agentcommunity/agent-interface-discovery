@@ -20,21 +20,20 @@ import {
 } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
-// Import the logic and types from your new core package
 import {
   buildTxtRecord,
   validateTxtRecord,
   type AidGeneratorData,
 } from '@agentcommunity/aid-web-generator';
 
-// Import constants that are still UI-related
-import { AUTH_TOKENS } from '@agentcommunity/aid';
+import { AUTH_TOKENS, PROTOCOL_TOKENS } from '@agentcommunity/aid';
 import type { ProtocolToken, AuthToken } from '@agentcommunity/aid';
 
-// Define a type for our local form state using the imported core type
 type FormData = AidGeneratorData;
 
+
 const PROTOCOL_ORDER: ProtocolToken[] = ['mcp', 'a2a', 'openapi', 'local'];
+
 
 function parseExample(example: string): Partial<FormData> {
   const parts = new Map(
@@ -66,18 +65,15 @@ export function GeneratorPanel() {
     domain: 'example.com',
   });
 
-  // Core logic is now delegated to the imported functions
   const txtRecordString = useMemo(() => buildTxtRecord(formData), [formData]);
   const validationResult = useMemo(() => validateTxtRecord(txtRecordString), [txtRecordString]);
 
   const updateField = (field: keyof FormData, value: string) => {
-    // Explicitly type `prev` to fix the implicit 'any' error
     setFormData((prev: FormData) => ({ ...prev, [field]: value }));
   };
 
   const handleExampleSelect = (content: string) => {
     const parsed = parseExample(content);
-    // Explicitly type `prev` to fix the implicit 'any' error
     setFormData((prev: FormData) => ({ ...prev, ...parsed }));
   };
 
@@ -86,6 +82,7 @@ export function GeneratorPanel() {
   const isDescTooLong = descByteLength > 60;
 
   return (
+
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-6">
