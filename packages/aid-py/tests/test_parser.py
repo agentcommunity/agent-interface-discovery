@@ -1,3 +1,8 @@
+# MIT License
+# Copyright (c) 2025 Agent Community
+# Author: Agent Community
+# Repository: https://github.com/agentcommunity/agent-interface-discovery
+
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 

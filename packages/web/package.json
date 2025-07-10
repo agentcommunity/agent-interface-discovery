@@ -2,6 +2,13 @@
   "name": "@agentcommunity/aid-web",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "author": "Agent Community",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentcommunity/agent-interface-discovery.git",
+    "directory": "packages/web"
+  },
   "description": "Web interface for Agent Interface Discovery",
   "engines": {
     "node": ">=18.17"
