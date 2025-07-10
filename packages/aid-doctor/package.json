@@ -47,7 +47,7 @@
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "clean": "rm -rf dist",
-    "prepare": "pnpm build"
+    "prepack": "turbo run build --filter={workspace}"
   },
   "dependencies": {
     "@agentcommunity/aid": "workspace:*",
