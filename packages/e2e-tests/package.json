@@ -3,8 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "description": "End-to-End tests for live showcase AID records",
+  "engines": {
+    "node": ">=18.17"
+  },
   "scripts": {
-    "e2e": "tsx src/e2e.ts"
+    "e2e": "tsx src/e2e.ts",
+    "clean": "rimraf dist"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -40,13 +40,16 @@
     "README.md",
     "LICENSE"
   ],
+  "engines": {
+    "node": ">=18.17"
+  },
   "scripts": {
-    "build": "tsup src/index.ts src/cli.ts --format cjs,esm --dts --clean",
-    "dev": "tsup src/index.ts src/cli.ts --format cjs,esm --dts --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "lint": "eslint src/**/*.ts",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist",
+    "clean": "rimraf dist",
     "prepack": "turbo run build --filter={workspace}"
   },
   "dependencies": {
@@ -61,9 +64,6 @@
     "tsup": "^8.0.0",
     "typescript": "^5.8.0",
     "vitest": "^2.0.0"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "publishConfig": {
     "access": "public"

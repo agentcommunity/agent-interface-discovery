@@ -2,7 +2,18 @@
   "name": "@agentcommunity/aid-go-test-runner",
   "version": "0.0.0",
   "private": true,
+  "description": "Test runner for Go AID implementation",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
   "scripts": {
     "test": "go test -v ./..."
-  }
+  },
+  "keywords": [
+    "aid-go",
+    "test-runner"
+  ]
 }

@@ -42,14 +42,17 @@
     "README.md",
     "LICENSE"
   ],
+  "engines": {
+    "node": ">=18.17"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "lint": "eslint src/**/*.ts",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist",
-    "prepare": "pnpm build"
+    "clean": "rimraf dist",
+    "prepack": "turbo run build --filter={workspace}"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -57,9 +60,6 @@
     "tsup": "^8.0.0",
     "typescript": "^5.8.0",
     "vitest": "^2.0.0"
-  },
-  "engines": {
-    "node": ">=18"
   },
   "publishConfig": {
     "access": "public"

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Web interface for Agent Interface Discovery",
+  "engines": {
+    "node": ">=18.17"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
