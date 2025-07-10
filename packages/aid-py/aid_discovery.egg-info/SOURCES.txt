@@ -10,4 +10,5 @@ aid_py/constants.py
 aid_py/discover.py
 aid_py/parser.py
 tests/test_discover.py
+tests/test_parity.py
 tests/test_parser.py

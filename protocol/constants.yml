@@ -35,13 +35,13 @@ errorCodes:
     description: 'A record was found but is malformed or missing required keys'
   ERR_UNSUPPORTED_PROTO:
     code: 1002
-    message: 'The record is valid, but the client does not support the specified protocol'
+    description: 'The record is valid, but the client does not support the specified protocol'
   ERR_SECURITY:
     code: 1003
-    message: 'Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied)'
+    description: 'Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied)'
   ERR_DNS_LOOKUP_FAILED:
     code: 1004
-    message: 'The DNS query failed for a network-related reason'
+    description: 'The DNS query failed for a network-related reason'
 
 # AID Record structure - required and optional fields
 aidRecord:

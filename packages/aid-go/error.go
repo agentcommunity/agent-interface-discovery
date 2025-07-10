@@ -1,8 +1,8 @@
-package aidgo
+package aid
 
 import "fmt"
 
-// AidError provides richer error context with spec numeric code.
+// AidError represents a standard client error.
 // Implements the error interface.
 
 type AidError struct {
@@ -16,12 +16,20 @@ func (e *AidError) Error() string {
 }
 
 func newAidError(symbol string, msg string) *AidError {
-	codeMap := map[string]int{
-		"ERR_NO_RECORD":         ErrNoRecord,
-		"ERR_INVALID_TXT":       ErrInvalidTXT,
-		"ERR_UNSUPPORTED_PROTO": ErrUnsupportedProto,
-		"ERR_SECURITY":          ErrSecurity,
-		"ERR_DNS_LOOKUP_FAILED": ErrDNSLookupFailed,
+	var code int
+	switch symbol {
+	case "ERR_NO_RECORD":
+		code = ErrNoRecord
+	case "ERR_INVALID_TXT":
+		code = ErrInvalidTxt
+	case "ERR_UNSUPPORTED_PROTO":
+		code = ErrUnsupportedProto
+	case "ERR_SECURITY":
+		code = ErrSecurity
+	case "ERR_DNS_LOOKUP_FAILED":
+		code = ErrDnsLookupFailed
+	default:
+		code = -1 // Unknown error
 	}
-	return &AidError{Symbol: symbol, Code: codeMap[symbol], Msg: msg}
+	return &AidError{Symbol: symbol, Code: code, Msg: msg}
 }

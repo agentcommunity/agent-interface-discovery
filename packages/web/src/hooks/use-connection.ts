@@ -1,28 +1,36 @@
 'use client';
 
 import { useState } from 'react';
+import type { Result } from '@/lib/types/result';
 
-export interface HandshakeResult {
-  success: boolean;
-  /** When the server refused unauthenticated requests */
-  needsAuth?: boolean;
-  /** Whether server returned spec‑compliant WWW‑Authenticate header */
-  compliantAuth?: boolean;
-  /** URI for OAuth metadata doc */
-  metadataUri?: string;
-  /** Raw metadata fetched from metadataUri */
-  metadata?: unknown;
-  data?: {
-    protocolVersion: string;
-    serverInfo: { name: string; version: string };
-    capabilities: { id: string; type: 'tool' | 'resource' }[];
-  };
-  error?: string;
+export interface HandshakeSuccessData {
+  protocolVersion: string;
+  serverInfo: { name: string; version: string };
+  capabilities: { id: string; type: 'tool' | 'resource' }[];
 }
 
+/**
+ * Custom error used when the handshake indicates authentication is required.
+ */
+export class AuthRequiredError extends Error {
+  readonly needsAuth = true;
+  constructor(
+    message: string,
+    public readonly compliantAuth?: boolean,
+    public readonly metadataUri?: string,
+    public readonly metadata?: unknown,
+  ) {
+    super(message);
+    this.name = 'AuthRequiredError';
+  }
+}
+
+export type HandshakeResult = Result<HandshakeSuccessData, Error | AuthRequiredError>;
+
+// TEMPORARY alias for incremental migration.
+export type LegacyHandshakeResult = HandshakeResult;
+
 interface ExecuteOptions {
-  /** Mock handshake response for Storybook / tests */
-  mockData?: HandshakeResult;
   /** Bearer token for authenticated handshake */
   auth?: { bearer: string };
 }
@@ -37,20 +45,8 @@ export function useConnection() {
 
   const execute = async (uri: string, options?: ExecuteOptions): Promise<HandshakeResult> => {
     setStatus('running');
-
     // ────────────────────────────────────────
-    // 1. Mock path (useful in Storybook / tests)
-    // ────────────────────────────────────────
-    if (options?.mockData) {
-      await new Promise((r) => setTimeout(r, 600 + Math.random() * 300));
-      const data: HandshakeResult = options.mockData;
-      setResult(data);
-      setStatus(data.success ? 'success' : 'error');
-      return data;
-    }
-
-    // ────────────────────────────────────────
-    // 2. Real network request
+    // Real network request
     // ────────────────────────────────────────
     try {
       const response = await fetch('/api/handshake', {
@@ -59,29 +55,44 @@ export function useConnection() {
         body: JSON.stringify({ uri, ...(options?.auth ? { auth: options.auth } : {}) }),
       });
 
-      let data: HandshakeResult = (await response.json()) as HandshakeResult;
+      const raw = (await response.json()) as {
+        success: boolean;
+        needsAuth?: boolean;
+        compliantAuth?: boolean;
+        metadataUri?: string;
+        metadata?: unknown;
+        data?: HandshakeSuccessData;
+        error?: string;
+      };
 
-      // Fetch additional OAuth metadata for richer UX (optional)
-      if (data.needsAuth && data.compliantAuth && typeof data.metadataUri === 'string') {
-        try {
-          const metaResp = await fetch(data.metadataUri, { method: 'GET' });
-          if (metaResp.ok) {
-            const metaJson = (await metaResp.json()) as unknown;
-            data = { ...data, metadata: metaJson };
-          }
-        } catch {
-          /* swallow metadata fetch errors; they are non‑critical */
-        }
+      if (raw.success && raw.data) {
+        const okResult: HandshakeResult = { ok: true, value: raw.data };
+        setResult(okResult);
+        setStatus('success');
+        return okResult;
       }
 
-      setResult(data);
-      setStatus(data.success ? 'success' : 'error');
-      return data;
+      if (raw.needsAuth) {
+        const authErr = new AuthRequiredError(
+          'Authentication required',
+          raw.compliantAuth,
+          raw.metadataUri,
+          raw.metadata,
+        );
+        const errResult: HandshakeResult = { ok: false, error: authErr };
+        setResult(errResult);
+        setStatus('error');
+        return errResult;
+      }
+
+      const genericErr = new Error(raw.error || 'Handshake failed');
+      const errResult: HandshakeResult = { ok: false, error: genericErr };
+      setResult(errResult);
+      setStatus('error');
+      return errResult;
     } catch (error) {
-      const errorResult: HandshakeResult = {
-        success: false,
-        error: error instanceof Error ? error.message : 'Network request failed',
-      };
+      const err: Error = error instanceof Error ? error : new Error('Network request failed');
+      const errorResult: HandshakeResult = { ok: false, error: err };
       setResult(errorResult);
       setStatus('error');
       return errorResult;

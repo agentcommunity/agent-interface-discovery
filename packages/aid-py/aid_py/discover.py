@@ -38,8 +38,10 @@ def _query_txt_record(fqdn: str, timeout: float) -> Tuple[list[str], int]:
 DNS_TTL_DEFAULT = 300  # fallback
 
 
-def discover(domain: str, *, timeout: float = 5.0) -> Tuple[dict, int]:
+def discover(domain: str, *, protocol: str | None = None, timeout: float = 5.0) -> Tuple[dict, int]:
     """Discover and validate the AID record for *domain*.
+
+    Can optionally try a protocol-specific subdomain first.
 
     Returns a tuple `(record_dict, ttl_seconds)`.
     Raises `AidError` on any failure as per the specification.
@@ -53,21 +55,35 @@ def discover(domain: str, *, timeout: float = 5.0) -> Tuple[dict, int]:
     except Exception:
         domain_alabel = domain  # Fallback – let DNS resolver handle errors
 
-    fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
+    def _query_and_parse(query_name: str) -> Tuple[dict, int]:
+        """Query a specific FQDN and parse the result."""
+        txt_records, ttl = _query_txt_record(query_name, timeout)
 
-    txt_records, ttl = _query_txt_record(fqdn, timeout)
+        last_error: AidError | None = None
+        for txt in txt_records:
+            try:
+                record = parse(txt)
+                return record, ttl
+            except AidError as exc:
+                # Save and try the next TXT string (if multiple records exist)
+                last_error = exc
+                continue
 
-    last_error: AidError | None = None
-    for txt in txt_records:
+        # If we got here, either no records or all invalid
+        if last_error is not None:
+            raise last_error
+        raise AidError("ERR_NO_RECORD", f"No valid _agent TXT record found for {query_name}")
+
+    # Try protocol-specific subdomain first if specified
+    if protocol:
+        protocol_fqdn = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
         try:
-            record = parse(txt)
-            return record, ttl
+            return _query_and_parse(protocol_fqdn)
         except AidError as exc:
-            # Save and try the next TXT string (if multiple records exist)
-            last_error = exc
-            continue
+            if exc.error_code != "ERR_NO_RECORD":
+                raise exc
+            # else: fall through to base domain query
 
-    # If we got here, either no records or all invalid
-    if last_error is not None:
-        raise last_error
-    raise AidError("ERR_NO_RECORD", "No valid _agent TXT record found") 
+    # Fallback or default: query the base _agent subdomain
+    base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
+    return _query_and_parse(base_fqdn) 

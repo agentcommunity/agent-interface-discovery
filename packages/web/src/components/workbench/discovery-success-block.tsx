@@ -6,6 +6,7 @@ import Confetti from 'react-confetti';
 import { CheckCircle2, Globe, Key, Tag, Info, Link as LinkIcon, Server } from 'lucide-react';
 import { type DiscoveryResult } from '@/hooks/use-discovery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { isOk } from '@/lib/types/result';
 
 interface DetailRowProps {
   Icon: React.ElementType;
@@ -37,10 +38,11 @@ const DetailRow: React.FC<DetailRowProps> = ({ Icon, label, value, isCode }) => 
 export const DiscoverySuccessBlock: React.FC<{ result: DiscoveryResult }> = ({ result }) => {
   const { width, height } = useWindowSize();
 
-  // The component should not render if discovery was not successful or data is missing.
-  if (!result.success || !result.data) return null;
+  if (!isOk(result)) {
+    return null;
+  }
 
-  const { data, metadata } = result;
+  const { record, metadata } = result.value;
 
   return (
     <>
@@ -61,11 +63,11 @@ export const DiscoverySuccessBlock: React.FC<{ result: DiscoveryResult }> = ({ r
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <DetailRow Icon={Info} label="Description" value={data.desc} />
-          <DetailRow Icon={LinkIcon} label="URI" value={data.uri} isCode />
-          <DetailRow Icon={Server} label="Host" value={`${data.host}:${data.port}`} isCode />
-          <DetailRow Icon={Tag} label="Protocol" value={data.protocol} isCode />
-          <DetailRow Icon={Key} label="Authentication" value={data.auth} isCode />
+          <DetailRow Icon={Info} label="Description" value={record.desc} />
+          <DetailRow Icon={LinkIcon} label="URI" value={record.uri} isCode />
+          <DetailRow Icon={Server} label="Host" value={`${record.host}:${record.port}`} isCode />
+          <DetailRow Icon={Tag} label="Protocol" value={record.protocol} isCode />
+          <DetailRow Icon={Key} label="Authentication" value={record.auth} isCode />
           <hr className="my-2 border-green-200" />
           <DetailRow Icon={Globe} label="DNS Query" value={metadata?.dnsQuery} isCode />
           <DetailRow Icon={Key} label="Full TXT Record" value={metadata?.txtRecord} isCode />

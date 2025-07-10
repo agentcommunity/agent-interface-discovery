@@ -3,32 +3,37 @@
 import { useState } from 'react';
 // Import the browser-specific discovery function and types
 import { discover, AidError, type AidRecord } from '@agentcommunity/aid/browser';
+import type { Result } from '@/lib/types/result';
 
 /** Shape of the successful TXT payload parsed and formatted by the hook for the UI. */
 export interface DiscoveryData extends AidRecord {
   host: string;
   port: number;
+  /** The connection protocol (e.g., mcp, custom). */
+  protocol?: string;
+  /** Optional extra fields that may be present in TXT record (e.g., protocol). */
+  [key: string]: unknown;
 }
 
-/** The result shape that the UI components expect. */
-export interface DiscoveryResult {
-  success: boolean;
-  data?: DiscoveryData;
-  error?: string;
-  metadata?: {
-    dnsQuery: string;
-    lookupTime: number;
-    recordType: 'TXT'; // Always TXT for AID
-    source: 'DNS-over-HTTPS'; // Always DoH in the browser
-    txtRecord?: string; // The raw record string, available only on success
-  };
+/**
+ * Represents additional metadata we want to expose alongside a successful discovery.
+ * We keep it separate from DiscoveryData so consumers can choose whether they need
+ * the parsed record or the diagnostic details.
+ */
+export interface DiscoveryMetadata {
+  dnsQuery: string;
+  lookupTime: number;
+  recordType: 'TXT';
+  source: 'DNS-over-HTTPS' | 'DNS';
+  txtRecord?: string;
 }
 
-/** Options accepted by the `execute` function. */
-interface ExecuteOptions {
-  /** Supply a canned response for Storybook / tests. */
-  mockData?: DiscoveryResult;
-}
+/** The new result type using the generic Result union. */
+export type DiscoveryResult = Result<{ record: DiscoveryData; metadata: DiscoveryMetadata }, Error>;
+
+// TEMPORARY backward-compat alias so that legacy imports compile during migration.
+// FIXME: remove after all call-sites adopt Result pattern.
+export type LegacyDiscoveryResult = DiscoveryResult;
 
 /**
  * React hook for performing client-side AID DNS discovery.
@@ -37,17 +42,8 @@ export function useDiscovery() {
   const [status, setStatus] = useState<'pending' | 'running' | 'success' | 'error'>('pending');
   const [result, setResult] = useState<DiscoveryResult | null>(null);
 
-  const execute = async (domain: string, options?: ExecuteOptions): Promise<DiscoveryResult> => {
+  const execute = async (domain: string): Promise<DiscoveryResult> => {
     setStatus('running');
-
-    if (options?.mockData) {
-      // Mock path remains unchanged
-      await new Promise((r) => setTimeout(r, 800 + Math.random() * 400));
-      const data: DiscoveryResult = options.mockData;
-      setResult(data);
-      setStatus(data.success ? 'success' : 'error');
-      return data;
-    }
 
     const startTime = Date.now();
     try {
@@ -65,18 +61,20 @@ export function useDiscovery() {
 
       // Format the successful result into the shape our UI expects
       const successResult: DiscoveryResult = {
-        success: true,
-        data: {
-          ...libResult.record,
-          host: resultUri.hostname,
-          port: resultUri.port ? Number.parseInt(resultUri.port, 10) : 443,
-        },
-        metadata: {
-          dnsQuery: libResult.queryName,
-          lookupTime,
-          recordType: 'TXT',
-          source: 'DNS-over-HTTPS',
-          txtRecord: reconstructedTxt,
+        ok: true,
+        value: {
+          record: {
+            ...libResult.record,
+            host: resultUri.hostname,
+            port: resultUri.port ? Number.parseInt(resultUri.port, 10) : 443,
+          },
+          metadata: {
+            dnsQuery: libResult.queryName,
+            lookupTime,
+            recordType: 'TXT',
+            source: 'DNS-over-HTTPS',
+            txtRecord: reconstructedTxt,
+          },
         },
       };
 
@@ -84,27 +82,16 @@ export function useDiscovery() {
       setStatus('success');
       return successResult;
     } catch (error) {
-      const lookupTime = Date.now() - startTime;
-      let errorMessage = 'An unknown discovery error occurred.';
-
-      // Handle specific AidError instances for better feedback
-      if (error instanceof AidError) {
-        errorMessage = error.message;
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
+      const err: Error =
+        error instanceof AidError
+          ? error
+          : (error instanceof Error
+            ? error
+            : new Error('Unknown discovery error'));
 
       const errorResult: DiscoveryResult = {
-        success: false,
-        error: errorMessage,
-        metadata: {
-          dnsQuery: domain,
-          lookupTime,
-          recordType: 'TXT',
-          source: 'DNS-over-HTTPS',
-          // We cannot get the raw TXT record on failure from the browser library.
-          txtRecord: undefined,
-        },
+        ok: false,
+        error: err,
       };
 
       setResult(errorResult);

@@ -1,4 +1,4 @@
-package aidgo
+package aid
 
 import (
 	"encoding/json"
@@ -84,7 +84,7 @@ func ValidateRecord(raw map[string]string) (AidRecord, error) {
 		}
 		scheme := schemeSplit[0]
 		allowed := false
-		for _, s := range LocalURISchemes {
+		for _, s := range LocalUriSchemes {
 			if s == scheme {
 				allowed = true
 				break

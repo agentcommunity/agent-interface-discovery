@@ -1,6 +1,6 @@
-package aidgo
+package aid
 
-// AidRecord represents a validated AID TXT record.
+// AidRecord holds the parsed key-value pairs from a TXT record.
 type AidRecord struct {
 	V     string `json:"v"`
 	URI   string `json:"uri"`

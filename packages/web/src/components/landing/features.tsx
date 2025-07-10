@@ -24,7 +24,7 @@ const problems = [
     icon: Settings,
     title: 'No Discovery Standard',
     description:
-      "There's no universal way to find agent capabilities. Each provider invents their own discovery method.",
+      'There&apos;s no universal way to find agent capabilities. Each provider invents their own discovery method.',
   },
 ];
 
@@ -38,7 +38,7 @@ export function Problem() {
               The AI Integration Problem
             </h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
-              Connecting to AI agents shouldn't require a PhD in API archaeology
+              Connecting to AI agents shouldn&apos;t require a PhD in API archaeology
             </p>
           </div>
 
