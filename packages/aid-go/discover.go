@@ -1,4 +1,4 @@
-package aidgo
+package aid
 
 import (
 	"context"
@@ -17,7 +17,7 @@ var lookupTXT = net.DefaultResolver.LookupTXT
 func Discover(domain string, timeout time.Duration) (AidRecord, uint32, error) {
 	// IDN → A-label
 	alabel, _ := idna.ToASCII(domain)
-	fqdn := strings.TrimSuffix(DNSSubdomain+"."+alabel, ".")
+	fqdn := strings.TrimSuffix(DnsSubdomain+"."+alabel, ".")
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

@@ -101,6 +101,7 @@ Client implementations **SHOULD** use these codes to report specific failure mod
 | `1001` | `ERR_INVALID_TXT`       | A record was found but is malformed or missing required keys.                             |
 | `1002` | `ERR_UNSUPPORTED_PROTO` | The record is valid, but the client does not support the specified protocol.              |
 | `1003` | `ERR_SECURITY`          | Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied). |
+| `1004` | `ERR_DNS_LOOKUP_FAILED` | The DNS query failed for a network-related reason.                                        |
 
 ### **2.4. Exposing Multiple Protocols (Non-Normative Guidance)**
 
@@ -194,6 +195,7 @@ For cross-language SDK consistency, clients **SHOULD** use these numeric constan
 | `ERR_INVALID_TXT`       | `1001` |
 | `ERR_UNSUPPORTED_PROTO` | `1002` |
 | `ERR_SECURITY`          | `1003` |
+| `ERR_DNS_LOOKUP_FAILED` | `1004` |
 
 ## **References**
 

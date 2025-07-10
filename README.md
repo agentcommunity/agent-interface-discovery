@@ -1,200 +1,220 @@
 # Agent Interface Discovery (AID)
 
-> **DNS for Agents** — Type a domain. Connect to its agent. Instantly.
-
-[![Build Status](https://github.com/agent-community/agent-interface-discovery/actions/workflows/ci.yml/badge.svg)](https://github.com/agent-community/agent-interface-discovery/actions)
-[![npm version](https://img.shields.io/npm/v/@agentcommunity/aid.svg)](https://www.npmjs.com/package/@agentcommunity/aid)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<div align="center">
+  <p><strong>DNS for Agents: Type a domain. Connect to its agent. Instantly.</strong></p>
+  <p>
+    <a href="https://github.com/agent-community/agent-interface-discovery/actions/workflows/ci.yml">
+      <img src="https://github.com/agent-community/agent-interface-discovery/actions/workflows/ci.yml/badge.svg" alt="Build Status" />
+    </a>
+    <a href="https://www.npmjs.com/package/@agentcommunity/aid">
+      <img src="https://img.shields.io/npm/v/@agentcommunity/aid.svg?color=blue" alt="npm version" />
+    </a>
+    <a href="https://pypi.org/project/aid-discovery/">
+      <img src="https://img.shields.io/pypi/v/aid-discovery.svg?color=blue" alt="PyPI version" />
+    </a>
+    <a href="https://github.com/agent-community/agent-interface-discovery/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+    </a>
+    <a href="https://github.com/orgs/agentcommunity/discussions">
+      <img src="https://img.shields.io/badge/Community-Discussions-purple" alt="GitHub Discussions" />
+    </a>
+  </p>
+</div>
 
 AID is a minimal, open standard that answers one question: **"Given a domain name, where is its AI agent?"**
 
-It uses a single DNS `TXT` record to make any agent service—whether it speaks MCP, A2A, or another protocol—instantly discoverable. No more digging through docs, no more manual configuration.
+It uses a single DNS `TXT` record to make any agent service—whether it speaks MCP, A2A, or another protocol—instantly discoverable. No more digging through API docs, no more manual configuration.
 
-## ✨ The Magic
+## How It Works
 
-```bash
-# A user wants to use Supabase's agent. They only know the domain.
-$ npx @agentcommunity/aid-doctor check supabase.agentcommunity.org
+AID establishes a well-known location for agent discovery. The process is simple, secure, and built on the backbone of the internet.
 
-✅ AID Record Found for _agent.supabase.agentcommunity.org
-   Protocol:    mcp
-   URI:         https://api.supabase.com/mcp
-   Auth Hint:   pat
-   Description: (Community Showcase)
+```mermaid
+graph TD
+    A[Client Application] -- 1. discover('example.com') --> B{DNS Resolver};
+    B -- 2. Query TXT record for '_agent.example.com' --> C[DNS Server];
+    C -- 3. Return TXT Record --> B;
+    B -- 4. 'v=aid1;uri=https://...;p=mcp' --> A;
+    A -- 5. Parse record & connect Agent--> D[Agent at https://...];
 ```
 
-**Zero configuration. Universal compatibility. Just DNS.**
+## Guiding Principles
 
-## 🎯 Why AID?
+- **Decentralized & Open:** No central registry, no vendor lock-in. If you control a domain, you can publish an AID record.
+- **Contract-First:** A language-agnostic [YAML file](./protocol/constants.yml) is the single source of truth for all protocol constants, ensuring cross-language consistency.
+- **Protocol-Agnostic:** Discover agents speaking MCP, A2A, OpenAPI, or even local protocols running in Docker.
+- **Idiomatic Libraries:** Core libraries are hand-written in each language for the best developer experience, with constants generated automatically.
 
-- **🌐 For Providers:** Make your agent instantly discoverable with one DNS record.
-- **⚡ For Client Devs:** Write one discovery function, not ten. Support any AID-compliant agent out of the box.
-- **🤝 For the Ecosystem:** A simple, open, and decentralized standard for a truly interoperable agent web. No central registry, no lock-in.
+## Getting Started
 
-## 🚀 Quick Start
+### Key Resources
 
-### Use the CLI (`aid-doctor`)
+| Resource                   | Link                                                                   | Description                                                                    |
+| :------------------------- | :--------------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| **Interactive Workbench**  | **[aid.agentcommunity.org](https://aid.agentcommunity.org)**           | The best way to see the protocol in action with a live resolver and generator. |
+| **Official Documentation** | **[docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)** | Read the full specification, guides, and API reference.                        |
+| **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check any domain's AID record from your terminal.          |
 
-The quickest way to check any domain's AID record.
+### Using the Libraries
 
-```bash
-npm install -g @agentcommunity/aid-doctor
-aid-doctor check example.com
-```
+Build AID-aware clients in your favorite language.
 
-### Use the Library (`@agentcommunity/aid`)
-
-The core library for building AID-aware clients.
+<details>
+<summary><strong>TypeScript (Node.js & Browser)</strong></summary>
 
 ```bash
 pnpm add @agentcommunity/aid
 ```
 
-**Node.js usage:**
+**Node.js (uses native DNS):**
 
 ```typescript
 import { discover, AidError } from '@agentcommunity/aid';
 
-try {
-  // Discover any agent by domain
-  const { record, ttl } = await discover('supabase.agentcommunity.org');
-  console.log(`Found ${record.proto} agent at ${record.uri}`);
-  console.log(`Record TTL: ${ttl} seconds`);
-  //=> Found mcp agent at https://api.supabase.com/mcp
-  //=> Record TTL: 60 seconds
-} catch (error) {
-  if (error instanceof AidError) {
-    // Handle specific errors like NoRecordFound, InvalidRecord, etc.
-    console.error(`AID Error (${error.code}): ${error.message}`);
-  }
-}
+const { record, ttl } = await discover('supabase.agentcommunity.org');
+console.log(`Found ${record.proto} agent at ${record.uri} (TTL: ${ttl}s)`);
+//=> Found mcp agent at https://api.supabase.com/mcp (TTL: 60s)
 ```
 
-**Browser usage:**
+**Browser (uses DNS-over-HTTPS):**
 
 ```typescript
-import { discover, AidError } from '@agentcommunity/aid/browser';
+import { discover } from '@agentcommunity/aid/browser';
 
-try {
-  // Uses DNS-over-HTTPS for browser compatibility
-  const { record } = await discover('supabase.agentcommunity.org');
-  console.log(`Found ${record.proto} agent at ${record.uri}`);
-} catch (error) {
-  if (error instanceof AidError) {
-    console.error(`AID Error (${error.code}): ${error.message}`);
-  }
+const { record } = await discover('supabase.agentcommunity.org');
+console.log(`Found ${record.proto} agent at ${record.uri}`);
+```
+
+</details>
+
+<details>
+<summary><strong>Python</strong></summary>
+
+```bash
+pip install aid-discovery
+```
+
+```python
+from aid_py import discover, AidError
+
+try:
+    result = discover("supabase.agentcommunity.org")
+    print(f"Found {result.record.proto} agent at {result.record.uri}")
+    #=> Found mcp agent at https://api.supabase.com/mcp
+except AidError as e:
+    print(f"AID Error ({e.code}): {e}")
+```
+
+</details>
+
+<details>
+<summary><strong>Go</strong></summary>
+
+```bash
+go get -u github.com/agentcommunity/agent-interface-discovery/aid-go
+```
+
+```go
+import (
+	"fmt"
+	"log"
+	"github.com/agentcommunity/agent-interface-discovery/aid-go"
+)
+
+func main() {
+	result, err := aid.Discover("supabase.agentcommunity.org")
+	if err != nil {
+		log.Fatalf("AID Error: %v", err)
+	}
+	fmt.Printf("Found %s agent at %s (TTL: %d)\n", result.Record.Proto, result.Record.URI, result.TTL)
+    //=> Found mcp agent at https://api.supabase.com/mcp (TTL: 60)
 }
 ```
 
-### Try the Interactive Workbench
+</details>
 
-Experience AID in your browser with our dual-mode interactive workbench:
+## Monorepo Overview
 
-**🌐 [aid.agentcommunity.org](https://aid.agentcommunity.org)**
+This repository uses a PNPM/Turborepo monorepo structure. It contains the full suite of libraries, tools, and documentation for the AID standard.
 
-#### **Resolver Mode** ([/workbench](https://aid.agentcommunity.org/workbench))
+### Packages
 
-- **Instant Discovery**: Test any domain's AID record in real-time
-- **Live Examples**: Explore showcase agents from Supabase, Auth0, and more
-- **Protocol Testing**: Validate actual connections with security warnings
-- **Copy-Paste Ready**: Get code snippets for your favorite language
-- **Live Handshake Testing:** Performs real MCP `initialize` requests for supported showcase domains, surfacing actual capability lists or detailed error diagnostics
-- **Auth-aware handshake:** Detects spec-compliant servers (shows OAuth metadata) or gracefully falls back to PAT prompt for legacy endpoints
-
-#### **Generator Mode** ([/workbench#generator](https://aid.agentcommunity.org/workbench#generator))
-
-- **Interactive TXT Record Creator**: Build valid AID records with a guided form interface
-- **Live Validation**: Real-time spec compliance checking using the core AID library
-- **Protocol Selection**: Choose from MCP, A2A, OpenAPI, or local execution protocols
-- **Copy-to-Clipboard**: Generate and copy DNS-ready TXT record strings
-- **Spec Compliance**: 100% validation accuracy with detailed error feedback
-
-Perfect for developers who want to see AID in action before integrating it into their projects.
-
-## 📖 How It Works
-
-AID uses a well-known DNS `TXT` record at `_agent.<domain>`.
-
-```dns
-_agent.supabase.agentcommunity.org. 60 IN TXT "v=aid1;uri=https://api.supabase.com/mcp;proto=mcp;auth=pat;desc=(Community Showcase)"
-```
-
-The client queries this record, parses the `key=value` pairs, and uses the `uri` to connect. That's it. For full details, see the [**Full Specification**](./packages/docs/specification.md).
-
-### Supported Protocols
-
-The `proto` key (aliased as `p`) tells the client what language to speak.
-
-| Token     | Protocol                | Description                                 |
-| :-------- | :---------------------- | :------------------------------------------ |
-| `mcp`     | Model Context Protocol  | Rich, stateful agent communication          |
-| `a2a`     | Agent-to-Agent Protocol | Inter-agent communication standard          |
-| `openapi` | OpenAPI Specification   | A REST API described by an OpenAPI document |
-| `local`   | Local Execution         | Run an agent via Docker, NPX, or Pip        |
-
-A full, community-maintained list is available at the [**Token Registry**](https://github.com/agentcommunity/aid-tokens).
-
-## 📦 Packages in This Monorepo
-
-| Package                                        | Version                                                                                                                                 | Description                                    |
-| :--------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------- |
-| **`@agentcommunity/aid`**                      | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid.svg)](https://www.npmjs.com/package/@agentcommunity/aid)               | Core TypeScript library (Node/Browser)         |
-| **`@agentcommunity/aid-doctor`**               | [![npm version](https://img.shields.io/npm/v/@agentcommunity/aid-doctor.svg)](https://www.npmjs.com/package/@agentcommunity/aid-doctor) | The official CLI tool                          |
-| **`@agentcommunity/aid-web`**                  | [![Vercel Status](https://img.shields.io/badge/Deployed-Live-green)](https://aid.agentcommunity.org)                                    | Interactive dual-mode workbench & landing page |
-| [`aid-discovery` (Python)](./packages/aid-py/) | _Beta_                                                                                                                                  | The official Python library                    |
-| [`aid-go` (Go)](./packages/aid-go/)            | _Beta_                                                                                                                                  | The official Go library                        |
-
-## 🏗️ Development
-
-This project is a PNPM/Turborepo monorepo with a comprehensive test suite and CI pipeline.
-
-```bash
-# Clone and install
-git clone https://github.com/agentcommunity/agent-interface-discovery.git
-cd agent-interface-discovery
-pnpm install
-
-# Generate constants from the YAML contract
-pnpm gen
-
-# Build all packages (includes Node.js + browser bundles)
-pnpm build
-
-# Run all tests (across all languages)
-pnpm test           # Node/TypeScript tests
-python -m pytest    # Python tests
-cd packages/aid-go && go test ./...
-
-# Lint all code
-pnpm lint
-
-# Run end-to-end tests against live showcase records
-pnpm e2e
-```
+| Package                                                                                                  | Status  | Description                                                       |
+| :------------------------------------------------------------------------------------------------------- | :------ | :---------------------------------------------------------------- |
+| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                             | Public  | Core TypeScript library for Node.js and Browsers                  |
+| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)               | Public  | Official CLI for checking and validating AID records              |
+| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                    | Public  | Official Python library                                           |
+| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)              | Public  | Official Go library                                               |
+| [**@agentcommunity/aid-web-generator**](https://www.npmjs.com/package/@agentcommunity/aid-web-generator) | Public  | Reusable JS library for building and validating AID TXT records   |
+| [**@agentcommunity/aid-web**](./packages/web)                                                            | Public  | The Next.js app for the website and workbench                     |
+| **@agentcommunity/e2e-tests**                                                                            | Private | E2E tests validating our live showcase domains                    |
+| **(test runners)**                                                                                       | Private | Internal packages for orchestrating Python and Go tests via Turbo |
 
 ### Project Structure
 
 ```
 agent-interface-discovery/
-├── protocol/
-│   └── constants.yml          # Single source of truth for protocol constants
-├── scripts/
-│   └── generate-constants.ts  # Code generation script
+├── protocol/                  # Protocol constants (YAML source of truth)
+├── scripts/                   # Code generation and utility scripts
 ├── packages/
 │   ├── aid/                   # Core TypeScript library (Node.js + Browser)
 │   ├── aid-doctor/            # CLI tool
-│   ├── aid-py/                # Python library (beta)
-│   ├── aid-go/                # Go library (beta)
-│   ├── web/                   # Interactive web workbench & landing page
-│   └── docs/                  # Specification documents
-├── tracking/                  # Development progress tracking
+│   ├── aid-py/                # Python library
+│   ├── aid-go/                # Go library
+│   ├── aid-web/               # Next.js web workbench
+│   ├── aid-web-generator/     # Shared record generation/validation logic
+│   ├── e2e-tests/             # End-to-end tests
+│   └── (test-runners)/        # Internal test runners for Go/Python
+├── docs/
+│   ├── development/           # Progress journal (PHASE_*.md), TODOs, dev notes
+│   └── ...                    # Specification and other documentation
 └── ...
 ```
 
-## 🤝 Contributing
+## Development
 
-We welcome contributions! Please see our **[Contributing Guide](./CONTRIBUTING.md)** and the **[spec contribution process](./docs/CONTRIBUTING-spec.md)** for details. All community interaction is governed by our **[Code of Conduct](./CODE_OF_CONDUCT.md)**.
+**Prerequisites:** Node.js (v18+), PNPM (v9+)
 
-## 📄 License
+```bash
+# 1. Clone the repository
+git clone https://github.com/agentcommunity/agent-interface-discovery.git
+cd agent-interface-discovery
+
+# 2. Install dependencies
+pnpm install
+```
+
+### Core Monorepo Scripts
+
+Thanks to Turborepo, you can run all commands from the root directory.
+
+| Command      | Description                                                      |
+| :----------- | :--------------------------------------------------------------- |
+| `pnpm dev`   | Start all packages in development/watch mode.                    |
+| `pnpm build` | Build all packages for production.                               |
+| `pnpm test`  | Run the entire test suite across all languages (TS, Python, Go). |
+| `pnpm lint`  | Lint and format all code.                                        |
+| `pnpm e2e`   | Run end-to-end tests against the live showcase records.          |
+| `pnpm gen`   | Regenerate constant files from the YAML contract.                |
+| `pnpm clean` | Remove all build artifacts (`dist`, `.turbo`, etc.).             |
+
+### The Contract-First Workflow
+
+The single source of truth for all protocol constants is `protocol/constants.yml`. To update them across all language packages, follow this process:
+
+1.  **Edit the YAML file:** Make your changes in `protocol/constants.yml`.
+2.  **Run the generator:** This command reads the YAML and updates the corresponding files in the TS, Go, and Python packages.
+    ```bash
+    pnpm gen
+    ```
+3.  **Verify and commit:** Run the full test suite (`pnpm test`) and commit the changes to `protocol/constants.yml` along with all the newly generated files. The CI pipeline will fail if they are not in sync.
+
+## Community & Support
+
+- For questions, ideas, and support, join our **[GitHub Discussions](https://github.com/orgs/agentcommunity/discussions)**.
+- Chat with us on **[Discord](https://discord.gg/S5XqVHrj)**.
+- To contribute, please see our **[Contributing Guide](./CONTRIBUTING.md)** and **[Code of Conduct](./CODE_OF_CONDUCT.md)**.
+
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.

@@ -1,22 +1,42 @@
 import React from 'react';
 import { Search, Plug } from 'lucide-react';
 import { ToolCallBlock } from './tool-call-block';
-import { type DiscoveryResult } from '@/hooks/use-discovery';
-import { type HandshakeResult } from '@/hooks/use-connection';
+import type { DiscoveryResult } from '@/hooks/use-discovery';
+import type { HandshakeResult } from '@/hooks/use-connection';
+import { DiscoverySuccessBlock } from './discovery-success-block';
+import { ToolListSummary } from './tool-list-summary';
+import type { ChatLogMessage } from '@/hooks/use-chat-engine';
+
+// --- Removed legacy type definitions ---
 
 type ToolStatus = 'running' | 'success' | 'error' | 'needs_auth';
 
 interface DiscoveryToolBlockProps {
   status: ToolStatus;
-  result: DiscoveryResult | null;
+  result?: DiscoveryResult | null;
   domain: string;
 }
 
 interface ConnectionToolBlockProps {
   status: ToolStatus;
-  result: HandshakeResult | null;
+  result?: HandshakeResult | null;
   discoveryResult?: DiscoveryResult | null;
   onProvideAuth?: (token: string) => void;
+}
+
+// Type for error with metadata
+interface ErrorWithMetadata {
+  message?: string;
+  metadata?: {
+    lookupTime?: number;
+  };
+}
+
+// Type for auth error
+interface AuthError {
+  message?: string;
+  compliantAuth?: boolean;
+  metadata?: Record<string, unknown>;
 }
 
 export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBlockProps) {
@@ -28,17 +48,16 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
       },
     ];
 
-    // Add result snippets based on status and result
     if (status === 'success' || status === 'error') {
-      if (result?.metadata?.txtRecord) {
+      if (result?.ok && result.value?.metadata?.txtRecord) {
         snippets.push({
           title: 'Found TXT Record',
-          code: result.metadata.txtRecord,
+          code: result.value.metadata.txtRecord,
         });
       }
 
-      if (result?.data) {
-        const data = result.data;
+      if (result?.ok && result.value?.record) {
+        const data = result.value.record;
         const parsedRecord = [
           `Version: ${data.v}`,
           `URI: ${data.uri}`,
@@ -54,10 +73,14 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
           title: 'Parsed Agent Record',
           code: parsedRecord,
         });
-      } else if (result?.error) {
+      } else if (result && !result.ok && result.error) {
+        // error case - properly type the error
+        const lookupTime = (result.error as ErrorWithMetadata)?.metadata?.lookupTime ?? 'N/A';
+        const errorMessage = (result.error as ErrorWithMetadata)?.message || 'Unknown error';
+
         snippets.push({
           title: 'Error Details',
-          code: `Error: ${result.error}\nLookup time: ${result.metadata?.lookupTime}ms`,
+          code: `Error: ${errorMessage}\nLookup time: ${lookupTime}ms`,
         });
       }
     }
@@ -66,15 +89,13 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
   };
 
   const getStatusText = () => {
-    switch (status) {
-      case 'running':
-        return 'Querying DNS...';
-      case 'success':
-        return result?.data?.desc ? `Found: ${result.data.desc}` : 'Agent discovered';
-      case 'error':
-        return result?.error || 'Discovery failed';
-      default:
-        return status;
+    if (!result) return status;
+    if (status === 'running') return 'Querying DNS...';
+    if (result.ok) {
+      return result.value?.record?.desc ? `Found: ${result.value.record.desc}` : 'Agent discovered';
+    } else {
+      const errorMessage = (result.error as ErrorWithMetadata)?.message;
+      return errorMessage || 'Discovery failed';
     }
   };
 
@@ -86,7 +107,7 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
       statusText={getStatusText()}
       codeSnippets={getCodeSnippets()}
     >
-      {result && <DiscoveryDetailsView result={result} />}
+      {result && !result.ok && <DiscoveryDetailsView result={result} />}
     </ToolCallBlock>
   );
 }
@@ -98,27 +119,17 @@ export function ConnectionToolBlock({
   onProvideAuth,
 }: ConnectionToolBlockProps) {
   const getCodeSnippets = () => {
-    const uri = discoveryResult?.data?.uri || 'unknown-uri';
+    const uri = (discoveryResult?.ok && discoveryResult.value?.record?.uri) || 'unknown-uri';
     const snippets = [
       {
         title: 'Connection Request',
-        code: `// MCP Handshake Request
-fetch('/api/handshake', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    uri: "${uri}"
-  })
-})`,
+        code: `// MCP Handshake Request\nfetch('/api/handshake', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    uri: "${uri}"\n  })\n})`,
       },
     ];
 
-    // Add response snippets based on status and result
     if (status === 'success' || status === 'error' || status === 'needs_auth') {
-      if (result?.data) {
-        const data = result.data;
+      if (result?.ok && result.value) {
+        const data = result.value;
         const response = {
           protocolVersion: data.protocolVersion,
           serverInfo: data.serverInfo,
@@ -127,15 +138,15 @@ fetch('/api/handshake', {
             type: cap.type,
           })),
         };
-
         snippets.push({
           title: 'Handshake Response',
           code: JSON.stringify(response, null, 2),
         });
-      } else if (result?.error) {
+      } else if (result && !result.ok && result.error) {
+        const errorMessage = (result.error as AuthError)?.message || 'Unknown error';
         snippets.push({
           title: status === 'needs_auth' ? 'Authentication Required' : 'Connection Error',
-          code: `Error: ${result.error}`,
+          code: `Error: ${errorMessage}`,
         });
       }
     }
@@ -144,23 +155,28 @@ fetch('/api/handshake', {
   };
 
   const getStatusText = () => {
-    switch (status) {
-      case 'running':
-        return 'Establishing connection...';
-      case 'success': {
-        const capCount = result?.data?.capabilities.length || 0;
-        return `Connected (${capCount} capabilities)`;
-      }
-      case 'error':
-        return result?.error || 'Connection failed';
-      case 'needs_auth':
-        return 'Authentication required';
-      default:
-        return status;
+    if (!result) return status;
+    if (status === 'running') return 'Establishing connection...';
+    if (result.ok) {
+      const capCount = result.value?.capabilities?.length || 0;
+      return `Connected (${capCount} capabilities)`;
+    } else if (status === 'needs_auth') {
+      return 'Authentication required';
+    } else {
+      const errorMessage = (result.error as AuthError)?.message;
+      return errorMessage || 'Connection failed';
     }
   };
 
   const defaultExpand = status === 'needs_auth' || status === 'error';
+
+  // Helper: get compliantAuth and metadata from error if present
+  let compliantAuth: boolean | null = null;
+  let metadata: Record<string, unknown> | null = null;
+  if (result && !result.ok && 'compliantAuth' in result.error) {
+    compliantAuth = (result.error as AuthError)?.compliantAuth ?? null;
+    metadata = (result.error as AuthError)?.metadata ?? null;
+  }
 
   return (
     <ToolCallBlock
@@ -173,21 +189,29 @@ fetch('/api/handshake', {
     >
       {result && <ConnectionDetailsView result={result} />}
       {status === 'needs_auth' &&
-        (result?.compliantAuth && result?.metadata ? (
-          <MetadataAuthView metadata={result.metadata} />
+        (compliantAuth && metadata ? (
+          <MetadataAuthView metadata={metadata} />
+        ) : (compliantAuth === false ? (
+          <LocalSchemeNotice
+            uri={discoveryResult?.ok ? discoveryResult.value?.record?.uri : undefined}
+          />
         ) : (
           <>
-            <LegacyNotice authHint={discoveryResult?.data?.auth} />
+            <LegacyNotice
+              authHint={discoveryResult?.ok ? discoveryResult.value?.record?.auth : undefined}
+            />
             {onProvideAuth && (
-              <AuthPrompt onSubmit={onProvideAuth} authHint={discoveryResult?.data?.auth} />
+              <AuthPrompt
+                onSubmit={onProvideAuth}
+                authHint={discoveryResult?.ok ? discoveryResult.value?.record?.auth : undefined}
+              />
             )}
           </>
-        ))}
+        )))}
     </ToolCallBlock>
   );
 }
 
-// Helper to determine the status color for the timeline view
 function getStepStatusClassName(step: { hasError?: boolean; completed?: boolean }) {
   if (step.hasError) {
     return 'bg-red-500';
@@ -198,22 +222,22 @@ function getStepStatusClassName(step: { hasError?: boolean; completed?: boolean 
   return 'bg-gray-300';
 }
 
-// Detail views for showing step-by-step progress
 function DiscoveryDetailsView({ result }: { result: DiscoveryResult }) {
+  if (!result) return null;
   const steps = [
     {
-      text: `Querying DNS for _agent.${result.metadata?.dnsQuery}...`,
+      text: `Querying DNS for _agent.${result.ok ? result.value?.metadata?.dnsQuery : ''}...`,
       completed: true,
     },
     {
-      text: result.success ? 'Found TXT Record' : 'No TXT Record found',
+      text: result.ok ? 'Found TXT Record' : 'No TXT Record found',
       completed: true,
-      hasError: !result.success,
+      hasError: !result.ok,
     },
     {
-      text: result.success ? 'Parsing agent record...' : 'Discovery failed',
-      completed: result.success,
-      hasError: !result.success,
+      text: result.ok ? 'Parsing agent record...' : 'Discovery failed',
+      completed: !!result.ok,
+      hasError: !result.ok,
     },
   ];
 
@@ -240,22 +264,23 @@ function DiscoveryDetailsView({ result }: { result: DiscoveryResult }) {
 }
 
 function ConnectionDetailsView({ result }: { result: HandshakeResult }) {
+  if (!result) return null;
   const steps = [
     {
       text: 'Initializing handshake...',
       completed: true,
     },
     {
-      text: result.success ? 'Handshake complete' : 'Handshake failed',
+      text: result.ok ? 'Handshake complete' : 'Handshake failed',
       completed: true,
-      hasError: !result.success,
+      hasError: !result.ok,
     },
     {
-      text: result.success
-        ? `Agent offers ${result.data?.capabilities.length || 0} capabilities`
+      text: result.ok
+        ? `Agent offers ${result.value?.capabilities.length || 0} capabilities`
         : 'No capabilities available',
-      completed: result.success,
-      hasError: !result.success,
+      completed: !!result.ok,
+      hasError: !result.ok,
     },
   ];
 
@@ -315,9 +340,7 @@ function AuthPrompt({
   );
 }
 
-// The `object` type is a safer alternative to `any` and correctly represents
-// any non-primitive value, which is exactly what JSON.stringify accepts.
-function MetadataAuthView({ metadata }: { metadata: object }) {
+function MetadataAuthView({ metadata }: { metadata: Record<string, unknown> }) {
   const json = JSON.stringify(metadata, null, 2);
   return (
     <div className="mt-4">
@@ -339,3 +362,40 @@ function LegacyNotice({ authHint }: { authHint?: string }) {
     </p>
   );
 }
+
+function LocalSchemeNotice({ uri }: { uri?: string }) {
+  return (
+    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+      <p className="font-medium mb-1">Local CLI required</p>
+      <p>
+        This agent is configured to run via a local command
+        {uri ? (
+          <>
+            : <code className="bg-white border px-1 py-0.5 rounded text-xs">{uri}</code>
+          </>
+        ) : null}
+        . Start the CLI on your machine and make it accessible via an HTTP/WebSocket URL, then
+        re-enter its address or provide a Personal Access Token if the CLI exposes one.
+      </p>
+    </div>
+  );
+}
+
+export const ToolBlocks: React.FC<{ messages: ChatLogMessage[] }> = ({ messages }) => {
+  // Find the last discovery and connection results to render their summaries
+  const lastDiscovery = messages.find((m) => m.type === 'discovery_result');
+  const lastConnection = messages.find((m) => m.type === 'connection_result');
+
+  // We only render the "summary" blocks, not the whole chat history.
+  // The chat history is handled by DiscoveryChat.
+  return (
+    <>
+      {lastDiscovery && 'result' in lastDiscovery && (
+        <DiscoverySuccessBlock result={lastDiscovery.result} />
+      )}
+      {lastConnection && 'result' in lastConnection && (
+        <ToolListSummary handshakeResult={lastConnection.result} />
+      )}
+    </>
+  );
+};

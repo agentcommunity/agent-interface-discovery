@@ -1,8 +1,8 @@
-"""AID specification constants for the Python implementation.
+"""
+GENERATED FILE - DO NOT EDIT
 
-NOTE: These values are duplicated from the single-source YAML (`protocol/constants.yml`).
-During Phase 2 we may replace this static file with code-generation from the YAML,
-but for now we keep it simple so we can progress with the parser logic.
+This file is auto-generated from protocol/constants.yml by scripts/generate-constants.ts
+To make changes, edit the YAML file and run: pnpm gen
 """
 from __future__ import annotations
 
@@ -17,23 +17,21 @@ SPEC_VERSION: Final[str] = "aid1"
 # ---------------------------------------------------------------------------
 # Protocol tokens
 # ---------------------------------------------------------------------------
-
 PROTO_A2A: Final[str] = "a2a"
 PROTO_LOCAL: Final[str] = "local"
 PROTO_MCP: Final[str] = "mcp"
 PROTO_OPENAPI: Final[str] = "openapi"
 
 PROTOCOL_TOKENS: Final[Dict[str, str]] = {
-    "a2a": PROTO_A2A,
-    "local": PROTO_LOCAL,
-    "mcp": PROTO_MCP,
-    "openapi": PROTO_OPENAPI,
+    "a2a": "a2a",
+    "local": "local",
+    "mcp": "mcp",
+    "openapi": "openapi",
 }
 
 # ---------------------------------------------------------------------------
 # Auth tokens
 # ---------------------------------------------------------------------------
-
 AUTH_APIKEY: Final[str] = "apikey"
 AUTH_BASIC: Final[str] = "basic"
 AUTH_CUSTOM: Final[str] = "custom"
@@ -44,14 +42,14 @@ AUTH_OAUTH2_DEVICE: Final[str] = "oauth2_device"
 AUTH_PAT: Final[str] = "pat"
 
 AUTH_TOKENS: Final[Dict[str, str]] = {
-    "apikey": AUTH_APIKEY,
-    "basic": AUTH_BASIC,
-    "custom": AUTH_CUSTOM,
-    "mtls": AUTH_MTLS,
-    "none": AUTH_NONE,
-    "oauth2_code": AUTH_OAUTH2_CODE,
-    "oauth2_device": AUTH_OAUTH2_DEVICE,
-    "pat": AUTH_PAT,
+    "apikey": "apikey",
+    "basic": "basic",
+    "custom": "custom",
+    "mtls": "mtls",
+    "none": "none",
+    "oauth2_code": "oauth2_code",
+    "oauth2_device": "oauth2_device",
+    "pat": "pat",
 }
 
 # ---------------------------------------------------------------------------
@@ -88,4 +86,8 @@ DNS_SUBDOMAIN: Final[str] = "_agent"
 DNS_TTL_MIN: Final[int] = 300
 DNS_TTL_MAX: Final[int] = 900
 
-LOCAL_URI_SCHEMES: Final[List[str]] = ["docker", "npx", "pip"] 
+LOCAL_URI_SCHEMES: Final[List[str]] = [
+    "docker",
+    "npx",
+    "pip",
+]

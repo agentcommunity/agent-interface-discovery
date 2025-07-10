@@ -49,4 +49,10 @@ def test_description_length():
 
 def test_is_valid_proto():
     assert is_valid_proto("mcp") is True
-    assert is_valid_proto("unknown") is False 
+    assert is_valid_proto("unknown") is False
+
+
+def test_duplicate_keys():
+    txt = "v=aid1;v=aid1;uri=https://api.example.com/mcp;proto=mcp"
+    with pytest.raises(AidError, match="Duplicate key: v"):
+        parse(txt) 

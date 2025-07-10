@@ -70,6 +70,8 @@ def _parse_raw_record(txt: str) -> RawAidRecord:
         value = value.strip()
         if not key or not value:
             raise AidError("ERR_INVALID_TXT", f"Empty key or value in pair: {pair}")
+        if key in record:
+            raise AidError("ERR_INVALID_TXT", f"Duplicate key: {key}")
         record[key] = value
     return record
 

@@ -38,6 +38,40 @@ def test_discover_success(monkey_resolver):  # pylint: disable=unused-argument
     assert ttl == 300
 
 
+def test_discover_protocol_specific_success(monkeypatch):
+    import dns.resolver
+
+    def _fake_resolve(name, rdtype, lifetime=5.0):
+        if name == "_agent.mcp.example.com":
+            return _FakeAnswer(["v=aid1;uri=https://api.example.com/mcp;proto=mcp"], 333)
+        if name == "_agent.example.com":
+            return _FakeAnswer(["v=aid1;uri=https://api.example.com/fallback;p=a2a"], 444)
+        raise dns.resolver.NXDOMAIN()
+
+    monkeypatch.setattr(dns.resolver, "resolve", _fake_resolve)
+    record, ttl = discover("example.com", protocol="mcp")
+    assert record["proto"] == "mcp"
+    assert record["uri"] == "https://api.example.com/mcp"
+    assert ttl == 333
+
+
+def test_discover_fallback_to_base(monkeypatch):
+    import dns.resolver
+
+    def _fake_resolve(name, rdtype, lifetime=5.0):
+        if name == "_agent.mcp.example.com":
+            raise dns.resolver.NXDOMAIN()
+        if name == "_agent.example.com":
+            return _FakeAnswer(["v=aid1;uri=https://fallback.com;p=a2a"], 555)
+        raise dns.resolver.NXDOMAIN()
+
+    monkeypatch.setattr(dns.resolver, "resolve", _fake_resolve)
+    record, ttl = discover("example.com", protocol="mcp")
+    assert record["proto"] == "a2a"
+    assert record["uri"] == "https://fallback.com"
+    assert ttl == 555
+
+
 def test_discover_no_record(monkeypatch):
     import dns.resolver
 

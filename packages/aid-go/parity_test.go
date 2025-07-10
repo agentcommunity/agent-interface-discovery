@@ -1,4 +1,4 @@
-package aidgo
+package aid
 
 import (
 	"encoding/json"

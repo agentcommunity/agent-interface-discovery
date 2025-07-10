@@ -49,7 +49,7 @@ export function Hero() {
           </Badge>
 
           <h1 className="mb-8 text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-balance animate-fade-in-up">
-            Agent Interface <span className="block text-muted-foreground">Discovery</span>
+            _agent Interface <span className="block text-muted-foreground">Discovery</span>
           </h1>
 
           <p className="mx-auto mb-10 max-w-3xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">

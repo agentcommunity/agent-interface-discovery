@@ -1,81 +1,92 @@
-# Workbench Component Architecture
+### Updated Workbench Component Architecture
 
 ## 🎯 Overview
 
 The workbench is a script-based AI agent thought process simulator that shows users how AI agents discover and connect to MCP servers through a realistic chat interface. It is powered by a central "chat engine" that manages all state and logic, while the UI components act as simple renderers.
 
+**Recent architectural changes have extracted core logic into reusable packages, improving maintainability and separating concerns.**
+
 ## 📁 File Structure
 
 ```
-packages/web/src/components/workbench/
-├── discovery-chat.tsx          # Main UI orchestrator component
-├── tool-call-block.tsx         # Generic expandable tool UI
-├── tool-blocks.tsx             # Specialized discovery/connection blocks
-└── tool-list-summary.tsx       # Final capability list display
-
-packages/web/src/lib/
-└── tool-manifests.tsx          # Script definitions & mock data
-
-packages/web/src/hooks/
-├── useChatEngine.ts            # The stateful "brain" of the application
-├── useDiscovery.ts             # DNS discovery hook
-└── useConnection.ts            # MCP handshake hook
+packages/
+├── web/                            # The Next.js UI Application
+│   ├── src/components/workbench/
+│   │   ├── generator-panel.tsx     # NEW: Thin UI layer for the generator
+│   │   ├── discovery-chat.tsx      # Main UI orchestrator for resolver
+│   │   ├── tool-call-block.tsx     # Generic expandable tool UI
+│   │   └── ...
+│   ├── src/hooks/
+│   │   └── use-chat-engine.ts      # The stateful "brain" of the application
+│   └── src/lib/
+│       ├── tool-manifests.tsx      # NOW: Exports logic functions
+│       ├── tool-manifest-data.ts   # NEW: Contains all static manifest objects
+│       └── tool-manifest-types.ts  # NEW: Contains all shared types
+│
+└── web-generator/                  # NEW: UI-agnostic core package
+    └── src/index.ts                # Exports buildTxtRecord() and validateTxtRecord()
 ```
 
-## 🧩 Component Breakdown
+## 🧩 Component & Logic Breakdown
 
-### 1. **useChatEngine Hook** (`hooks/useChatEngine.ts`)
+### 1. **Codebase Refactoring & Core Packages (Recent Improvement)**
+
+**Role:** To create a more maintainable, scalable, and reusable architecture.
+
+**What we did:**
+
+- **`@agentcommunity/aid-web-generator` Package:** All UI-agnostic logic for building and validating AID records was extracted from `GeneratorPanel` into this new, self-contained package.
+- **Data/Logic Separation:** Static data (the large `toolManifests` object) was moved into `tool-manifest-data.ts`, separating it from the logic in `tool-manifests.tsx`. Shared types were centralized in `tool-manifest-types.ts`.
+- **Codebase Hardening:** Systematically resolved all linter errors across the web application, enforcing full type safety, robust promise handling, and modern JavaScript conventions.
+
+---
+
+### 2. **useChatEngine Hook** (`hooks/use-chat-engine.ts`)
 
 **Role:** The stateful "brain" of the application. It manages the entire conversation session from start to finish.
 
 **What it does:**
 
-- Manages all application state, including the message log and tool results.
-- Provides a `dispatch` function to receive commands from the UI (e.g., `SUBMIT_DOMAIN`).
-- Loads the appropriate tool manifest for the domain.
-- Executes the manifest's script step-by-step (narrative → tool → narrative).
-- Records tool results and makes them available to subsequent narrative steps.
-- Handles success and failure logic, allowing narratives to respond to errors.
+- Manages all application state (`messages`, `status`, etc.).
+- Provides a `dispatch` function to receive commands (`SUBMIT_DOMAIN`, `PROVIDE_AUTH`).
+- Loads the appropriate tool manifest for a given domain from `tool-manifest-data.ts`.
+- Executes the manifest's script step-by-step, orchestrating narrative and tool calls.
+- Records tool results and makes them available to subsequent narrative steps for context-aware responses.
 
 ---
 
-### 2. **DiscoveryChat** (`discovery-chat.tsx`)
+### 3. **GeneratorPanel** (`components/workbench/generator-panel.tsx`)
 
-**Role:** The main UI component, acting as a "dumb" renderer for the engine's state.
+**Role:** A thin UI layer for the AID record generator.
 
 **What it does:**
 
-- Calls `useChatEngine()` to get the current state (`messages`, `status`) and the `dispatch` function.
+- Renders the form inputs (URI, protocol, auth, etc.).
+- Manages the local form state.
+- **Delegates all core logic:** Calls `buildTxtRecord()` and `validateTxtRecord()` from the `@agentcommunity/aid-web-generator` package to generate the preview and show validation status.
+- Focuses entirely on presentation, making it a "dumb" component driven by the core logic package.
+
+---
+
+### 4. **DiscoveryChat** (`discovery-chat.tsx`)
+
+**Role:** The main UI component for the resolver, acting as a "dumb" renderer for the engine's state.
+
+**What it does:**
+
+- Calls `useChatEngine()` to get the current state and `dispatch` function.
 - Renders the list of messages provided by the engine.
-- Uses a `switch` on the message type to render the correct component (user bubble, assistant typewriter, tool block, etc.).
-- Dispatches commands to the engine based on user actions (e.g., clicking an example button or submitting the input form).
-
-**Key Features:**
-
-- Is almost entirely stateless; the engine is the single source of truth.
-- Decouples the UI from the business logic, making it easy to change the appearance without affecting the engine.
+- Uses a `switch` on message type to render the correct component (user bubble, tool block, etc.).
+- Dispatches commands to the engine based on user actions.
 
 ---
 
-### 3. **Tool Manifests System** (`lib/tool-manifests.tsx`)
+### 5. **Tool Manifests System** (`lib/tool-manifest-data.ts` & `lib/tool-manifests.tsx`)
 
-**Role:** Declarative conversation flow definitions, or "screenplays" for the agent.
+**Role:** Declarative "screenplays" for the agent simulation.
 
-**What it does:**
-
-- Defines complete conversation scripts for each domain
-- Provides mock data for realistic demos
-- Contains context-aware narrative functions
-- Maps domain names to specific agent scenarios
-
-**Key Manifests:**
-
-- `simple.agentcommunity.org` - Basic demo agent
-- `supabase.agentcommunity.org` - Database operations
-- `auth0.agentcommunity.org` - Identity management
-- `messy.agentcommunity.org` - Chaotic experimental agent
-- `no-server.agentcommunity.org` - Successful discovery but a failed connection, a common real-world scenario.
-- `default-failure` - Handles unknown domains gracefully
+- **`tool-manifest-data.ts`:** Contains the large `Record` of `ToolManifest` objects. This is the single source of truth for all demo scenarios and their scripts.
+- **`tool-manifests.tsx`:** Contains the _logic_ for interacting with the manifest data, such as `getManifestForDomain()` and `getEnhancedCapability()`.
 
 **Script Structure:**
 
@@ -83,13 +94,9 @@ packages/web/src/hooks/
 script: [
   { type: 'narrative', content: (results, domain) => 'AI thinking text...' },
   { type: 'tool_call', toolId: 'discovery' },
-  { type: 'narrative', content: (results) => 'AI reasoning about results...' },
-  { type: 'tool_call', toolId: 'connection' },
-  { type: 'narrative', content: (results) => 'Final summary...' },
+  // ... and so on
 ];
 ```
-
----
 
 ### 4. **ToolCallBlock** (`tool-call-block.tsx`)
 

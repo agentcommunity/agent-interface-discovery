@@ -46,7 +46,8 @@
     "lint": "eslint src/**/*.ts",
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "turbo run build --filter={workspace}"
   },
   "dependencies": {
     "@agentcommunity/aid": "workspace:*",

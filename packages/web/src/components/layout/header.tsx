@@ -3,40 +3,72 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Github, Bot, ExternalLink } from 'lucide-react';
+import { Bot, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-export function Header() {
-  const pathname = usePathname();
-  const [hash, setHash] = useState('');
 
+// This function handles the click, updates the URL, and manually fires the event.
+// Moved to the outer scope to fix the 'unicorn/consistent-function-scoping' lint error.
+const handleModeChange = (newMode: 'resolver' | 'generator') => {
+  const newHash = newMode === 'generator' ? '#generator' : '';
+  // This check prevents errors during server-side rendering.
+  if (globalThis.window !== undefined) {
+    globalThis.history.replaceState(null, '', `/workbench${newHash}`);
+    // Manually dispatch a hashchange event so other components can react
+    globalThis.dispatchEvent(new Event('hashchange'));
+  }
+};
+
+function WorkbenchModeSwitcher() {
+  const [mode, setMode] = useState<'resolver' | 'generator'>('resolver');
+
+  // This effect listens for hash changes to keep the switcher UI in sync
   useEffect(() => {
-    const updateHash = () => {
-      setHash(globalThis.location.hash); // instead of window.location.hash
+    const handleHashChange = () => {
+      const hash = globalThis.location.hash.slice(1);
+      setMode(hash === 'generator' ? 'generator' : 'resolver');
     };
 
-    updateHash(); // Initialize
-    globalThis.addEventListener('hashchange', updateHash);
-    return () => globalThis.removeEventListener('hashchange', updateHash);
+    handleHashChange(); // Set initial state
+    globalThis.addEventListener('hashchange', handleHashChange);
+    return () => globalThis.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  // Enhance this to handle hash when pathname is the same
-  const isActive = (href: string) => {
-    if (href.includes('#')) {
-      const [basePath, targetHash] = href.split('#');
-      return pathname === basePath && hash === `#${targetHash}`;
-    }
-    if (href === '/workbench' && pathname === '/workbench') {
-      return !hash || hash === '#'; // treat base /workbench with no hash as active
-    }
-    return pathname === href;
-  };
+  return (
+    <div className="inline-flex rounded-lg border bg-muted p-1">
+      <Button
+        variant={mode === 'resolver' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => handleModeChange('resolver')}
+        className="w-24 rounded-md transition-all duration-200"
+      >
+        Resolve
+      </Button>
+      <Button
+        variant={mode === 'generator' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => handleModeChange('generator')}
+        className="w-24 rounded-md transition-all duration-200"
+      >
+        Generate
+      </Button>
+    </div>
+  );
+}
+
+export function Header() {
+  const pathname = usePathname();
+  const isWorkbench = pathname === '/workbench';
+
 
   const navigation = [
-    { name: 'Resolver', href: '/workbench', external: false },
-    { name: 'Generator', href: '/workbench#generator', external: false },
     { name: 'Docs', href: 'https://docs.agentcommunity.org', external: true },
+    {
+      name: 'GitHub',
+      href: 'https://github.com/agentcommunity/aid-interface-discovery',
+      external: true,
+    },
   ];
 
   return (
@@ -51,49 +83,48 @@ export function Header() {
           </span>
         </Link>
 
-        <nav className="flex items-center space-x-6 text-sm font-medium">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              target={item.external ? '_blank' : undefined}
-              rel={item.external ? 'noopener noreferrer' : undefined}
-              className={cn(
-                'transition-all duration-200 hover:text-foreground flex items-center gap-1 hover:scale-105',
-                isActive(item.href) ? 'text-foreground' : 'text-muted-foreground',
-              )}
-            >
-              {item.name}
-              {item.external && (
-                <ExternalLink className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" />
-              )}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex-1 flex justify-center">
+          {isWorkbench ? (
+            <WorkbenchModeSwitcher />
+          ) : (
+            <nav className="flex items-center space-x-6 text-sm font-medium">
+              {/* Future-proofing: could add back home-page specific nav items here */}
+            </nav>
+          )}
+        </div>
 
-        <div className="ml-auto flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105"
-          >
-            <Link
-              href="https://github.com/agentcommunity/aid-interface-discovery"
-              target="_blank"
-              className="flex items-center gap-2"
+        <div className="flex items-center space-x-4">
+          <nav className="hidden sm:flex items-center space-x-6 text-sm font-medium">
+            {navigation.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+                className={cn(
+                  'transition-all duration-200 hover:text-foreground flex items-center gap-1 hover:scale-105',
+                  'text-muted-foreground',
+                )}
+              >
+                {item.name}
+                {item.external && (
+                  <ExternalLink className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+                )}
+              </Link>
+            ))}
+          </nav>
+          {isWorkbench ? (
+            <Button disabled className="shadow-soft-md">
+              Workbench
+            </Button>
+          ) : (
+            <Button
+              asChild
+              className="bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105"
             >
-              <Github className="h-4 w-4" />
-              <span className="hidden sm:inline">GitHub</span>
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            className="bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105"
-          >
-            <Link href="/workbench">Try the Workbench</Link>
-          </Button>
+              <Link href="/workbench">Try the Workbench</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

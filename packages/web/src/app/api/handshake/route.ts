@@ -45,10 +45,17 @@ export async function POST(request: Request) {
   if (isPrivateHost(url.hostname)) {
     return NextResponse.json({ success: false, error: 'Target host not allowed' }, { status: 400 });
   }
+  // If the scheme isn't one we can connect to directly from the browser, treat it as
+  // requiring a local Personal Access Token (PAT) / CLI proxy rather than a hard failure.
   if (!isSupportedScheme(url.protocol as SupportedScheme)) {
     return NextResponse.json(
-      { success: false, error: `Unsupported URI scheme: ${url.protocol}` },
-      { status: 400 },
+      {
+        success: false,
+        needsAuth: true,
+        compliantAuth: false,
+        error: `Unsupported URI scheme: ${url.protocol}. Provide a Personal Access Token or run a local proxy.`,
+      },
+      { status: 401 },
     );
   }
 

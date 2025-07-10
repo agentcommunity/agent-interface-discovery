@@ -9,3 +9,6 @@ This package will provide:
 - `AidError` – rich error class mapping spec error codes.
 
 **Status:** In development – targeting feature parity with the TypeScript reference implementation.
+
+To run tests, use the monorepo's unified test command from the root directory:
+`pnpm test`
