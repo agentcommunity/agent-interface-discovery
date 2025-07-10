@@ -26,14 +26,12 @@ import {
   type AidGeneratorData,
 } from '@agentcommunity/aid-web-generator';
 
-import { AUTH_TOKENS, PROTOCOL_TOKENS } from '@agentcommunity/aid';
+import { AUTH_TOKENS } from '@agentcommunity/aid';
 import type { ProtocolToken, AuthToken } from '@agentcommunity/aid';
 
 type FormData = AidGeneratorData;
 
-
 const PROTOCOL_ORDER: ProtocolToken[] = ['mcp', 'a2a', 'openapi', 'local'];
-
 
 function parseExample(example: string): Partial<FormData> {
   const parts = new Map(
@@ -82,7 +80,6 @@ export function GeneratorPanel() {
   const isDescTooLong = descByteLength > 60;
 
   return (
-
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-6">
