@@ -2,6 +2,13 @@
   "name": "@agentcommunity/aid-py-test-runner",
   "version": "0.0.0",
   "private": true,
+  "description": "Test runner for Python AID implementation",
+  "engines": {
+    "node": ">=18.17"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
   "scripts": {
     "install-dev": "pip install -e '.[dev]'",
     "test": "python3 -m pytest"

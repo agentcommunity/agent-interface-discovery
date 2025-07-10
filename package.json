@@ -4,21 +4,30 @@
   "version": "0.0.0",
   "type": "commonjs",
   "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=18.17",
+    "pnpm": ">=8.0.0"
+  },
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "one-shot": "eslint --cache --max-warnings 0 .",
-    "lint": "eslint --cache --max-warnings 0 .",
-    "format": "prettier --write .",
-    "gen": "tsx scripts/generate-constants.ts",
-    "turbo": "turbo run dev --parallel",
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev --parallel --filter=!@agentcommunity/e2e-tests",
+    "dev:core": "turbo run dev --parallel --filter=@agentcommunity/aid --filter=@agentcommunity/aid-doctor",
+    "dev:web": "turbo run dev --filter=@agentcommunity/aid-web...",
+    "dev:all": "turbo run dev --parallel",
     "build": "turbo run build",
     "test": "turbo run test",
+    "lint": "turbo run lint",
     "clean": "turbo run clean",
+    "one-shot": "eslint --cache --max-warnings 0 .",
+    "format": "prettier --write .",
+    "gen": "tsx scripts/generate-constants.ts",
     "docs:sync": "turbo run sync:docs",
     "e2e": "turbo run e2e",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
     "prepare": "husky install"
   },
   "devDependencies": {
@@ -34,6 +43,8 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
+    "rimraf": "^5.0.0",
+    "tsup": "^7.0.0",
     "tsx": "^4.20.3",
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",

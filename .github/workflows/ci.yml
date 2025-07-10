@@ -1,5 +1,4 @@
 name: CI
-
 on:
   push:
     branches: [main]
@@ -9,7 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ secrets.VERCEL_TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
 

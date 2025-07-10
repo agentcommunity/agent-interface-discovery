@@ -1,29 +1,58 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "remoteCache": {
+    "signature": true
+  },
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "node_modules/**"]
-    },
-    "lint": {
-      "outputs": []
-    },
-    "test": {
-      "outputs": ["coverage/**"]
+      "outputs": ["dist/**", ".next/**"],
+      "inputs": [
+        "src/**",
+        "tsup.config.ts",
+        "tsconfig.json",
+        "package.json",
+        "../../tsup.config.base.ts",
+        "../../tsconfig.base.json"
+      ]
     },
     "dev": {
-      "dependsOn": ["^dev"],
       "cache": false,
-      "outputs": []
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "inputs": [
+        "src/**",
+        "tests/**",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "vitest.config.*",
+        "jest.config.*"
+      ]
+    },
+    "lint": {
+      "outputs": [],
+      "inputs": [
+        "src/**",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.js",
+        "**/*.jsx",
+        ".eslintrc.*",
+        "eslint.config.*"
+      ]
     },
     "clean": {
-      "cache": false,
-      "outputs": []
+      "cache": false
     },
     "e2e": {
-      "dependsOn": ["build", "^build"],
+      "dependsOn": ["build"],
       "cache": false,
-      "outputs": []
+      "inputs": ["dist/**", "e2e/**", "**/*.e2e.ts", "**/*.e2e.tsx"]
     }
   }
 }
