@@ -20,11 +20,7 @@ import {
 } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
-import {
-  buildTxtRecord,
-  validateTxtRecord,
-  type AidGeneratorData,
-} from '@agentcommunity/aid-web-generator';
+import { buildTxtRecord, validateTxtRecord, type AidGeneratorData } from '@/lib/aid-generator';
 
 import { AUTH_TOKENS } from '@agentcommunity/aid';
 import type { ProtocolToken, AuthToken } from '@agentcommunity/aid';
@@ -81,7 +77,7 @@ export function GeneratorPanel() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto space-y-6">
           <Card>
             <CardHeader>
