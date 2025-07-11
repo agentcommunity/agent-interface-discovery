@@ -6,6 +6,12 @@
     <a href="https://github.com/agent-community/agent-interface-discovery/actions/workflows/ci.yml">
       <img src="https://github.com/agent-community/agent-interface-discovery/actions/workflows/ci.yml/badge.svg" alt="Build Status" />
     </a>
+    <a href="https://aid.agentcommunity.org/workbench">
+      <img src="https://img.shields.io/badge/Demo-Try%20AID%20Workbench-brightgreen?style=flat&logo=rocket" alt="Demo AID Workbench" />
+    </a>
+    <a href="https://img.shields.io/github/package-json/v/agentcommunity/agent-interface-discovery?style=flat&label=AID%20Version&color=orange">
+      <img src="https://img.shields.io/github/package-json/v/agentcommunity/agent-interface-discovery?style=flat&label=AID%20Version&color=orange" alt="AID Version" />
+    </a>
     <a href="https://www.npmjs.com/package/@agentcommunity/aid">
       <img src="https://img.shields.io/npm/v/@agentcommunity/aid.svg?color=blue" alt="npm version" />
     </a>
@@ -24,6 +30,8 @@
 AID is a minimal, open standard that answers one question: **"Given a domain name, where is its AI agent?"**
 
 It uses a single DNS `TXT` record to make any agent service—whether it speaks MCP, A2A, or another protocol—instantly discoverable. No more digging through API docs, no more manual configuration.
+
+[AID website](aid.agentcommunity.org)
 
 ## How It Works
 
@@ -53,7 +61,7 @@ graph TD
 | :------------------------- | :--------------------------------------------------------------------- | :----------------------------------------------------------------------------- |
 | **Interactive Workbench**  | **[aid.agentcommunity.org](https://aid.agentcommunity.org)**           | The best way to see the protocol in action with a live resolver and generator. |
 | **Official Documentation** | **[docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)** | Read the full specification, guides, and API reference.                        |
-| **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check any domain's AID record from your terminal.          |
+| **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check and generate AID records from your terminal.         |
 
 ### Using the Libraries
 
@@ -139,16 +147,15 @@ This repository uses a PNPM/Turborepo monorepo structure. It contains the full s
 
 ### Packages
 
-| Package                                                                                                  | Status  | Description                                                       |
-| :------------------------------------------------------------------------------------------------------- | :------ | :---------------------------------------------------------------- |
-| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                             | Public  | Core TypeScript library for Node.js and Browsers                  |
-| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)               | Public  | Official CLI for checking and validating AID records              |
-| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                    | Public  | Official Python library                                           |
-| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)              | Public  | Official Go library                                               |
-| [**@agentcommunity/aid-web-generator**](https://www.npmjs.com/package/@agentcommunity/aid-web-generator) | Public  | Reusable JS library for building and validating AID TXT records   |
-| [**@agentcommunity/aid-web**](./packages/web)                                                            | Private | The Next.js app for the website and workbench                     |
-| **@agentcommunity/e2e-tests**                                                                            | Private | E2E tests validating our live showcase domains                    |
-| **(test runners)**                                                                                       | Private | Internal packages for orchestrating Python and Go tests via Turbo |
+| Package                                                                                     | Status  | Description                                                       |
+| :------------------------------------------------------------------------------------------ | :------ | :---------------------------------------------------------------- |
+| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                | Public  | Core TypeScript library for Node.js and Browsers                  |
+| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)  | Public  | Official CLI for checking, validating, and generating AID records |
+| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                       | Public  | Official Python library                                           |
+| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go) | Public  | Official Go library                                               |
+| [**@agentcommunity/aid-web**](./packages/web)                                               | Private | The Next.js app for the website and workbench                     |
+| **@agentcommunity/e2e-tests**                                                               | Private | E2E tests validating our live showcase domains                    |
+| **(test runners)**                                                                          | Private | Internal packages for orchestrating Python and Go tests via Turbo |
 
 ### Project Structure
 
@@ -162,7 +169,6 @@ agent-interface-discovery/
 │   ├── aid-py/                # Python library
 │   ├── aid-go/                # Go library
 │   ├── web/                   # Next.js web workbench
-│   ├── web-generator/         # Shared record generation/validation logic
 │   ├── e2e-tests/             # End-to-end tests
 │   └── (test-runners)/        # Internal test runners for Go/Python
 ├── tracking/                  # Development progress tracking (PHASE_*.md)
