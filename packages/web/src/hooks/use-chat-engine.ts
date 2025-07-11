@@ -243,7 +243,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         setStatus('failed');
       }
     },
-    [datasource, sendAssistant],
+    [datasource, sendAssistant, addMessage],
   );
 
   const provideAuth = useCallback(
@@ -271,7 +271,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         // TODO: Push a new `connection_result` message to show the new error.
       }
     },
-    [datasource, state.status, state.discovery, state.domain],
+    [datasource, state.status, state.discovery, state.domain, addMessage],
   );
 
   // Public dispatcher
@@ -297,7 +297,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         void provideAuth(cmd.payload);
       }
     },
-    [processDomain, provideAuth],
+    [processDomain, provideAuth, addMessage],
   );
 
   return { state, dispatch } as const;

@@ -46,3 +46,36 @@ export function timeAgo(date: Date): string {
   const days = Math.floor(diffInSeconds / SECONDS_IN_DAY);
   return `${days} day${days > 1 ? 's' : ''} ago`;
 }
+
+/**
+ * Get the current version of the AID package
+ * Returns "0.0.0" as fallback when package.json is not available
+ */
+export function getAidVersion(): string {
+  // For now, return fallback until npm package is live
+  // This can be updated to fetch from /api/version when needed
+  return '0.0.0';
+}
+
+/**
+ * Fetch the current version from the API route
+ * This is async and should be used in components that can handle loading states
+ */
+export async function fetchAidVersion(): Promise<string> {
+  try {
+    const response = await fetch('/api/version');
+    const data: unknown = await response.json();
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'version' in data &&
+      typeof (data as { version: unknown }).version === 'string' &&
+      (data as { version: string }).version.trim() !== ''
+    ) {
+      return (data as { version: string }).version;
+    }
+    return '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}

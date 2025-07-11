@@ -1,7 +1,7 @@
 // packages/web/src/components/workbench/discovery-chat.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Send } from 'lucide-react';
@@ -90,7 +90,7 @@ function ChatInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="relative w-full pb-4">
+    <form onSubmit={handleSubmit} className="relative w-full">
       <div className="flex items-center gap-2 p-2 bg-white rounded-full border border-gray-200 shadow-sm">
         <Input
           ref={inputRef}
@@ -124,19 +124,32 @@ export function DiscoveryChat() {
     dispatch({ type: 'SUBMIT_DOMAIN', payload: domain });
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Use layout effect to handle scroll after DOM updates and content expansion
+  useLayoutEffect(() => {
+    const scrollToEnd = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      }
+    };
+
+    // Allow time for content expansion animations and layout changes
+    const timer = setTimeout(scrollToEnd, 150);
+    return () => clearTimeout(timer);
   }, [state.messages]);
 
   return (
     <div className="h-full bg-gray-50 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <TitleSection mode="resolver" />
-
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {state.messages.length === 0 && (
-          <div className="text-center text-gray-500 pt-8">
-            <p>Enter a domain or select an example below to start.</p>
-          </div>
+          <>
+            <TitleSection mode="resolver" />
+            <div className="text-center text-gray-500 pt-8">
+              <p>Enter a domain or select an example below to start.</p>
+            </div>
+          </>
         )}
 
         <div className="max-w-3xl mx-auto w-full">
@@ -147,7 +160,7 @@ export function DiscoveryChat() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4">
+      <div className="flex-shrink-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4 pb-4">
         <div className="max-w-3xl mx-auto px-4 space-y-4">
           <ExamplePicker variant="buttons" onSelect={handleSubmit} disabled={isLoading} />
           <ChatInput onSubmit={handleSubmit} isLoading={isLoading} autoFocus />

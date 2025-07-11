@@ -30,7 +30,7 @@ function CodeSnippet({ title, code }: { title: string; code: string }) {
           Copy
         </Button>
       </div>
-      <pre className="text-xs font-mono text-gray-700 bg-gray-100 p-2 rounded border overflow-x-auto">
+      <pre className="text-xs font-mono text-gray-700 bg-gray-100 p-2 rounded border min-w-0 whitespace-pre-wrap break-words overflow-hidden">
         {code}
       </pre>
     </div>
@@ -89,12 +89,13 @@ export function ToolCallBlock({
   const color = getStatusColor(status);
 
   return (
-    <div className="my-2 text-sm">
+    <div className="my-2 text-sm min-w-0 w-full max-w-full">
       <div
         className={`
             p-3 bg-gray-50 rounded-lg border border-gray-200 shadow-sm
             transition-all duration-300 ease-in-out
-            ${isExpanded ? 'w-full' : 'max-w-md'}
+            w-full max-w-full sm:max-w-md min-w-0
+            ${isExpanded ? 'sm:max-w-full' : ''}
         `}
       >
         <button

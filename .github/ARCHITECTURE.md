@@ -9,11 +9,10 @@
 ```
 packages/
 ├── aid/                    # Core TypeScript library (published to npm)
-├── aid-doctor/            # CLI validation tool (published to npm)
+├── aid-doctor/            # CLI validation and generation tool (published to npm)
 ├── aid-py/               # Python implementation + test runner (private)
 ├── aid-go/               # Go implementation + test runner (private)
 ├── web/                  # Next.js web interface (private)
-├── web-generator/        # CLI for generating web interfaces (published)
 └── e2e-tests/           # End-to-end tests against live records (private)
 ```
 

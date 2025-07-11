@@ -1,3 +1,10 @@
+/**
+ * @/lib/aid-generator - Standalone logic for generating AID records.
+ *
+ * This logic was previously in the `@agentcommunity/aid-web-generator` package.
+ * It's placed here to be used by the GeneratorPanel component.
+ */
+
 import { parse } from '@agentcommunity/aid';
 import type { ProtocolToken, AuthToken } from '@agentcommunity/aid';
 

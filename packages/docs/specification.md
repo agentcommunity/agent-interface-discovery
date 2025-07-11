@@ -3,10 +3,15 @@ title: "Agent Interface Discovery 'aid'"
 description: 'Specification'
 icon: material/file-document-outline
 
+edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/specification.md
+extra_css_class: aid-page
+
 tags:
   - v1
   - '2025-07-05'
 ---
+
+[View raw markdown](https://github.com/agentcommunity/agent-interface-discovery/raw/main/packages/docs/specification.md)
 
 # **Agent Interface Discovery (AID) — v1.0.0**
 

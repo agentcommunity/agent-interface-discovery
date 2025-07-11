@@ -1,6 +1,13 @@
 {
   "name": "@agentcommunity/aid-py-test-runner",
   "version": "0.0.0",
+  "license": "MIT",
+  "author": "Agent Community",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentcommunity/agent-interface-discovery.git",
+    "directory": "packages/aid-py"
+  },
   "private": true,
   "description": "Test runner for Python AID implementation",
   "engines": {

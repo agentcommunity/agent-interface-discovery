@@ -50,9 +50,11 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
 
     if (status === 'success' || status === 'error') {
       if (result?.ok && result.value?.metadata?.txtRecord) {
+        // Break long TXT records at semicolons for mobile readability
+        const formattedTxtRecord = result.value.metadata.txtRecord.replaceAll(';', ';\n');
         snippets.push({
           title: 'Found TXT Record',
-          code: result.value.metadata.txtRecord,
+          code: formattedTxtRecord,
         });
       }
 
@@ -345,7 +347,9 @@ function MetadataAuthView({ metadata }: { metadata: Record<string, unknown> }) {
   return (
     <div className="mt-4">
       <div className="text-sm font-medium mb-1">Auth Metadata</div>
-      <pre className="text-xs bg-gray-100 p-2 rounded overflow-x-auto max-h-64">{json}</pre>
+      <pre className="text-xs bg-gray-100 p-2 rounded min-w-0 whitespace-pre-wrap break-words overflow-hidden max-h-64">
+        {json}
+      </pre>
       <p className="text-xs text-gray-600 mt-1">
         The server is spec-compliant. Follow the indicated auth flow (e.g. OAuth device, PAT, etc.)
         and retry once you have a token.
@@ -371,7 +375,7 @@ function LocalSchemeNotice({ uri }: { uri?: string }) {
         This agent is configured to run via a local command
         {uri ? (
           <>
-            : <code className="bg-white border px-1 py-0.5 rounded text-xs">{uri}</code>
+            : <code className="bg-white border px-1 py-0.5 rounded text-xs break-words">{uri}</code>
           </>
         ) : null}
         . Start the CLI on your machine and make it accessible via an HTTP/WebSocket URL, then

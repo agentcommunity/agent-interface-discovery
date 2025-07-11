@@ -1,3 +1,7 @@
+# MIT License
+# Copyright (c) 2025 Agent Community
+# Author: Agent Community
+# Repository: https://github.com/agentcommunity/agent-interface-discovery
 """DNS discovery client for Agent Interface Discovery (AID).
 
 Uses `dnspython` to query the `_agent.<domain>` TXT record, validates it
