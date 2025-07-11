@@ -19,6 +19,10 @@ AID is a minimal, open standard that answers one question: **“Given a domain n
 
 It uses a single DNS `TXT` record to make any agent service—whether it speaks MCP, A2A, or another protocol—instantly discoverable. No more digging through docs, no more manual configuration.
 
+[**:rocket: Try it now — Live Resolver & Generator**](https://aid.agentcommunity.org/workbench){ .md-button .md-button--primary target="\_blank" }
+
+---
+
 !!! agent "The 'It Just Works' Moment"
 A developer wants to use Supabase's tools. They type `supabase.com` into their client. The client queries DNS, finds the official MCP endpoint, and connects. **Zero extra steps.**
 
@@ -28,7 +32,7 @@ flowchart LR
         User["User/Agent"] --> Domain["supabase.com"];
     end
     subgraph AID Discovery
-        Domain --> DNS["DNS Query: _agent._mcp.supabase.com"];
+        Domain --> DNS["DNS Query: _agent.supabase.com (or _agent._mcp.supabase.com)"];
         DNS --> Endpoint["TXT Record: uri=https://..."];
     end
     subgraph Connection
@@ -38,9 +42,13 @@ flowchart LR
 
 ## How It Works (The 15-Second Version)
 
-1.  **Provider Publishes a Record:** A service provider (e.g., Google) adds a single `TXT` record to their DNS at a standard location: `_agent.<protocol>.<domain>`.
-2.  **Client Queries DNS:** A client application takes the user's input (`google.com`) and the protocol it wants (`mcp`) to query `_agent._mcp.google.com`.
+1.  **Provider Publishes a Record:** A service provider (e.g., Google) adds a single `TXT` record to their DNS at the canonical location: `_agent.<domain>`. (For advanced use, protocol-specific subdomains like `_agent._mcp.<domain>` are also supported—see below.)
+2.  **Client Queries DNS:** A client application takes the user's input (`google.com`) and queries the `TXT` record at `_agent.google.com`. If looking for a specific protocol, it MAY first try `_agent._mcp.google.com` and fall back to `_agent.google.com` if not found.
 3.  **Client Connects:** The `TXT` record contains the `uri` of the agent endpoint. The client uses this to connect directly.
+
+> **Note:**
+>
+> - The canonical, required location is `_agent.<domain>`. Protocol-specific subdomains (e.g., `_agent._mcp.<domain>`) are optional and only needed if a provider wants to expose multiple agent protocols for the same domain.
 
 That's it. The heavy lifting (authentication, capability negotiation) is handled by the agent protocol itself (like MCP). AID just gets you to the right front door.
 
@@ -54,7 +62,7 @@ That's it. The heavy lifting (authentication, capability negotiation) is handled
 
 <div class="grid cards" markdown>
 
-- [:material-file-document-outline:{ .lg .middle } **Specification**](v1/specification.md)
+- [:material-file-document-outline:{ .lg .middle } **Specification**](specification.md)
 
   Read the full v1.0.0 Specification. Lean, mean, and ready to implement.
 
@@ -62,11 +70,11 @@ That's it. The heavy lifting (authentication, capability negotiation) is handled
 
   Understand the "why" behind the new, simplified design.
 
-- [:material-source-branch:{ .lg .middle } **Token Registries**](https://github.com/agent-community/aid-tokens)
+- [:material-source-branch:{ .lg .middle } **_agent registry (soon) **]
 
   See the official list of `proto` and `auth` tokens.
 
-- [:material-rocket-launch:{ .lg .middle } **Get Started**](generator.md)
+- [:material-rocket-launch:{ .lg .middle } **Set up \_agent record**](generator.md)
 
   Use our simple tools to validate or generate your AID record.
 
@@ -77,4 +85,4 @@ That's it. The heavy lifting (authentication, capability negotiation) is handled
 ### Want the deep dive?
 
 - [**Rationale**](rationale.md) – _Why we chose DNS, why the manifest was removed, and why simplicity wins._
-- [**Specification**](v1/specification.md) – _The exact `TXT` record format, client algorithm, and security rules._
+- [**Specification**](specification.md) – _The exact `TXT` record format, client algorithm, and security rules._
