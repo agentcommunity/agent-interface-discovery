@@ -85,105 +85,196 @@ For every public **npm** package:
 
 ---
 
-## 6 . Final local dry-runs
+Below is a **branch-based, protected-main, staged-publish release checklist** that reflects the new reality:
 
-### **Phase 1 Dry-Run (Do this now)**
-
-```bash
-# Dry-run Changeset bump
-pnpm changeset status      # Inspect what will be versioned and published
-
-# Dry-run pack for each public npm package
-pnpm -r --filter="./packages/*" --filter="!./packages/aid-py" exec npm pack --dry-run
-```
-
-### **Phase 2 Dry-Run (Do this later)**
-
-_When you're ready to publish the Python package, run these checks:_
-
-```bash
-# Check Python build and distribution artifacts
-cd packages/aid-py
-python -m build --sdist --wheel
-twine check dist/*
-```
+- **`aid-web-generator` folded into `aid-doctor`**
+- **main is protected — no direct pushes**
+- **npm first, PyPI later**
+- **dry-run pack command clarified**
 
 ---
 
-## 7 . Team communication / permissions
+FIANL STEPS:
 
-- [ ] All org owners on npm have **2-factor auth** enabled (requirement for Automation tokens).
-- [ ] At least two maintainers on npm & PyPI in case someone’s on vacation.
-- [ ] Slack / Discord #release channel created for day-of chatter.
+## 0 . Pre-flight matrix (unchanged)
 
----
-
-## 8 . Changelog prep
-
-- [ ] `pnpm changeset` already created with summary.
-- [ ] `CHANGELOG.md` exists at root—Changesets will append.
+- Tokens, licences, ignore list, etc. already ticked — see previous checklist.
 
 ---
 
-## 9 . Release-day commands (Phase 1: npm Publish)
-
-_These commands version everything, but the modified CI workflow will only publish to npm._
+## 1 . Create the release branch (`release/v1.0.0`)
 
 ```bash
-git switch main && git pull
+git switch -c release/v1.0.0 origin/main
 pnpm clean && pnpm install --frozen-lockfile && pnpm build && pnpm test
+```
 
-pnpm changeset version        # Bumps versions on all packages locally
-git add . && git commit -m "chore(release): v1.0.0"
-git tag -s v1.0.0 -m "Release v1.0.0"
-git push origin main v1.0.0   # Triggers the modified publish workflow
+_Everything must pass before you touch Changesets._
+
+---
+
+## 2 . Generate the single **major** Changeset
+
+(affects every public npm package, including the new code in `aid-doctor`, but _ignores_ web / e2e / runners)
+
+```bash
+pnpm changeset add
+# choose "major" → summary: "Initial stable release. Web generator merged into aid-doctor."
+```
+
+Commit the Changeset file:
+
+```bash
+git add .changeset
+git commit -m "chore: create v1.0.0 changeset"
+git push -u origin release/v1.0.0
 ```
 
 ---
 
-## 10 . Post-publish validation
+## 3 . Open PR → **release/v1.0.0 → main**
 
-### **Phase 1 Validation (After npm publish)**
-
-- [ ] `npm info @agentcommunity/aid version` shows `1.0.0`.
-- [ ] GitHub Release notes drafted & published.
-
-### **Phase 2 Validation (After PyPI publish)**
-
-- [ ] `pip install agent-community==1.0.0` works in a fresh venv.
-- [ ] The GitHub Release can be updated to mention the Python package is now live.
+- CI must be green (build / test / audit).
+- Reviewers approve; but **do not squash-merge** (Changesets needs full commit).
 
 ---
 
-## 11 . `changeset/config.json` (For Reference)
+## 4 . Merge PR — **main** now contains only the `.changeset/` entry
 
-This configuration does not need to change. Changesets will correctly version all packages, including the Python one. We are only controlling the _publish_ step in the CI workflow.
+GitHub Actions does **nothing** yet (no version bump, no publish).
+
+---
+
+## 5 . Version & tag in _release branch_ (not on main)
+
+We can’t push to main, so:
+
+```bash
+git switch release/v1.0.0   # already on this branch
+git pull --ff-only origin main   # refresh with latest main
+
+pnpm changeset version      # bumps every public pkg to 1.0.0, updates CHANGELOG
+git add .
+git commit -m "chore(release): v1.0.0 version bump"
+git push
+```
+
+CI runs again on the branch; should still be green.
+
+---
+
+## 6 . PR #2 → merge the **version bump commit** into main
+
+- Title: “chore(release): publish v1.0.0”
+- After merge, main now has the bump commit → triggers **Changesets GitHub Action** which:
+  1. Builds
+  2. Runs `pnpm changeset publish` (publishes **npm** packages only, because the Python step is disabled)
+
+The action needs:
+
+```yaml
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+_(already present)._
+
+---
+
+## 7 . Verify npm release
+
+```bash
+npm info @agentcommunity/aid version            # → 1.0.0
+npm info @agentcommunity/aid-doctor version     # → 1.0.0
+```
+
+Local install smoke-test:
+
+```bash
+npm init -y tmp && cd tmp
+npm install @agentcommunity/aid@1
+npx aid-doctor --help
+cd .. && rm -rf tmp
+```
+
+---
+
+## 8 . Draft & publish GitHub Release notes
+
+(Mark Python status as “coming soon after PyPI namespace approval.”)
+
+---
+
+## 9 . Phase-2 (PyPI) checklist — **after approval**
+
+1. Add `PYPI_TOKEN` to repo secrets.
+2. Un-comment / enable `twine upload` step in the publish workflow:
+
+```yaml
+- name: Publish PyPI
+  if: github.ref == 'refs/tags/v*'
+  env:
+    TWINE_USERNAME: '__token__'
+    TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+  run: |
+    cd packages/aid-py
+    python -m build --sdist --wheel
+    twine upload dist/*
+```
+
+3. Bump only the Python package **patch** version:
+
+```bash
+git switch -c release/pypi
+pnpm changeset --empty       # choose "patch" only for aid-py
+git commit -m "chore(pypi): publish Python package"
+git push -u origin release/pypi
+# PR -> main -> merge -> tag v1.0.1 -> publish to PyPI (only aid-py gets bump)
+```
+
+---
+
+## 10 . Fix for the dry-run command
+
+Earlier failure came from filtering paths. Use workspace filter:
+
+```bash
+# Dry-run npm packs for every public JS package
+pnpm -r --filter "@agentcommunity/*" --filter="!@agentcommunity/aid-py-test-runner" exec npm pack --dry-run
+```
+
+Or, simpler:
+
+```bash
+pnpm -r exec npm pack --dry-run
+```
+
+(Turbo/PNPM will still skip private packages listed with `"private": true` in `package.json`.)
+
+---
+
+## 11 . Update ignore list (aid-web-generator is gone)
+
+`.changeset/config.json`
 
 ```json
-{
-  "changelog": "@changesets/cli/changelog",
-  "commit": false,
-  "linked": [],
-  "access": "public",
-  "baseBranch": "main",
-  "updateInternalDependencies": "patch",
-  "ignore": [
-    "@agentcommunity/aid-web",
-    "@agentcommunity/e2e-tests",
-    "@agentcommunity/aid-go-test-runner",
-    "@agentcommunity/aid-py-test-runner"
-  ]
-}
+"ignore": [
+  "@agentcommunity/aid-web",
+  "@agentcommunity/e2e-tests",
+  "@agentcommunity/aid-go-test-runner",
+  "@agentcommunity/aid-py-test-runner"
+]
 ```
 
 ---
 
-### Quick ELI5 summary
+### Recap
 
-_Tokens_ are secret API keys that let GitHub do the `npm publish` / `twine upload` for you. You create them once on npm/PyPI, store them in GitHub _Secrets,_ and your workflow reads them when it’s time to publish.
+1. **release/v1.0.0 branch**: changeset add → PR #1
+2. Merge PR #1 → main (only changeset entry)
+3. Version bump on same branch → PR #2
+4. Merge PR #2 → main → CI publishes npm 1.0.0
+5. Draft GitHub release
+6. After PyPI approval → release/pypi branch with patch changeset → publish Python
 
-We will follow this staged plan:
-
-1.  **First, we'll get the `NPM_TOKEN` and modify our GitHub Action to skip the Python release.**
-2.  Then, we'll run the release commands to publish all the **JavaScript packages** to npm.
-3.  **Later,** once PyPI approves our project name, we'll add the `PYPI_TOKEN` and re-enable the Python step to publish it.
+Take it slow, tick each box, and you’ll ship without tripping the protected-main rule or PyPI delay.
