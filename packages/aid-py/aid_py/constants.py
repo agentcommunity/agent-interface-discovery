@@ -1,7 +1,3 @@
-# MIT License
-# Copyright (c) 2025 Agent Community
-# Author: Agent Community
-# Repository: https://github.com/agentcommunity/agent-interface-discovery
 """
 GENERATED FILE - DO NOT EDIT
 
