@@ -46,40 +46,43 @@ function ExampleItem({ example }: { example: Example }) {
 export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProps) {
   if (variant === 'toggle') {
     return (
-      <ToggleGroup
-        type="single"
-        onValueChange={(value) => value && onSelect(value)}
-        className="flex flex-col gap-6 sm:flex-row sm:justify-between w-full"
-      >
-        <div className="flex flex-col items-start gap-2">
-          <h3 className="text-sm font-semibold">Simple Examples</h3>
-          <div className="flex flex-wrap gap-2">
-            {BASIC_EXAMPLES.map((ex) => (
-              <ToggleGroupItem
-                key={ex.title}
-                value={ex.content}
-                className="text-sm font-medium text-foreground"
-              >
-                {ex.title}
-              </ToggleGroupItem>
-            ))}
+      <div className="w-full">
+        <div className="border-b border-muted mb-4 w-full" />
+        <ToggleGroup
+          type="single"
+          onValueChange={(value) => value && onSelect(value)}
+          className="flex flex-col sm:flex-row gap-6 w-full items-start"
+        >
+          <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
+            <h3 className="text-sm font-semibold">Simple Examples</h3>
+            <div className="flex flex-wrap gap-2 w-full">
+              {BASIC_EXAMPLES.map((ex) => (
+                <ToggleGroupItem
+                  key={ex.title}
+                  value={ex.content}
+                  className="text-sm font-medium text-foreground"
+                >
+                  {ex.title}
+                </ToggleGroupItem>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="flex flex-col items-start gap-2">
-          <h3 className="text-sm font-semibold">Real World Examples</h3>
-          <div className="flex flex-wrap gap-2">
-            {REAL_WORLD_EXAMPLES.map((ex) => (
-              <ToggleGroupItem
-                key={ex.title}
-                value={ex.content}
-                className="flex items-center gap-2 text-sm font-medium !text-foreground"
-              >
-                <ExampleItem example={ex} />
-              </ToggleGroupItem>
-            ))}
+          <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
+            <h3 className="text-sm font-semibold">Real World Examples</h3>
+            <div className="flex flex-wrap gap-2 w-full">
+              {REAL_WORLD_EXAMPLES.map((ex) => (
+                <ToggleGroupItem
+                  key={ex.title}
+                  value={ex.content}
+                  className="flex items-center gap-2 text-sm font-medium !text-foreground"
+                >
+                  <ExampleItem example={ex} />
+                </ToggleGroupItem>
+              ))}
+            </div>
           </div>
-        </div>
-      </ToggleGroup>
+        </ToggleGroup>
+      </div>
     );
   }
 

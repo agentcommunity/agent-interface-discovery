@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, PlayCircle, Sparkles } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copybutton';
+import { getAidVersion } from '@/lib/utils';
 
 export function Hero() {
   const [tokenCount, setTokenCount] = useState(0);
@@ -45,7 +46,7 @@ export function Hero() {
             variant="secondary"
             className="mb-6 animate-fade-in shadow-soft-xs hover:shadow-soft-md transition-all duration-200"
           >
-            v1.0.0 • DNS-based Discovery
+            v{getAidVersion()} • DNS-based Agent Discovery
           </Badge>
 
           <h1 className="mb-8 text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-balance animate-fade-in-up">
