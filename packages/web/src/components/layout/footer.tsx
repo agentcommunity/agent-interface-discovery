@@ -26,12 +26,13 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://docs.agentcommunity.org/aid/quick-start"
+                  href="https://docs.agentcommunity.org/aid/quickstart"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   Quick Start
                 </Link>
               </li>
+              {/*
               <li>
                 <Link
                   href="https://docs.agentcommunity.org/aid/examples"
@@ -40,6 +41,7 @@ export function Footer() {
                   Examples
                 </Link>
               </li>
+              */}
             </ul>
           </div>
 
