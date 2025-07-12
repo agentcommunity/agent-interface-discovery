@@ -84,3 +84,56 @@ AID v1 is a deliberately focused and pragmatic standard. It provides a simple, r
 
 - [Quick Start Guide](quickstart/index.md)
 - [Blog: The Missing MX Record](blog/missing_record.md)
+
+---
+
+## Appendix: Full Protocol Flowchart
+
+```mermaid
+  graph TD
+    A[User provides domain] --> B[Normalize domain to A-label]
+    B --> C[Query DNS TXT record at _agent.domain]
+    C --> D{DNS lookup successful?}
+    D -->|No| E[ERR_DNS_LOOKUP_FAILED]
+    D -->|Yes| F{Record exists?}
+    F -->|No| G[ERR_NO_RECORD]
+    F -->|Yes| H[Concatenate DNS strings if split]
+    H --> I[Parse key=value pairs]
+    I --> J{Contains v=aid1?}
+    J -->|No| K[ERR_INVALID_TXT]
+    J -->|Yes| L{Contains uri and proto?}
+    L -->|No| K
+    L -->|Yes| M[Extract values: uri, proto, auth, desc]
+    M --> N{Client supports protocol?}
+    N -->|No| O[ERR_UNSUPPORTED_PROTO]
+    N -->|Yes| P{Protocol is 'local'?}
+    P -->|Yes| Q[Check security safeguards]
+    Q --> R{User consent given?}
+    R -->|No| S[ERR_SECURITY]
+    R -->|Yes| T[Execute local agent]
+    P -->|No| U{URI uses HTTPS?}
+    U -->|No| V[ERR_SECURITY]
+    U -->|Yes| W[Validate DNSSEC if available]
+    W --> X{DNSSEC valid?}
+    X -->|Invalid| Y[ERR_SECURITY]
+    X -->|Valid/Not present| Z[Connect to remote agent]
+    Z --> AA{Connection successful?}
+    AA -->|No| BB[Connection failed]
+    AA -->|Yes| CC[Negotiate protocol]
+    T --> CC
+    CC --> DD{Protocol negotiation OK?}
+    DD -->|No| EE[Protocol error]
+    DD -->|Yes| FF[Agent ready for use]
+
+    style A fill:#e1f5fe
+    style FF fill:#e8f5e8
+    style E fill:#ffebee
+    style G fill:#ffebee
+    style K fill:#ffebee
+    style O fill:#ffebee
+    style S fill:#ffebee
+    style V fill:#ffebee
+    style Y fill:#ffebee
+    style BB fill:#ffebee
+    style EE fill:#ffebee
+```
