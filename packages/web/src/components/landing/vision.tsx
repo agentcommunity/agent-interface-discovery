@@ -18,14 +18,14 @@ const visionFeatures = [
   },
   {
     icon: Rocket,
-    title: 'Next-Generation AI Infrastructure',
+    title: 'Open-Source Agent Infrastructure',
     description:
-      "AID is just the beginning. We're building the foundation for autonomous agent networks, smart routing, and self-organizing AI ecosystems that scale from startups to enterprises.",
+      'We’re building a vendor-neutral stack for hosting, scaling and observing agents. Curious? Get involved at agentcommunity.org.',
     highlights: [
-      'Agent mesh networking',
-      'Intelligent load balancing',
-      'Self-healing connections',
-      'Enterprise-grade security',
+      'MIT-licensed core',
+      'Self-host or cloud',
+      'Pluggable runtimes',
+      'Community governance',
     ],
   },
 ];

@@ -112,9 +112,9 @@ export function Hero() {
                   $
                 </span>
                 <span className="text-foreground transition-colors duration-300 group-hover:text-foreground">
-                  npm install @agentcommunity/aid-core
+                  npm install @agentcommunity/aid
                 </span>
-                <CopyButton textToCopy="npm install @agentcommunity/aid-core" />
+                <CopyButton textToCopy="npm install @agentcommunity/aid" />
               </div>
             </div>
           </div>

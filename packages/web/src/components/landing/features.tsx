@@ -5,26 +5,22 @@ const problems = [
   {
     icon: AlertTriangle,
     title: 'Manual Integration Hell',
-    description:
-      'Every AI agent requires custom client code, documentation diving, and endless configuration tweaks.',
+    description: 'Each agent needs bespoke code, doc digging and manual config.',
   },
   {
     icon: Puzzle,
     title: 'Protocol Fragmentation',
-    description:
-      'MCP, A2A, OpenAPI, local packages—each agent speaks a different language with different auth flows.',
+    description: 'Agents speak MCP, A2A, OpenAPI and more—auth flows vary wildly.',
   },
   {
     icon: Clock,
     title: 'Wasted Development Time',
-    description:
-      'Developers spend weeks building what should be automatic: finding and connecting to AI services.',
+    description: 'Teams lose weeks wiring basic discovery and connection logic.',
   },
   {
     icon: Settings,
     title: 'No Discovery Standard',
-    description:
-      'There&apos;s no universal way to find agent capabilities. Each provider invents their own discovery method.',
+    description: 'No universal discovery standard. Every provider invents its own.',
   },
 ];
 
