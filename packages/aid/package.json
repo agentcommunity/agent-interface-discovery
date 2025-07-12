@@ -52,7 +52,7 @@
     "test": "vitest run",
     "test:coverage": "vitest --coverage",
     "clean": "rimraf dist",
-    "prepack": "turbo run build --filter={workspace}"
+    "prepack": "turbo run build --filter=."
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
