@@ -210,3 +210,10 @@ For cross-language SDK consistency, clients **SHOULD** use these numeric constan
 - [RFC5890] Internationalized Domain Names for Applications (IDNA)
 - [RFC8174] Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words
 - [RFC9460] Service Binding and Parameter Specification (SVCB/HTTPS)
+
+---
+
+**Next Steps:**
+
+- [Quick Start Guide](quickstart/index.md)
+- [Blog: The Missing MX Record](blog/missing_record.md)

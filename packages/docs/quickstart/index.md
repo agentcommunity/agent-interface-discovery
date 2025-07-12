@@ -87,10 +87,6 @@ Go to your DNS provider (Cloudflare, Vercel, GoDaddy, etc.) and add a new `TXT` 
 - **Content (or Value):** The string from Step 2.
 - **TTL:** `300` (5 minutes) is a good starting point.
 
-Here's how it might look in Vercel's DNS dashboard:
-
-![Vercel DNS Example](../assets/vercel-dns-example.png) <!-- You would add an actual image here -->
-
 ### Step 4: Verify Your Record
 
 Wait a few minutes for DNS to propagate. You can then check your work:
@@ -221,3 +217,14 @@ func main() {
 > **📖 More Details:** See the [Go package README](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go) for advanced usage, error handling, and API reference.
 
 **That's it!** You now have the agent's URI and can proceed to connect to it using its specified protocol.
+
+---
+
+**Explore:**
+
+- [MCP Guide](./quickstart_mcp.md)
+- [A2A Guide](./quickstart_a2a.md)
+- [OpenAPI Guide](./quickstart_openapi.md)
+- [Specification](../specification.md)
+- [Rationale](../rationale.md)
+- [Blog](../blog/finding_door_a2a.md)

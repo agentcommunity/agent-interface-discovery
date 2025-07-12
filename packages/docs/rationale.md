@@ -77,3 +77,10 @@ A successful standard is defined as much by the problems it _doesn't_ solve as b
 ### **6. Conclusion**
 
 AID v1 is a deliberately focused and pragmatic standard. It provides a simple, robust, and immediately deployable solution to the critical problem of agent discovery. By understanding what it does well and, just as importantly, what it _intentionally_ does not do, the community can build a powerful and interoperable ecosystem on a solid and stable foundation.
+
+---
+
+**Next Steps:**
+
+- [Quick Start Guide](quickstart/index.md)
+- [Blog: The Missing MX Record](blog/missing_record.md)
