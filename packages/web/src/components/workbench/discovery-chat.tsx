@@ -8,9 +8,11 @@ import { Loader2, Send } from 'lucide-react';
 import { useChatEngine, type ChatLogMessage } from '@/hooks/use-chat-engine';
 import { ToolListSummary } from '@/components/workbench/tool-list-summary';
 import { Typewriter } from '@/components/ui/typewriter';
+import { AID_GENERATOR_URL } from '@/lib/constants';
 import { TitleSection } from '@/components/workbench/title-section';
 import { ExamplePicker } from './example-picker';
 import { DiscoverySuccessBlock } from './discovery-success-block';
+import { DiscoveryToolBlock } from '@/components/workbench/tool-blocks';
 import { ConnectionToolBlock } from '@/components/workbench/tool-blocks';
 import type { HandshakeResult } from '@/hooks/use-connection';
 import type { DiscoveryResult } from '@/hooks/use-discovery';
@@ -22,12 +24,35 @@ function Message({ message }: { message: ChatLogMessage }) {
     switch (message.type) {
       case 'user':
         return <div className="text-sm">{message.content}</div>;
-      case 'assistant':
+      case 'assistant': {
+        if (message.content.includes('generator tool')) {
+          // Render with clickable link, skip typewriter for simplicity
+          const parts = message.content.split('generator tool');
+          return (
+            <p className="text-foreground">
+              {parts[0]}
+              <a
+                href={AID_GENERATOR_URL}
+                target="_self"
+                rel="noopener noreferrer"
+                className="underline hover:text-muted-foreground"
+              >
+                generator tool
+              </a>
+              {parts[1] ?? ''}
+            </p>
+          );
+        }
         return (
           <Typewriter key={message.id} text={message.content} onComplete={message.onComplete} />
         );
+      }
       case 'discovery_result':
-        return <DiscoverySuccessBlock result={message.result} />;
+        return message.result.ok ? (
+          <DiscoverySuccessBlock result={message.result} />
+        ) : (
+          <DiscoveryToolBlock status="error" result={message.result} domain={message.domain} />
+        );
       case 'connection_result':
         return (
           <ConnectionToolBlock
@@ -60,7 +85,7 @@ function Message({ message }: { message: ChatLogMessage }) {
         className={
           isUser
             ? 'max-w-[60%] bg-gray-900 text-white rounded-2xl px-4 py-3 shadow-sm'
-            : 'w-full text-gray-800'
+            : 'w-full text-foreground'
         }
       >
         {renderContent()}

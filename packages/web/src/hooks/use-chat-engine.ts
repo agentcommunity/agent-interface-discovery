@@ -151,9 +151,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         (scenario && !scenario.live ? new MockDatasource(domain) : new LiveDatasource());
 
       // Narrative 1 (always)
-      if (scenario?.narrative1) {
-        await sendAssistant(scenario.narrative1.replace('{domain}', domain));
-      }
+      await (scenario?.narrative1 ? sendAssistant(scenario.narrative1.replace('{domain}', domain)) : sendAssistant('Let me see…'));
 
       // 1. Discovery phase
       setStatus('discovering');
@@ -162,16 +160,22 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
 
       if (!isOk(discoveryRes)) {
         // Discovery failed path
-        if (scenario?.narrative2) {
-          const errMsg = discoveryRes.error.message ?? 'Error';
-          await sendAssistant(scenario.narrative2.replace('{error}', errMsg));
-        }
         addMessage({
           type: 'discovery_result',
           id: uniqueId(),
           result: discoveryRes,
           domain,
         });
+
+        if (scenario?.narrative2) {
+          const errMsg = discoveryRes.error.message ?? 'Error';
+          await sendAssistant(scenario.narrative2.replace('{error}', errMsg));
+        } else {
+          await sendAssistant(
+            `I couldn’t find an _agent record for ${domain}. If you manage this domain you can create one using our generator tool.`,
+          );
+        }
+
         setStatus('discovery_failed');
         return;
       }

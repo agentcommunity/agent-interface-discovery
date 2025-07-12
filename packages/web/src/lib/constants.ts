@@ -95,3 +95,5 @@ export const OTHER_CHAT_EXAMPLES: Example[] = [
     content: '',
   },
 ];
+
+export const AID_GENERATOR_URL = 'https://aid.agentcommunity.org/workbench#generator';

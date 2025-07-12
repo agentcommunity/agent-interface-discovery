@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Plug } from 'lucide-react';
+import { AID_GENERATOR_URL } from '@/lib/constants';
 import { ToolCallBlock } from './tool-call-block';
 import type { DiscoveryResult } from '@/hooks/use-discovery';
 import type { HandshakeResult } from '@/hooks/use-connection';
@@ -96,8 +97,8 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
     if (result.ok) {
       return result.value?.record?.desc ? `Found: ${result.value.record.desc}` : 'Agent discovered';
     } else {
-      const errorMessage = (result.error as ErrorWithMetadata)?.message;
-      return errorMessage || 'Discovery failed';
+      const errorMessage = (result.error as ErrorWithMetadata)?.message || 'No _agent record found';
+      return errorMessage;
     }
   };
 
@@ -108,8 +109,25 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
       status={status}
       statusText={getStatusText()}
       codeSnippets={getCodeSnippets()}
+      defaultExpanded={status === 'error'}
     >
-      {result && !result.ok && <DiscoveryDetailsView result={result} />}
+      {result && !result.ok && (
+        <>
+          <DiscoveryDetailsView result={result} />
+          <p className="mt-3 text-xs text-gray-600">
+            If you manage this domain, you can{' '}
+            <a
+              href={AID_GENERATOR_URL}
+              target="_self"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              create an AID record
+            </a>{' '}
+            using our generator.
+          </p>
+        </>
+      )}
     </ToolCallBlock>
   );
 }
