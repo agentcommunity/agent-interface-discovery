@@ -69,7 +69,7 @@ export function Header() {
   }, [pathname]);
 
   const navigation = [
-    { name: 'Docs', href: 'https://docs.agentcommunity.org', external: true },
+    { name: 'Docs', href: 'https://docs.agentcommunity.org/aid', external: true },
     {
       name: 'GitHub',
       href: 'https://github.com/agentcommunity/aid-interface-discovery',
@@ -117,8 +117,7 @@ export function Header() {
 
           {/* --- Desktop Workbench Button --- */}
           <div className="hidden sm:flex pl-4">
-            {isWorkbench ? // This button is now hidden on the workbench page to reduce clutter,
-            // as the switcher already indicates the page. You can re-enable if desired.
+            {isWorkbench ? // as the switcher already indicates the page. You can re-enable if desired. // This button is now hidden on the workbench page to reduce clutter,
             // <Button disabled className="shadow-soft-md">Workbench</Button>
             null : (
               <Button

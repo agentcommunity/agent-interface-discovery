@@ -18,7 +18,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/docs/specification"
+                  href="https://docs.agentcommunity.org/aid/specification"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   Specification
@@ -26,7 +26,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/docs/quick-start"
+                  href="https://docs.agentcommunity.org/aid/quick-start"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   Quick Start
@@ -34,7 +34,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/docs/examples"
+                  href="https://docs.agentcommunity.org/aid/examples"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
                   Examples
@@ -48,7 +48,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="https://github.com/agentcommunity/aid"
+                  href="https://github.com/agentcommunity/agent-interface-discovery"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center transition-all duration-200 hover:translate-x-1 group"
                   target="_blank"
                 >
@@ -58,7 +58,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://github.com/agentcommunity/aid/discussions"
+                  href="https://github.com/agentcommunity/agent-interface-discovery/discussions"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center transition-all duration-200 hover:translate-x-1 group"
                   target="_blank"
                 >
@@ -68,7 +68,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://github.com/agentcommunity/aid/issues"
+                  href="https://github.com/agentcommunity/agent-interface-discovery/issues"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center transition-all duration-200 hover:translate-x-1 group"
                   target="_blank"
                 >
