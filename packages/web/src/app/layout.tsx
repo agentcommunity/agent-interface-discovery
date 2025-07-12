@@ -7,24 +7,47 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:3001'),
-  title: 'Agent Interface Discovery - Universal AI Agent Standard',
+  title: '.agent Domain – DNS for Agents',
   description:
-    'DNS-based discovery protocol for AI agents. Find and connect to any agent using just a domain name.',
-  keywords: ['AI', 'agents', 'discovery', 'DNS', 'protocol', 'MCP', 'A2A'],
+    'The open, decentralized DNS-based discovery protocol for AI agents. Register your .agent domain and connect your agent to the world.',
+  metadataBase: new URL('https://www.agentcommunity.org'),
+  keywords: [
+    'agent domain',
+    '.agent',
+    'AI agents',
+    'DNS',
+    'discovery',
+    'domain registration',
+    'agent community',
+    'AID',
+    'MCP',
+    'A2A',
+  ],
   authors: [{ name: 'Agent Community' }],
   openGraph: {
-    title: 'Agent Interface Discovery',
-    description: 'Universal standard for AI agent discovery',
-    images: ['/og-image.png'],
-    url: 'https://aid.agentcommunity.org',
-    siteName: 'Agent Interface Discovery',
+    title: '.agent Domain – DNS for Agents',
+    description:
+      'Register your .agent domain and make your AI agent discoverable instantly. The universal standard for agent discovery.',
+    url: 'https://www.agentcommunity.org',
+    siteName: '.agent Domain',
+    images: [
+      {
+        url: '/og-card.png',
+        width: 1200,
+        height: 630,
+        alt: '.agent Domain Banner',
+      },
+    ],
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Agent Interface Discovery',
-    description: 'Universal standard for AI agent discovery',
+    site: '@agentdomainxyz',
+    creator: '@agentdomainxyz',
+    title: '.agent Domain – DNS for Agents',
+    description:
+      'Register your .agent domain and connect your agent to the world. DNS for Agents by Agent Community.',
     images: ['/og-card.png'],
   },
   robots: {
@@ -37,6 +60,19 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  other: {
+    'twitter:card': 'summary_large_image',
+    'twitter:site': '@agentdomainxyz',
+    'twitter:creator': '@agentdomainxyz',
+    'twitter:title': '.agent Domain – DNS for Agents',
+    'twitter:description': 'Register your .agent domain and connect your agent to the world.',
+    'twitter:image': '/og-card.png',
+    'twitter:image:alt': '.agent Domain Banner',
   },
 };
 
