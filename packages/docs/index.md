@@ -55,4 +55,4 @@ flowchart LR
 ### Want the deep dive?
 
 - [**Rationale**](rationale.md) – _Why we chose DNS, why the manifest was removed, and why simplicity wins._
-- [**Specification**](v1/specification.md) – _The exact `TXT` record format, client algorithm, and security rules._
+- [**Specification**](specification.md) – _The exact `TXT` record format, client algorithm, and security rules._
