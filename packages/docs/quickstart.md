@@ -15,13 +15,13 @@ Fast track for using Agent Interface Discovery.
 
 AID provides libraries and tools for multiple languages and use cases:
 
-| Package                                                                                             | Purpose                          | Language   | Status                                           |
-| --------------------------------------------------------------------------------------------------- | -------------------------------- | ---------- | ------------------------------------------------ |
-| **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                        | Core discovery library           | TypeScript | ✅ Published                                     |
-| **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**          | CLI validation & generation      | Node.js    | ✅ Published                                     |
-| **[aid-py](https://pypi.org/agentcommunity/aid-discovery/)**                                        | Python discovery library         | Python     | 🔜 Published                                     |
-| **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)** | Go discovery library             | Go         | ✅ Published                                     |
-| **AID Web Workbench**                                                                               | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org) |
+| Package                                                                                             | Purpose                          | Language   | Status                                                     |
+| --------------------------------------------------------------------------------------------------- | -------------------------------- | ---------- | ---------------------------------------------------------- |
+| **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                        | Core discovery library           | TypeScript | ✅ Published                                               |
+| **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**          | CLI validation & generation      | Node.js    | ✅ Published                                               |
+| **[aid-py](https://pypi.org/agentcommunity/aid-discovery/)**                                        | Python discovery library         | Python     | 🔜 Published                                               |
+| **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)** | Go discovery library             | Go         | ✅ Published                                               |
+| **AID Web Workbench**                                                                               | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
 
 ---
 
