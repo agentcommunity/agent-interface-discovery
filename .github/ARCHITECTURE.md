@@ -156,7 +156,7 @@ export const baseConfig = defineConfig({
     "build": "tsup",
     "dev": "tsup --watch",
     "clean": "rimraf dist",
-    "prepack": "turbo run build --filter={workspace}"
+    "prepack": "turbo run build --filter=."
   }
 }
 ```
