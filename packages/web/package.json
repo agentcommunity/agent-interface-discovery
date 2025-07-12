@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@agentcommunity/aid": "workspace:*",
-    "@agentcommunity/aid-web-generator": "workspace:^",
     "@modelcontextprotocol/sdk": "^1.15.0",
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-dialog": "^1.0.5",
