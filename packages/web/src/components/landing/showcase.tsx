@@ -8,54 +8,44 @@ import { CheckCircle, ExternalLink } from 'lucide-react';
 
 const toolkitPackages = [
   {
-    name: 'TypeScript/JavaScript',
+    name: 'TypeScript / JS',
     package: '@agentcommunity/aid',
-    description: 'Core resolver with TypeScript definitions for Node.js and browsers',
-    features: [
-      'Promise-based API',
-      'Built-in validation',
-      'Browser & Node.js support',
-      'TypeScript definitions',
-    ],
+    description: 'Core discovery library – Node.js & browser',
+    features: ['Promise-based API', 'TypeScript types', 'Built-in validation'],
     href: 'https://www.npmjs.com/package/@agentcommunity/aid',
-    badge: 'Core',
+    badge: 'Stable',
   },
   {
-    name: 'Python',
-    package: 'aid-py',
-    description: 'Pythonic interface with async/await support',
-    features: ['Async/await support', 'Type hints included', 'Clean API design', 'Cross-platform'],
-    href: 'https://pypi.org/project/aid-py/',
-    badge: 'Ready',
+    name: 'CLI – AID Doctor',
+    package: '@agentcommunity/aid-doctor',
+    description: 'Validate & generate DNS records from the terminal',
+    features: ['Record linting', 'Security checks', 'JSON/YAML output'],
+    href: 'https://www.npmjs.com/package/@agentcommunity/aid-doctor',
+    badge: 'Stable',
   },
   {
     name: 'Go',
     package: 'github.com/agentcommunity/aid-go',
-    description: 'High-performance Go implementation',
-    features: ['Zero allocations', 'Context support', 'Structured logging', 'No external deps'],
+    description: 'High-performance Go client',
+    features: ['Zero allocations', 'Context support', 'No external deps'],
     href: 'https://pkg.go.dev/github.com/agentcommunity/aid-go',
-    badge: 'Fast',
+    badge: 'Stable',
   },
   {
-    name: 'CLI Tool',
-    package: '@agentcommunity/aid-doctor',
-    description: 'Command-line validator and debugging tool',
-    features: [
-      'DNS record validation',
-      'Security checks',
-      'Performance testing',
-      'JSON/YAML output',
-    ],
-    href: 'https://www.npmjs.com/package/@agentcommunity/aid-doctor',
-    badge: 'DevOps',
+    name: 'Python',
+    package: 'aid-py',
+    description: 'Idiomatic asyncio client',
+    features: ['Async/await', 'Type hints', 'Clean API'],
+    href: 'https://pypi.org/project/aid-discovery/',
+    badge: 'Beta',
   },
   {
     name: 'Web Workbench',
-    package: 'Interactive Browser Tool',
-    description: 'Test agent discovery without installing anything',
-    features: ['Real-time validation', 'DNS debugging', 'Share results', 'Export configs'],
+    package: 'Interactive tool',
+    description: 'Try AID in the browser – no install',
+    features: ['Live DNS lookup', 'Shareable links', 'Export configs'],
     href: '/workbench',
-    badge: 'No Install',
+    badge: 'Stable',
   },
 ];
 
@@ -82,7 +72,13 @@ export function Toolkit() {
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between mb-2">
                     <Badge
-                      variant="default"
+                      variant={
+                        pkg.badge === 'Stable'
+                          ? 'success'
+                          : (pkg.badge === 'Beta'
+                            ? 'warning'
+                            : 'default')
+                      }
                       className="text-xs shadow-soft-xs transition-all duration-300 group-hover:shadow-soft-md group-hover:scale-105"
                     >
                       {pkg.badge}

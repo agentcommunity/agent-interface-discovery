@@ -6,16 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, PlayCircle, Sparkles } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copybutton';
-import { getAidVersion } from '@/lib/utils';
+import { getAidVersion, fetchAidVersion } from '@/lib/utils';
 
 export function Hero() {
   const [tokenCount, setTokenCount] = useState(0);
   const [engineerHours, setEngineerHours] = useState(0);
+  const [aidVersion, setAidVersion] = useState(getAidVersion());
   // Numeric separators make large numbers much easier to read.
   const targetTokens = 12_345_678;
   const HUMAN_TOKENS_PER_HOUR = 12_000;
 
   useEffect(() => {
+    fetchAidVersion()
+      .then(setAidVersion)
+      .catch(() => {});
     const duration = 2000; // 2 seconds
     const steps = 60;
     const increment = targetTokens / steps;
@@ -46,7 +50,7 @@ export function Hero() {
             variant="secondary"
             className="mb-6 animate-fade-in shadow-soft-xs hover:shadow-soft-md transition-all duration-200"
           >
-            v{getAidVersion()} • DNS-based Agent Discovery
+            v{aidVersion} • DNS-based Agent Discovery
           </Badge>
 
           <h1 className="mb-8 text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-balance animate-fade-in-up">
@@ -108,9 +112,9 @@ export function Hero() {
                   $
                 </span>
                 <span className="text-foreground transition-colors duration-300 group-hover:text-foreground">
-                  npm install @agentcommunity/aid-core
+                  npm install @agentcommunity/aid
                 </span>
-                <CopyButton textToCopy="npm install @agentcommunity/aid-core" />
+                <CopyButton textToCopy="npm install @agentcommunity/aid" />
               </div>
             </div>
           </div>

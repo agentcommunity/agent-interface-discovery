@@ -110,6 +110,10 @@
     @apply text-2xl md:text-3xl tracking-tight;
   }
 
+  h5 {
+    @apply text-xl md:text-xl;
+  }
+
   /* Body text defaults to muted foreground for better readability */
   p, li, span:not(.heading) {
     @apply text-muted-foreground leading-relaxed;
@@ -168,7 +172,7 @@
 
   /* Card Variants */
   .card-interactive {
-    @apply bg-card border border-border/50 rounded-xl shadow-soft-md hover:shadow-soft-lg hover:bg-card-hover transition-all duration-200 cursor-pointer;
+    @apply bg-card border border-border/50 rounded-xl shadow-soft-md hover:shadow-soft-lg hover:bg-muted transition-all duration-200 cursor-pointer;
   }
 
   .card-feature {

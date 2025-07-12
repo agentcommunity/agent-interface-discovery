@@ -39,11 +39,15 @@ AID establishes a well-known location for agent discovery. The process is simple
 
 ```mermaid
 graph TD
-    A[Client Application] -- 1. discover('example.com') --> B{DNS Resolver};
-    B -- 2. Query TXT record for '_agent.example.com' --> C[DNS Server];
-    C -- 3. Return TXT Record --> B;
-    B -- 4. 'v=aid1;uri=https://...;p=mcp' --> A;
-    A -- 5. Parse record & connect Agent--> D[Agent at https://...];
+    A[User provides domain] --> B[Query _agent.domain TXT record]
+    B --> C{Record found?}
+    C -->|No| D[Discovery fails]
+    C -->|Yes| E[Parse record]
+    E --> F{Valid format?}
+    F -->|No| G[Invalid record error]
+    F -->|Yes| H[Extract uri, proto, auth]
+    H --> I[Connect to agent]
+    I --> J[Use MCP/A2A/OpenAPI protocol]
 ```
 
 ## Guiding Principles

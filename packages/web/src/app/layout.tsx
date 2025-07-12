@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Agent Interface Discovery',
     description: 'Universal standard for AI agent discovery',
-    images: ['/og-image.png'],
+    images: ['/og-card.png'],
   },
   robots: {
     index: true,

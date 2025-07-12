@@ -12,6 +12,7 @@ interface CodeblockProps {
   className?: string;
   icon?: React.ReactNode;
   variant?: 'default' | 'inline';
+  rightSlot?: React.ReactNode;
 }
 
 export function Codeblock({
@@ -21,6 +22,7 @@ export function Codeblock({
   className = '',
   icon = <Terminal className="w-4 h-4" />,
   variant = 'default',
+  rightSlot,
 }: CodeblockProps) {
   if (variant === 'inline') {
     return (
@@ -53,10 +55,13 @@ export function Codeblock({
             {icon}
             <span className="font-medium text-muted-foreground">{title}</span>
           </div>
-          <CopyButton
-            textToCopy={content}
-            className="h-7 w-7 hover:bg-accent hover:text-accent-foreground"
-          />
+          <div className="flex items-center gap-2">
+            {rightSlot && <div>{rightSlot}</div>}
+            <CopyButton
+              textToCopy={content}
+              className="h-7 w-7 hover:bg-accent hover:text-accent-foreground"
+            />
+          </div>
         </div>
       )}
 

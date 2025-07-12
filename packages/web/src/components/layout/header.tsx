@@ -4,8 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 // Import Menu and X icons for the burger menu
-import { Bot, ExternalLink, Menu, X } from 'lucide-react';
+import { ExternalLink, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Logo } from './logo';
 
 // This function handles the click, updates the URL, and manually fires the event.
 // Moved to the outer scope to fix the 'unicorn/consistent-function-scoping' lint error.
@@ -81,14 +82,7 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-soft shadow-soft">
       <div className="container flex h-16 items-center justify-between">
         {/* === Left Side: Logo === */}
-        <Link href="/" className="group flex items-center gap-3 font-bold">
-          <div className="p-1.5 bg-muted rounded-lg transition-all duration-300 group-hover:bg-primary/10 group-hover:scale-110 shadow-soft-xs group-hover:shadow-soft-md">
-            <Bot className="h-5 w-5 text-muted-foreground transition-all duration-300 group-hover:text-primary group-hover:scale-110" />
-          </div>
-          <span className="text-xl tracking-tight transition-colors duration-300 group-hover:text-foreground">
-            AID
-          </span>
-        </Link>
+        <Logo className="flex-shrink-0" asLink />
 
         {/* === Center: Workbench Switcher (Desktop Only) === */}
         {isWorkbench && (
@@ -117,8 +111,7 @@ export function Header() {
 
           {/* --- Desktop Workbench Button --- */}
           <div className="hidden sm:flex pl-4">
-            {isWorkbench ? // <Button disabled className="shadow-soft-md">Workbench</Button> // as the switcher already indicates the page. You can re-enable if desired. // This button is now hidden on the workbench page to reduce clutter,
-            null : (
+            {isWorkbench ? null : ( // <Button disabled className="shadow-soft-md">Workbench</Button> // as the switcher already indicates the page. You can re-enable if desired. // This button is now hidden on the workbench page to reduce clutter,
               <Button
                 asChild
                 className="bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105"
