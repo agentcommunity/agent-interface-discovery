@@ -7,10 +7,10 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '.agent Domain – DNS for Agents',
+  title: 'Agent Interface Discovery - the DNS forAgents',
   description:
     'The open, decentralized DNS-based discovery protocol for AI agents. Register your .agent domain and connect your agent to the world.',
-  metadataBase: new URL('https://www.agentcommunity.org'),
+  metadataBase: new URL('https://aid.agentcommunity.org'),
   keywords: [
     'agent domain',
     '.agent',
@@ -25,10 +25,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Agent Community' }],
   openGraph: {
-    title: '.agent Domain – DNS for Agents',
-    description:
-      'Register your .agent domain and make your AI agent discoverable instantly. The universal standard for agent discovery.',
-    url: 'https://www.agentcommunity.org',
+    title: 'Agent Interface Discovery - the DNS forAgents',
+    description: 'Agent Interface Discovery -  the universal standard for agent discovery.',
+    url: 'https://aid.agentcommunity.org',
     siteName: '.agent Domain',
     images: [
       {
@@ -45,9 +44,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@agentdomainxyz',
     creator: '@agentdomainxyz',
-    title: '.agent Domain – DNS for Agents',
-    description:
-      'Register your .agent domain and connect your agent to the world. DNS for Agents by Agent Community.',
+    title: 'Agent Interface Discovery - the DNS forAgents',
+    description: 'DNS for Agents by Agent Community.',
     images: ['/og-card.png'],
   },
   robots: {
@@ -66,13 +64,12 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   other: {
-    'twitter:card': 'summary_large_image',
     'twitter:site': '@agentdomainxyz',
     'twitter:creator': '@agentdomainxyz',
-    'twitter:title': '.agent Domain – DNS for Agents',
-    'twitter:description': 'Register your .agent domain and connect your agent to the world.',
+    'twitter:title': 'Agent Interface Discovery - the DNS forAgents',
+    'twitter:description': 'Decentralized DNS based agent discovery protocol.',
     'twitter:image': '/og-card.png',
-    'twitter:image:alt': '.agent Domain Banner',
+    'twitter:image:alt': '_agent banner',
   },
 };
 
