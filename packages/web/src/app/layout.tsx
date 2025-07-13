@@ -34,7 +34,7 @@ export const metadata: Metadata = {
         url: '/og-card.png',
         width: 1200,
         height: 630,
-        alt: '.agent Domain Banner',
+        alt: '_agent Interface Discovery',
       },
     ],
     locale: 'en_US',
