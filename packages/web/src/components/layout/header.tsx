@@ -70,6 +70,7 @@ export function Header() {
   }, [pathname]);
 
   const navigation = [
+    { name: 'Join Community', href: 'https://agentcommunity.org/auth/sign-in', external: true },
     { name: 'Docs', href: 'https://docs.agentcommunity.org/aid', external: true },
     {
       name: 'GitHub',
