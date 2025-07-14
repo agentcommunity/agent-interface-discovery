@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/layout/header';
 import './globals.css';
+import Head from 'next/head';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -46,7 +47,7 @@ export const metadata: Metadata = {
     creator: '@agentdomainxyz',
     title: 'Agent Interface Discovery - the DNS forAgents',
     description: 'DNS for Agents by Agent Community.',
-    images: ['/og-card.png'],
+    images: ['https://aid.agentcommunity.org/og-card.png'], // absolute URL
   },
   robots: {
     index: true,
@@ -68,7 +69,7 @@ export const metadata: Metadata = {
     'twitter:creator': '@agentdomainxyz',
     'twitter:title': 'Agent Interface Discovery - the DNS forAgents',
     'twitter:description': 'Decentralized DNS based agent discovery protocol.',
-    'twitter:image': '/og-card.png',
+    'twitter:image': 'https://aid.agentcommunity.org/og-card.png', // absolute URL
     'twitter:image:alt': '_agent banner',
   },
 };
@@ -82,6 +83,15 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <Head>
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@agentdomainxyz" />
+        <meta name="twitter:creator" content="@agentdomainxyz" />
+        <meta name="twitter:title" content="Agent Interface Discovery - the DNS forAgents" />
+        <meta name="twitter:description" content="DNS for Agents by Agent Community." />
+        <meta name="twitter:image" content="https://aid.agentcommunity.org/og-card.png" />
+        <meta name="twitter:image:alt" content="_agent banner" />
+      </Head>
       <body className={inter.className}>
         <div className="flex h-dvh flex-col">
           <Header />
