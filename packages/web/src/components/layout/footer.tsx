@@ -50,6 +50,16 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
+                  href="https://agentcommunity.org/auth/sign-in"
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center transition-all duration-200 hover:translate-x-1 group"
+                  target="_blank"
+                >
+                  Join Community
+                  <ExternalLink className="ml-1 h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5" />
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="https://github.com/agentcommunity/agent-interface-discovery"
                   className="text-muted-foreground hover:text-foreground inline-flex items-center transition-all duration-200 hover:translate-x-1 group"
                   target="_blank"
