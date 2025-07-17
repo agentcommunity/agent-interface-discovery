@@ -14,6 +14,9 @@ packages/
 ├── aid-go/               # Go implementation + test runner (private)
 ├── web/                  # Next.js web interface (private)
 └── e2e-tests/           # End-to-end tests against live records (private)
+
+# NOTE: The official Python package is currently published at https://pypi.org/project/aid-discovery/ and is not yet community-owned. Community transfer is planned.
+
 ```
 
 ### Why This Structure?

@@ -115,6 +115,8 @@ try:
     #=> Found mcp agent at https://api.supabase.com/mcp
 except AidError as e:
     print(f"AID Error ({e.code}): {e}")
+
+# NOTE: The Python package is currently published at https://pypi.org/project/aid-discovery/ and is not yet community-owned. Community transfer is planned for a future release.
 ```
 
 </details>
