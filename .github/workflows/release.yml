@@ -1,4 +1,4 @@
-name: Release (npm only)
+name: Release (npm + PyPI)
 
 on:
   push:
@@ -12,6 +12,10 @@ jobs:
   publish:
     if: contains(github.event.head_commit.message, 'chore(release)')
     runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # required for PyPI OIDC
+      contents: read
 
     env:
       NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -32,5 +36,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Publish packages
+      - name: Publish npm packages
         run: pnpm changeset publish
+
+      - name: Set up Python for PyPI publishing
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Build Python package
+        run: |
+          cd packages/aid-py
+          python -m pip install --upgrade pip build
+          python -m build --sdist --wheel
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/aid-py/dist/
