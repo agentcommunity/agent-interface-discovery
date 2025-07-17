@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'packages/**/package.json'
+      - 'packages/**/pyproject.toml'
       - 'CHANGELOG.md'
       - '.changeset/**'
 
