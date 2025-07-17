@@ -19,7 +19,7 @@ AID provides libraries and tools for multiple languages and use cases:
 | --------------------------------------------------------------------------------------------------- | -------------------------------- | ---------- | ---------------------------------------------------------- |
 | **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                        | Core discovery library           | TypeScript | ✅ Published                                               |
 | **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**          | CLI validation & generation      | Node.js    | ✅ Published                                               |
-| **[aid-py](https://pypi.org/agentcommunity/aid-discovery/)**                                        | Python discovery library         | Python     | 🔜 Published                                               |
+| **[aid-discovery (Python)](https://pypi.org/project/aid-discovery/)**                               | Python discovery library         | Python     | 🔜 Published (not yet community-owned; transfer planned)   |
 | **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)** | Go discovery library             | Go         | ✅ Published                                               |
 | **AID Web Workbench**                                                                               | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
 
@@ -174,9 +174,11 @@ try:
 
 except AidError as e:
     print(f"Discovery failed: {e}")
+
+# NOTE: The Python package is currently published at https://pypi.org/project/aid-discovery/ and is not yet community-owned. Community transfer is planned for a future release.
 ```
 
-> **📖 More Details:** See the [Python package README](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-py) for advanced usage, error handling, and API reference.
+> **📖 More Details:** See the [Python package on PyPI](https://pypi.org/project/aid-discovery/) for advanced usage, error handling, and API reference.
 
 ### Go
 
