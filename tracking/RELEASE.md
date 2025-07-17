@@ -223,6 +223,27 @@ cd .. && rm -rf tmp
 3. First publish creates the project automatically
 4. No `PYPI_TOKEN` secret required
 
+### ⚠️ Critical Workflow Trigger Requirements:
+
+The release workflow only runs when **BOTH** conditions are met:
+
+1. **File trigger**: Push to main must change one of:
+   - `packages/**/package.json` (npm releases)
+   - `packages/**/pyproject.toml` (Python releases)
+   - `CHANGELOG.md` or `.changeset/**`
+2. **Message trigger**: Commit message must contain `chore(release)`
+
+**Common gotcha**: If `pyproject.toml` doesn't actually change between commits (e.g., already at target version), the workflow won't trigger even with correct commit message!
+
+### 🔧 Solution for Stuck Releases:
+
+If the workflow doesn't trigger despite correct setup:
+
+1. Create a temporary version downgrade (e.g., `1.0.0` → `0.1.0`)
+2. Commit and then immediately bump back to target version (`0.1.0` → `1.0.0`)
+3. Use `chore(release): bump Python package to vX.Y.Z` commit message
+4. This creates the file change needed to satisfy trigger conditions
+
 ---
 
 ## 10 . Future Migration to Organization (After Approval)
