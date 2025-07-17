@@ -205,14 +205,44 @@ cd .. && rm -rf tmp
 
 ---
 
-## 9 . Phase-2 (PyPI) checklist — **after approval**
+## 9 . PyPI Publishing: OIDC Route (Currently Active)
 
-1. Add `PYPI_TOKEN` to repo secrets.
-2. Un-comment / enable `twine upload` step in the publish workflow:
+**Status Update:** We've implemented PyPI publishing via **OIDC Pending Publisher** since the `agent-community` org approval is taking too long.
+
+### Current Implementation (v1.0.0):
+
+- ✅ PyPI publishing uses GitHub Actions OIDC (no secrets needed)
+- ✅ Pending publisher configured for `aid-discovery` project
+- ✅ Workflow updated with `pypa/gh-action-pypi-publish@release/v1`
+- ✅ Python package published as `aid-discovery` v1.0.0
+
+### How It Works:
+
+1. Workflow has `permissions: { id-token: write, contents: read }`
+2. PyPI pending publisher authenticates via OIDC
+3. First publish creates the project automatically
+4. No `PYPI_TOKEN` secret required
+
+---
+
+## 10 . Future Migration to Organization (After Approval)
+
+**When the `agent-community` org is approved:**
+
+1. **Transfer project ownership:**
+   - PyPI → `aid-discovery` project → Settings → Transfer ownership → `agent-community`
+
+2. **Optional: Switch to API token method:**
+   - Generate project-scoped `PYPI_TOKEN` in the org account
+   - Add to GitHub Secrets
+   - Update workflow to use token instead of OIDC
+
+3. **No version bumps needed** - just ownership transfer
+
+### Legacy API Token Method (for reference):
 
 ```yaml
 - name: Publish PyPI
-  if: github.ref == 'refs/tags/v*'
   env:
     TWINE_USERNAME: '__token__'
     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
@@ -222,19 +252,9 @@ cd .. && rm -rf tmp
     twine upload dist/*
 ```
 
-3. Bump only the Python package **patch** version:
-
-```bash
-git switch -c release/pypi
-pnpm changeset --empty       # choose "patch" only for aid-py
-git commit -m "chore(pypi): publish Python package"
-git push -u origin release/pypi
-# PR -> main -> merge -> tag v1.0.1 -> publish to PyPI (only aid-py gets bump)
-```
-
 ---
 
-## 10 . Fix for the dry-run command
+## 11 . Fix for the dry-run command
 
 Earlier failure came from filtering paths. Use workspace filter:
 
@@ -253,7 +273,7 @@ pnpm -r exec npm pack --dry-run
 
 ---
 
-## 11 . Update ignore list (aid-web-generator is gone)
+## 12 . Update ignore list (aid-web-generator is gone)
 
 `.changeset/config.json`
 
@@ -270,11 +290,17 @@ pnpm -r exec npm pack --dry-run
 
 ### Recap
 
+**npm packages (completed):**
+
 1. **release/v1.0.0 branch**: changeset add → PR #1
 2. Merge PR #1 → main (only changeset entry)
 3. Version bump on same branch → PR #2
 4. Merge PR #2 → main → CI publishes npm 1.0.0
-5. Draft GitHub release
-6. After PyPI approval → release/pypi branch with patch changeset → publish Python
 
-Take it slow, tick each box, and you’ll ship without tripping the protected-main rule or PyPI delay.
+**Python package (current approach):**
+
+1. **release/v1.0.0-python branch**: direct version bump + OIDC workflow
+2. PR → main → merge → CI publishes `aid-discovery` v1.0.0 to PyPI via OIDC
+3. Project ownership transfer to org when approved (no code changes needed)
+
+Take it slow, tick each box, and you'll ship without tripping the protected-main rule or PyPI delay.
