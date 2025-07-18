@@ -5,16 +5,18 @@ const solutions = [
   {
     number: '1',
     icon: Globe,
-    title: 'Universal Discovery',
-    description: 'Type any domain name and instantly discover available AI agents through DNS.',
+    title: 'One DNS TXT Record',
+    description:
+      'Add a single _agent.example.com TXT record. That&apos;s it. No registries, no APIs, no complexity.',
     iconColor: 'text-primary',
     iconBg: 'bg-primary/10',
   },
   {
     number: '2',
     icon: Zap,
-    title: 'Zero Manual Configuration',
-    description: 'No keys to juggle or docs to read. Discover and connect.',
+    title: 'Instant Discovery',
+    description:
+      'Any tool can instantly find your agent by looking up the _agent subdomain. Zero manual configuration.',
     iconColor: 'text-accent-foreground',
     iconBg: 'bg-accent/20',
   },
@@ -22,7 +24,8 @@ const solutions = [
     number: '3',
     icon: Layers,
     title: 'Protocol-Agnostic',
-    description: 'Supports MCP, A2A, OpenAPI, local packages and any custom protocol.',
+    description:
+      'The same DNS record works for MCP, A2A, OpenAPI, local packages and any custom protocol.',
     iconColor: 'text-primary',
     iconBg: 'bg-muted',
   },
