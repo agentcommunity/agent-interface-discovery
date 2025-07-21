@@ -12,7 +12,6 @@ export function Hero() {
   const [tokenCount, setTokenCount] = useState(0);
   const [engineerHours, setEngineerHours] = useState(0);
   const [aidVersion, setAidVersion] = useState(getAidVersion());
-  // Numeric separators make large numbers much easier to read.
   const targetTokens = 12_345_678;
   const HUMAN_TOKENS_PER_HOUR = 12_000;
 
@@ -20,7 +19,8 @@ export function Hero() {
     fetchAidVersion()
       .then(setAidVersion)
       .catch(() => {});
-    const duration = 2000; // 2 seconds
+
+    const duration = 2000;
     const steps = 60;
     const increment = targetTokens / steps;
     const stepDuration = duration / steps;
@@ -54,12 +54,13 @@ export function Hero() {
           </Badge>
 
           <h1 className="mb-8 text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-balance animate-fade-in-up">
-            _agent Interface <span className="block text-muted-foreground">Discovery</span>
+            _agent Interface <span className=" text-muted-foreground">Discovery</span>
           </h1>
 
-          <p className="mx-auto mb-10 max-w-3xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
-            Type a domain. Connect to its agent. Instantly. One DNS TXT record makes any AI agent
-            discoverable—no SDKs, no registries, no complexity.
+          <p className="mx-auto mb-8 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
+            AID = single DNS TXT record (
+            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">_agent.</code>) that
+            instantly tells any tool where an agent lives + which protocol (MCP, A2A, etc.).
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-center mb-12 animate-fade-in-up">

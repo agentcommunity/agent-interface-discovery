@@ -43,8 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@agentdomainxyz',
-    creator: '@agentdomainxyz',
+    site: '@agentcommunity_',
+    creator: '@agentcommunity_',
     title: 'Agent Interface Discovery - the DNS forAgents',
     description: 'DNS for Agents by Agent Community.',
     images: ['https://aid.agentcommunity.org/og-card.png'], // absolute URL
@@ -65,8 +65,8 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png',
   },
   other: {
-    'twitter:site': '@agentdomainxyz',
-    'twitter:creator': '@agentdomainxyz',
+    'twitter:site': '@agentcommunity_',
+    'twitter:creator': '@agentcommunity_',
     'twitter:title': 'Agent Interface Discovery - the DNS forAgents',
     'twitter:description': 'Decentralized DNS based agent discovery protocol.',
     'twitter:image': 'https://aid.agentcommunity.org/og-card.png', // absolute URL
@@ -85,8 +85,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <Head>
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@agentdomainxyz" />
-        <meta name="twitter:creator" content="@agentdomainxyz" />
+        <meta name="twitter:site" content="@agentcommunity_" />
+        <meta name="twitter:creator" content="@agentcommunity_" />
         <meta name="twitter:title" content="Agent Interface Discovery - the DNS forAgents" />
         <meta name="twitter:description" content="DNS for Agents by Agent Community." />
         <meta name="twitter:image" content="https://aid.agentcommunity.org/og-card.png" />
