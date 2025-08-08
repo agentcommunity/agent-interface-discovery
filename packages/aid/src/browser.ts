@@ -86,13 +86,15 @@ function normalizeDomain(domain: string): string {
  *
  * @param domain - The base domain
  * @param protocol - Optional protocol-specific subdomain
+ * @param useUnderscore - Use underscore prefix for protocol (e.g., _mcp)
  * @returns The DNS query name
  */
-function constructQueryName(domain: string, protocol?: string): string {
+function constructQueryName(domain: string, protocol?: string, useUnderscore = false): string {
   const normalizedDomain = normalizeDomain(domain);
 
   if (protocol) {
-    return `${DNS_SUBDOMAIN}.${protocol}.${normalizedDomain}`;
+    const protoPart = useUnderscore ? `_${protocol}` : protocol;
+    return `${DNS_SUBDOMAIN}.${protoPart}.${normalizedDomain}`;
   }
 
   return `${DNS_SUBDOMAIN}.${normalizedDomain}`;
@@ -189,67 +191,57 @@ export async function discover(
 ): Promise<DiscoveryResult> {
   const { protocol } = options;
 
-  // Try protocol-specific subdomain first if specified
-  if (protocol) {
-    const protocolQueryName = constructQueryName(domain, protocol);
+  // Canonical: Query the base _agent subdomain unless protocol is explicitly requested
+  if (!protocol) {
+    const baseQueryName = constructQueryName(domain);
+    const txtRecords = await queryTxtRecordsDoH(baseQueryName, options);
 
+    for (const txtRecord of txtRecords) {
+      const recordString = txtRecord.data;
+      if (recordString.includes('v=aid1') || recordString.includes('v=AID1')) {
+        try {
+          const record = parse(recordString);
+          return {
+            record,
+            domain,
+            queryName: baseQueryName,
+            ttl: txtRecord.ttl,
+          };
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    throw new AidError('ERR_NO_RECORD', `No valid AID record found for ${domain}`);
+  }
+
+  // Protocol explicitly requested: try underscore form first, then non-underscore, then base
+  const underscoreName = constructQueryName(domain, protocol, true);
+  const plainName = constructQueryName(domain, protocol, false);
+
+  for (const name of [underscoreName, plainName, constructQueryName(domain)]) {
     try {
-      const txtRecords = await queryTxtRecordsDoH(protocolQueryName, options);
-
-      // Process the first TXT record that contains AID data
+      const txtRecords = await queryTxtRecordsDoH(name, options);
       for (const txtRecord of txtRecords) {
         const recordString = txtRecord.data;
-
-        // Quick check if this looks like an AID record
         if (recordString.includes('v=aid1') || recordString.includes('v=AID1')) {
           try {
             const record = parse(recordString);
-            return {
-              record,
-              domain,
-              queryName: protocolQueryName,
-              ttl: txtRecord.ttl,
-            };
+            return { record, domain, queryName: name, ttl: txtRecord.ttl };
           } catch {
-            // Continue to next record if parsing fails
             continue;
           }
         }
       }
     } catch (error) {
-      // If protocol-specific query fails, fall back to base domain
-      if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
-        throw error;
-      }
-    }
-  }
-
-  // Query the base _agent subdomain
-  const baseQueryName = constructQueryName(domain);
-  const txtRecords = await queryTxtRecordsDoH(baseQueryName, options);
-
-  // Process TXT records
-  for (const txtRecord of txtRecords) {
-    const recordString = txtRecord.data;
-
-    // Quick check if this looks like an AID record
-    if (recordString.includes('v=aid1') || recordString.includes('v=AID1')) {
-      try {
-        const record = parse(recordString);
-        return {
-          record,
-          domain,
-          queryName: baseQueryName,
-          ttl: txtRecord.ttl,
-        };
-      } catch {
-        // Continue to next record if parsing fails
+      if (error instanceof AidError && error.errorCode === 'ERR_NO_RECORD') {
         continue;
       }
+      throw error;
     }
   }
 
-  // No valid AID record found
   throw new AidError('ERR_NO_RECORD', `No valid AID record found for ${domain}`);
 }
 
