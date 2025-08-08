@@ -1,0 +1,73 @@
+{
+  "name": "@agentcommunity/aid-conformance",
+  "version": "1.0.0",
+  "description": "Conformance fixtures and runner for Agent Interface Discovery (AID)",
+  "keywords": [
+    "agent",
+    "discovery",
+    "dns",
+    "aid",
+    "conformance",
+    "fixtures"
+  ],
+  "author": "Agent Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentcommunity/agent-interface-discovery.git",
+    "directory": "packages/aid-conformance"
+  },
+  "homepage": "https://aid.agentcommunity.org",
+  "bugs": {
+    "url": "https://github.com/agentcommunity/agent-interface-discovery/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./runner": {
+      "types": "./dist/runner.d.ts",
+      "import": "./dist/runner.js",
+      "require": "./dist/runner.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "aid-conformance": "./dist/runner.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "clean": "rimraf dist",
+    "prepack": "turbo run build --filter=."
+  },
+  "dependencies": {
+    "@agentcommunity/aid": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.30.1",
+    "tsup": "^8.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
