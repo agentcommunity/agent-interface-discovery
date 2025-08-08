@@ -50,6 +50,8 @@ graph TD
     I --> J[Use MCP/A2A/OpenAPI protocol]
 ```
 
+> Note: The canonical location is `_agent.<domain>`. Providers may optionally expose protocol-specific records on `_agent._<proto>.<domain>` (e.g., `_agent._mcp.example.com`). Clients discover via the base record by default, and may query protocol-specific subdomains when a specific protocol is explicitly requested. Refer to the specification for details.
+
 ## Guiding Principles
 
 - **Decentralized & Open:** No central registry, no vendor lock-in. If you control a domain, you can publish an AID record.
