@@ -8,7 +8,7 @@ import { query } from 'dns-query';
 export interface DiscoveryOptions {
   /** Timeout for DNS query in milliseconds (default: 5000) */
   timeout?: number;
-  /** Protocol-specific subdomain to try first */
+  /** Protocol-specific subdomain to try (optional). When provided, underscore and non-underscore forms are attempted. */
   protocol?: string;
 }
 
@@ -20,10 +20,11 @@ function normalizeDomain(domain: string): string {
   }
 }
 
-function constructQueryName(domain: string, protocol?: string): string {
+function constructQueryName(domain: string, protocol?: string, useUnderscore = false): string {
   const normalized = normalizeDomain(domain);
   if (protocol) {
-    return `${DNS_SUBDOMAIN}.${protocol}.${normalized}`;
+    const protoPart = useUnderscore ? `_${protocol}` : protocol;
+    return `${DNS_SUBDOMAIN}.${protoPart}.${normalized}`;
   }
   return `${DNS_SUBDOMAIN}.${normalized}`;
 }
@@ -126,28 +127,62 @@ export async function discover(
 
   const baseName = constructQueryName(domain);
 
-  // Attempt protocol-specific if provided
-  if (protocol) {
-    const protoName = constructQueryName(domain, protocol);
-    try {
-      return await Promise.race([
-        queryOnce(protoName),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () =>
-              reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${protoName}`)),
-            timeout,
-          ),
+  // Canonical: base _agent.<domain> query
+  // If protocol is explicitly requested, attempt protocol-specific subdomains afterwards
+  if (!protocol) {
+    return await Promise.race([
+      queryOnce(baseName),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${baseName}`)),
+          timeout,
         ),
-      ]);
-    } catch (error) {
-      if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
-        throw error;
-      }
-      // else fall through to base
+      ),
+    ]);
+  }
+
+  // Protocol explicitly requested: try underscore form first, then non-underscore; finally base
+  const protoNameUnderscore = constructQueryName(domain, protocol, true);
+  const protoName = constructQueryName(domain, protocol, false);
+
+  // 1) underscore form
+  try {
+    return await Promise.race([
+      queryOnce(protoNameUnderscore),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${protoNameUnderscore}`),
+            ),
+          timeout,
+        ),
+      ),
+    ]);
+  } catch (error) {
+    if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
+      throw error;
     }
   }
 
+  // 2) non-underscore form
+  try {
+    return await Promise.race([
+      queryOnce(protoName),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${protoName}`)),
+          timeout,
+        ),
+      ),
+    ]);
+  } catch (error) {
+    if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
+      throw error;
+    }
+  }
+
+  // 3) fallback to base
   return await Promise.race([
     queryOnce(baseName),
     new Promise<never>((_, reject) =>
