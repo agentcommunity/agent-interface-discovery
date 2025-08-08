@@ -57,12 +57,9 @@ _This is now complete for all packages, including Python._
 - [x] Create **Automation token** (done, see above).
 - [x] Put it in GH Secrets as **`NPM_TOKEN`**.
 
-### **Phase 2: PyPI (Deferred)**
+### **Phase 2: PyPI (OIDC active)**
 
-- [ ] Once the `agent-community` project is approved, create it on PyPI.
-- [ ] In PyPI Settings → API tokens → **Add** a token scoped to the project.
-- [ ] Copy the token to GH Secrets as **`PYPI_TOKEN`**.
-- [ ] Un-comment the Python publish step in the release workflow.
+_Publishing currently uses PyPI Pending Publisher via OIDC; no API token required. See section 9._
 
 ---
 
