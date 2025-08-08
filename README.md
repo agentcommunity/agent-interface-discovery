@@ -178,7 +178,7 @@ agent-interface-discovery/
 │   ├── e2e-tests/             # End-to-end tests
 │   └── (test-runners)/        # Internal test runners for Go/Python
 ├── tracking/                  # Development progress tracking (PHASE_*.md)
-├── ARCHITECTURE.md            # Comprehensive architecture documentation
+├── .github/ARCHITECTURE.md    # Comprehensive architecture documentation
 ├── tsconfig.base.json         # Shared TypeScript configuration
 ├── tsup.config.base.ts        # Shared build configuration
 └── ...                        # Other configuration files
@@ -186,7 +186,7 @@ agent-interface-discovery/
 
 ## Architecture
 
-This project follows a **production-grade monorepo architecture** designed for long-term maintainability and developer productivity. Our [`ARCHITECTURE.md`](./ARCHITECTURE.md) provides comprehensive documentation covering:
+This project follows a **production-grade monorepo architecture** designed for long-term maintainability and developer productivity. Our [`ARCHITECTURE.md`](.github/ARCHITECTURE.md) provides comprehensive documentation covering:
 
 - **Build System Decisions**: Why we chose Turbo + tsup over alternatives, with performance benchmarks
 - **Cross-Platform Compatibility**: How we ensure consistent behavior across Windows, Mac, and Linux
