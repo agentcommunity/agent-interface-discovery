@@ -162,6 +162,9 @@ This repository uses a PNPM/Turborepo monorepo structure. It contains the full s
 | [**@agentcommunity/aid-conformance**](https://www.npmjs.com/package/@agentcommunity/aid-conformance) | Public  | Conformance suite exporting fixtures and a CLI runner             |
 | [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                | Public  | Official Python library                                           |
 | [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)          | Public  | Official Go library                                               |
+| **aid-rs (Rust)**                                                                                    | WIP     | Parser + constants; discovery later                               |
+| **aid-dotnet (.NET)**                                                                                | WIP     | Parser + constants; discovery later                               |
+| **aid-java (Java)**                                                                                  | WIP     | Parser + constants; discovery later                               |
 | [**@agentcommunity/aid-web**](./packages/web)                                                        | Private | The Next.js app for the website and workbench                     |
 | **@agentcommunity/e2e-tests**                                                                        | Private | E2E tests validating our live showcase domains                    |
 | **(test runners)**                                                                                   | Private | Internal packages for orchestrating Python and Go tests via Turbo |
@@ -177,6 +180,9 @@ agent-interface-discovery/
 │   ├── aid-doctor/            # CLI tool
 │   ├── aid-py/                # Python library
 │   ├── aid-go/                # Go library
+│   ├── aid-rs/                # Rust library (WIP)
+│   ├── aid-dotnet/            # .NET library (WIP)
+│   ├── aid-java/              # Java library (WIP)
 │   ├── web/                   # Next.js web workbench
 │   ├── e2e-tests/             # End-to-end tests
 │   └── (test-runners)/        # Internal test runners for Go/Python
@@ -197,6 +203,11 @@ This project follows a **production-grade monorepo architecture** designed for l
 - **Developer Experience**: Standardized commands and hot reloading for rapid iteration
 
 **Why This Matters**: Understanding our architectural decisions enables contributors to extend the project effectively and ensures consistent development practices as the team scales. Every choice prioritizes long-term project health over short-term convenience.
+
+### Constants generation
+
+- Single command: `pnpm gen` reads `protocol/constants.yml` and writes language constants.
+- Currently supported: TypeScript, Python, Go, and optional Rust/.NET/Java (generated only if their package paths exist).
 
 ## Development
 

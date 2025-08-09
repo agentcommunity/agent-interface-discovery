@@ -59,6 +59,9 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 - [ ] SBOM & dependency audit
   - Emit CycloneDX SBOM; add periodic audit jobs for JS, Python, and Go.
 
+- [x] Parity CI job (multi-language)
+  - Added root `test:parity` and a dedicated CI job running TS/Py/Go parity.
+
 ## P3 — Documentation & Adoption
 
 - [ ] New language port guide
@@ -85,7 +88,8 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 ## P5 — Language Ports (tiered)
 
 - Tier 1: Rust, C#/.NET, Java
-  - Criteria: generated constants, parser error parity, discovery with IDN & TTL, conformance suite green, README + examples.
+  - Criteria: generated constants (via `pnpm gen`), parser error parity, conformance suite green, README + examples. Discovery later.
+  - Generator support: added optional emitters for Rust/.NET/Java; safe no-op if packages absent.
 - Tier 2: Swift, Kotlin, Ruby, PHP, Elixir (based on demand)
 
 ## P6 — Governance & Registries (spec §6)
