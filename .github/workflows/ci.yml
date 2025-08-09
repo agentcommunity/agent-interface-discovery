@@ -64,10 +64,10 @@ jobs:
           python -m pip install -e './packages/aid-py[dev]' pytest
           python -m pytest packages/aid-py
 
-      - name: Setup Go 1.22
+      - name: Setup Go 1.23
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Test (Go)
         run: |
@@ -76,6 +76,32 @@ jobs:
 
       - name: E2E Tests
         run: pnpm e2e
+
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Setup Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+      - name: Run parity tests (TS/Py/Go)
+        run: pnpm test:parity
 
       # ---- SBOM ------------------------------------------------------------
       - name: Generate SBOM (CycloneDX)

@@ -110,16 +110,20 @@ Client implementations **SHOULD** use these codes to report specific failure mod
 
 ### **2.4. Exposing Multiple Protocols (Non-Normative Guidance)**
 
-While a single AID record describes one service, providers **MAY** expose multiple, distinct agent services (e.g., one for MCP and one for A2A) by publishing records on protocol-specific subdomains.
+The canonical location for discovery is the base record: `_agent.<domain>`. Providers **MAY** additionally expose distinct agent services (e.g., one for MCP and one for A2A) on protocol-specific subdomains using the underscore form `_agent._<proto>.<domain>`.
 
-**Example:**
+**Examples:**
 
 ```dns
 _agent._mcp.example.com. 300 IN TXT "v=aid1;p=mcp;uri=..."
 _agent._a2a.example.com. 300 IN TXT "v=aid1;p=a2a;uri=..."
 ```
 
-A client seeking a specific protocol **SHOULD** first query the protocol-specific subdomain before falling back to the base `_agent.<domain>`.
+**Client behavior:**
+
+- By default, clients query the base `_agent.<domain>`.
+- When a specific protocol is explicitly requested (by the application), clients **MAY** first query the protocol-specific subdomain `_agent._<proto>.<domain>` and, if not found, fall back to the base record.
+- Providers that publish only the base record remain fully compliant.
 
 ---
 

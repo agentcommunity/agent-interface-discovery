@@ -42,11 +42,11 @@ Phase 3 focused on building a polished, public-facing web application that serve
 
 ### **[2025-01-06 18:00]** API Endpoints Development
 
-- **`/api/discover`:** DNS discovery using @agentcommunity/aid package
+- **Discovery:** The workbench performs DNS discovery client-side via `@agentcommunity/aid/browser` for responsiveness and to avoid server DNS blocking.
 - **`/api/handshake`:** Live connection testing with protocol-specific requests
 - **Error Handling:** Comprehensive error responses with user-friendly messages
 - **Security:** Input validation, HTTPS enforcement, proper HTTP status codes
-- **Result:** Robust backend API for web application functionality
+- **Result:** Robust backend API for live handshake; discovery handled client-side
 
 ### **[2025-01-06 18:30]** Interactive Features
 
@@ -114,7 +114,7 @@ Phase 3 focused on building a polished, public-facing web application that serve
 
 ### ✅ **API Infrastructure**
 
-- `/api/discover` - DNS lookup endpoint
+- Discovery handled client-side using the browser bundle of the core library
 - `/api/handshake` - Live connection testing
 - Comprehensive error handling
 - Security validation

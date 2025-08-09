@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
+import { readFile } from 'fs/promises';
 import {
   discover,
   AidError,
@@ -281,11 +282,20 @@ program
 program
   .command('version')
   .description('Show version information')
-  .action(() => {
+  .action(async () => {
+    let version = '0.0.0';
+    try {
+      const pkgUrl = new URL('../package.json', import.meta.url);
+      const fileContents = await readFile(pkgUrl, 'utf8');
+      const pkg = JSON.parse(fileContents) as { version?: string };
+      version = pkg.version ?? version;
+    } catch {
+      // ignore - fallback stays 0.0.0
+    }
     console.log(
       [
         chalk.bold('aid-doctor') + ' - Agent Interface Discovery CLI',
-        `Version: ${chalk.green('0.1.0')}`,
+        `Version: ${chalk.green(version)}`,
         `Node: ${chalk.gray(process.version)}`,
         `Platform: ${chalk.gray(process.platform)}`,
         '',

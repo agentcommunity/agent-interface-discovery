@@ -50,6 +50,8 @@ graph TD
     I --> J[Use MCP/A2A/OpenAPI protocol]
 ```
 
+> Note: The canonical location is `_agent.<domain>`. Providers may optionally expose protocol-specific records on `_agent._<proto>.<domain>` (e.g., `_agent._mcp.example.com`). Clients discover via the base record by default, and may query protocol-specific subdomains when a specific protocol is explicitly requested. Refer to the specification for details.
+
 ## Guiding Principles
 
 - **Decentralized & Open:** No central registry, no vendor lock-in. If you control a domain, you can publish an AID record.
@@ -153,15 +155,16 @@ This repository uses a PNPM/Turborepo monorepo structure. It contains the full s
 
 ### Packages
 
-| Package                                                                                     | Status  | Description                                                       |
-| :------------------------------------------------------------------------------------------ | :------ | :---------------------------------------------------------------- |
-| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                | Public  | Core TypeScript library for Node.js and Browsers                  |
-| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)  | Public  | Official CLI for checking, validating, and generating AID records |
-| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                       | Public  | Official Python library                                           |
-| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go) | Public  | Official Go library                                               |
-| [**@agentcommunity/aid-web**](./packages/web)                                               | Private | The Next.js app for the website and workbench                     |
-| **@agentcommunity/e2e-tests**                                                               | Private | E2E tests validating our live showcase domains                    |
-| **(test runners)**                                                                          | Private | Internal packages for orchestrating Python and Go tests via Turbo |
+| Package                                                                                              | Status  | Description                                                       |
+| :--------------------------------------------------------------------------------------------------- | :------ | :---------------------------------------------------------------- |
+| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                         | Public  | Core TypeScript library for Node.js and Browsers                  |
+| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)           | Public  | Official CLI for checking, validating, and generating AID records |
+| [**@agentcommunity/aid-conformance**](https://www.npmjs.com/package/@agentcommunity/aid-conformance) | Public  | Conformance suite exporting fixtures and a CLI runner             |
+| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                | Public  | Official Python library                                           |
+| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)          | Public  | Official Go library                                               |
+| [**@agentcommunity/aid-web**](./packages/web)                                                        | Private | The Next.js app for the website and workbench                     |
+| **@agentcommunity/e2e-tests**                                                                        | Private | E2E tests validating our live showcase domains                    |
+| **(test runners)**                                                                                   | Private | Internal packages for orchestrating Python and Go tests via Turbo |
 
 ### Project Structure
 
@@ -178,7 +181,7 @@ agent-interface-discovery/
 │   ├── e2e-tests/             # End-to-end tests
 │   └── (test-runners)/        # Internal test runners for Go/Python
 ├── tracking/                  # Development progress tracking (PHASE_*.md)
-├── ARCHITECTURE.md            # Comprehensive architecture documentation
+├── .github/ARCHITECTURE.md    # Comprehensive architecture documentation
 ├── tsconfig.base.json         # Shared TypeScript configuration
 ├── tsup.config.base.ts        # Shared build configuration
 └── ...                        # Other configuration files
@@ -186,7 +189,7 @@ agent-interface-discovery/
 
 ## Architecture
 
-This project follows a **production-grade monorepo architecture** designed for long-term maintainability and developer productivity. Our [`ARCHITECTURE.md`](./ARCHITECTURE.md) provides comprehensive documentation covering:
+This project follows a **production-grade monorepo architecture** designed for long-term maintainability and developer productivity. Our [`ARCHITECTURE.md`](.github/ARCHITECTURE.md) provides comprehensive documentation covering:
 
 - **Build System Decisions**: Why we chose Turbo + tsup over alternatives, with performance benchmarks
 - **Cross-Platform Compatibility**: How we ensure consistent behavior across Windows, Mac, and Linux
