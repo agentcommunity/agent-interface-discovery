@@ -1708,6 +1708,16 @@
         "build": {
           "build/net6.0/xunit.runner.visualstudio.props": {}
         }
+      },
+      "AidDiscovery/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "compile": {
+          "bin/placeholder/AidDiscovery.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AidDiscovery.dll": {}
+        }
       }
     }
   },
@@ -5497,10 +5507,16 @@
         "xunit.runner.visualstudio.2.5.3.nupkg.sha512",
         "xunit.runner.visualstudio.nuspec"
       ]
+    },
+    "AidDiscovery/1.0.0": {
+      "type": "project",
+      "path": "../src/AidDiscovery.csproj",
+      "msbuildProject": "../src/AidDiscovery.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "AidDiscovery >= 1.0.0",
       "Microsoft.NET.Test.Sdk >= 17.8.0",
       "coverlet.collector >= 6.0.0",
       "xunit >= 2.5.3",
@@ -5531,7 +5547,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/workspace/packages/aid-dotnet/src/AidDiscovery.csproj": {
+              "projectPath": "/workspace/packages/aid-dotnet/src/AidDiscovery.csproj"
+            }
+          }
         }
       },
       "warningProperties": {

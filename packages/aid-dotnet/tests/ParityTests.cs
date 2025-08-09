@@ -4,7 +4,7 @@ namespace AidDiscovery.Tests;
 
 public class ParityTests
 {
-    private record FixtureRecord(string name, string raw, Dictionary<string, object> expected);
+    private record FixtureRecord(string name, string raw, Dictionary<string, string> expected);
     private record FixtureRoot(List<FixtureRecord> records);
 
     [Fact]
@@ -18,7 +18,7 @@ public class ParityTests
         foreach (var rec in fx.records)
         {
             var parsed = Aid.Parse(rec.raw);
-            var got = new Dictionary<string, object?>
+            var got = new Dictionary<string, string>
             {
                 ["v"] = parsed.V,
                 ["uri"] = parsed.Uri,
