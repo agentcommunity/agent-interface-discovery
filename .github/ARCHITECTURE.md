@@ -228,6 +228,19 @@ pnpm test
 3. Merge to main triggers version bump
 4. Automated npm publish for public packages
 
+### Parity CI
+
+To prevent ecosystem drift across languages, CI includes a dedicated parity job:
+
+- Setup Node/PNPM, Python 3.11 (pytest), and Go toolchain
+- Install workspace deps with caching
+- Run the root `test:parity` script which executes:
+  - TypeScript unit/parity tests
+  - Go `go test ./...`
+  - Python `pytest` for `packages/aid-py`
+
+The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go.
+
 ## 📋 Design Principles
 
 ### 1. **Fail Fast**

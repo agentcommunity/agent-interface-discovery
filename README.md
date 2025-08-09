@@ -155,15 +155,16 @@ This repository uses a PNPM/Turborepo monorepo structure. It contains the full s
 
 ### Packages
 
-| Package                                                                                     | Status  | Description                                                       |
-| :------------------------------------------------------------------------------------------ | :------ | :---------------------------------------------------------------- |
-| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                | Public  | Core TypeScript library for Node.js and Browsers                  |
-| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)  | Public  | Official CLI for checking, validating, and generating AID records |
-| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                       | Public  | Official Python library                                           |
-| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go) | Public  | Official Go library                                               |
-| [**@agentcommunity/aid-web**](./packages/web)                                               | Private | The Next.js app for the website and workbench                     |
-| **@agentcommunity/e2e-tests**                                                               | Private | E2E tests validating our live showcase domains                    |
-| **(test runners)**                                                                          | Private | Internal packages for orchestrating Python and Go tests via Turbo |
+| Package                                                                                              | Status  | Description                                                       |
+| :--------------------------------------------------------------------------------------------------- | :------ | :---------------------------------------------------------------- |
+| [**@agentcommunity/aid**](https://www.npmjs.com/package/@agentcommunity/aid)                         | Public  | Core TypeScript library for Node.js and Browsers                  |
+| [**@agentcommunity/aid-doctor**](https://www.npmjs.com/package/@agentcommunity/aid-doctor)           | Public  | Official CLI for checking, validating, and generating AID records |
+| [**@agentcommunity/aid-conformance**](https://www.npmjs.com/package/@agentcommunity/aid-conformance) | Public  | Conformance suite exporting fixtures and a CLI runner             |
+| [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                | Public  | Official Python library                                           |
+| [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)          | Public  | Official Go library                                               |
+| [**@agentcommunity/aid-web**](./packages/web)                                                        | Private | The Next.js app for the website and workbench                     |
+| **@agentcommunity/e2e-tests**                                                                        | Private | E2E tests validating our live showcase domains                    |
+| **(test runners)**                                                                                   | Private | Internal packages for orchestrating Python and Go tests via Turbo |
 
 ### Project Structure
 

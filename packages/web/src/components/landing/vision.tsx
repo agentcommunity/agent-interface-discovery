@@ -86,7 +86,7 @@ export function Vision() {
               className="group shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105"
             >
               <Link
-                href="https://github.com/agentcommunity/aid-interface-discovery/blob/main/README.md#roadmap"
+                href="https://github.com/agentcommunity/agent-interface-discovery/blob/main/README.md#roadmap"
                 target="_blank"
               >
                 View the Roadmap

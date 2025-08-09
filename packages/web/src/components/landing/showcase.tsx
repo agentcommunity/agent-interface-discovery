@@ -33,9 +33,9 @@ const toolkitPackages = [
   },
   {
     name: 'Python',
-    package: 'aid-py',
-    description: 'Idiomatic asyncio client',
-    features: ['Async/await', 'Type hints', 'Clean API'],
+    package: 'aid-discovery',
+    description: 'Idiomatic Python client',
+    features: ['Type hints', 'Clean API'],
     href: 'https://pypi.org/project/aid-discovery/',
     badge: 'Beta',
   },
