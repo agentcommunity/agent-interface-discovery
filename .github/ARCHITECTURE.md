@@ -277,6 +277,15 @@ The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go.
 - Private package.json for test running
 - Implementation following core specification
 
+Generator support
+
+- The single entrypoint `pnpm gen` reads `protocol/constants.yml` and emits constants for TS, Python, Go, and (optionally) Rust/.NET/Java if their package folders exist.
+- Outputs (auto-generated; do not edit):
+  - Rust → `packages/aid-rs/src/constants_gen.rs`
+  - .NET → `packages/aid-dotnet/src/Constants.g.cs`
+  - Java → `packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java`
+- Formatters are run best-effort (`gofmt`, `rustfmt`) when available; generation is a safe no‑op if the target package is absent.
+
 ### Remote Caching
 
 **Setup**: Configured but disabled by default.
