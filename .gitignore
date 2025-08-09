@@ -109,3 +109,8 @@ build/
 # Python
 __pycache__/
 *.pyc
+
+# Rust toolchain and build artifacts
+.rustup/
+.cargo/
+**/target/
