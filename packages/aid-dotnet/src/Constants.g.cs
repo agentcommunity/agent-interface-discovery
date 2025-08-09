@@ -25,5 +25,6 @@ namespace AidDiscovery {
     public const string DnsSubdomain = "_agent";
     public const int DnsTtlMin = 300;
     public const int DnsTtlMax = 900;
+    public static readonly string[] LocalUriSchemes = new string[] { "docker", "npx", "pip" };
   }
 }
