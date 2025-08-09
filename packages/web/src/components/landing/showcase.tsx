@@ -27,7 +27,7 @@ const toolkitPackages = [
     name: 'Go',
     package: 'github.com/agentcommunity/aid-go',
     description: 'High-performance Go client',
-    features: ['Zero allocations', 'Context support', 'No external deps'],
+    features: ['Context support', 'No external deps'],
     href: 'https://pkg.go.dev/github.com/agentcommunity/aid-go',
     badge: 'Stable',
   },
@@ -37,7 +37,15 @@ const toolkitPackages = [
     description: 'Idiomatic Python client',
     features: ['Type hints', 'Clean API'],
     href: 'https://pypi.org/project/aid-discovery/',
-    badge: 'Beta',
+    badge: 'Stable',
+  },
+  {
+    name: 'Conformance Suite',
+    package: '@agentcommunity/aid-conformance',
+    description: 'Golden fixtures and CLI runner for parity checks',
+    features: ['Golden fixtures', 'CLI runner', 'Cross-language parity'],
+    href: 'https://www.npmjs.com/package/@agentcommunity/aid-conformance',
+    badge: 'Stable',
   },
   {
     name: 'Web Workbench',
@@ -46,6 +54,14 @@ const toolkitPackages = [
     features: ['Live DNS lookup', 'Shareable links', 'Export configs'],
     href: '/workbench',
     badge: 'Stable',
+  },
+  {
+    name: 'Coming soon',
+    package: 'Rust / C# / Java',
+    description: 'Tier‑1 language ports following the conformance suite',
+    features: ['Generated constants', 'Parser parity', 'Discovery support'],
+    href: 'https://github.com/agentcommunity',
+    badge: 'Planned',
   },
 ];
 
