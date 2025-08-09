@@ -228,5 +228,6 @@ func main() {
 - [A2A Guide](./quickstart_a2a.md)
 - [OpenAPI Guide](./quickstart_openapi.md)
 - [Specification](../specification.md)
+- [Security Best Practices](../security.md)
 - [Rationale](../rationale.md)
 - [Blog](../blog/finding_door_a2a.md)
