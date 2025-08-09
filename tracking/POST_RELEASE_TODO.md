@@ -59,6 +59,9 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 - [ ] SBOM & dependency audit
   - Emit CycloneDX SBOM; add periodic audit jobs for JS, Python, and Go.
 
+- [x] Parity CI job (multi-language)
+  - Added root `test:parity` and a dedicated CI job running TS/Py/Go parity.
+
 ## P3 — Documentation & Adoption
 
 - [ ] New language port guide
