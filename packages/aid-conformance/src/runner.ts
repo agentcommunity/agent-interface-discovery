@@ -1,9 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { parse } from '@agentcommunity/aid';
 import type { GoldenFixture, GoldenRecordCase } from './index.js';
 import { fixtures as defaultFixtures } from './index.js';
+
+type AidModule = { parse: (txt: string) => unknown };
+
+async function parseAid(txt: string) {
+  const mod = (await import('@agentcommunity/aid')) as AidModule;
+  return mod.parse(txt);
+}
 
 function loadFixtureFromPath(filePath: string): GoldenFixture {
   const abs = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
@@ -15,13 +21,13 @@ function loadFixtureFromPath(filePath: string): GoldenFixture {
   return json;
 }
 
-function runFixture(fix: GoldenFixture) {
+async function runFixture(fix: GoldenFixture) {
   let passed = 0;
   let failed = 0;
 
   for (const c of fix.records as GoldenRecordCase[]) {
     try {
-      const parsed = parse(c.raw);
+      const parsed = await parseAid(c.raw);
       const ok = JSON.stringify(parsed) === JSON.stringify(c.expected);
       if (ok) {
         passed += 1;
@@ -41,14 +47,14 @@ function runFixture(fix: GoldenFixture) {
   process.exitCode = failed === 0 ? 0 : 1;
 }
 
-function main() {
+async function main() {
   const arg = process.argv[2];
   if (!arg) {
-    runFixture(defaultFixtures);
+    await runFixture(defaultFixtures);
     return;
   }
   const fix = loadFixtureFromPath(arg);
-  runFixture(fix);
+  await runFixture(fix);
 }
 
-main();
+void main();

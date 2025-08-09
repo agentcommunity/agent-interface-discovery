@@ -14,7 +14,8 @@ export default defineConfig([
   {
     entry: ['src/runner.ts'],
     format: ['esm', 'cjs'],
-    dts: true,
+    // Do not emit DTS for the CLI runner to avoid cross-package type resolution during standalone builds
+    dts: false,
     sourcemap: true,
     clean: false,
     splitting: false,
