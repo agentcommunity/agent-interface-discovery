@@ -4,6 +4,8 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Compass, Rocket, CheckCircle2 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Codeblock } from '@/components/ui/codeblock';
 
 // --- Code snippets identical to README / docs ------------------------------
@@ -44,6 +46,13 @@ export function QuickStart() {
   const [lang, setLang] = useState<'typescript' | 'python' | 'go'>('typescript');
   const [publishTab, setPublishTab] = useState<'dns' | 'terraform'>('dns');
 
+  const STEPS: Array<{ id: 'discover' | 'publish' | 'validate'; label: string; Icon: LucideIcon }> =
+    [
+      { id: 'discover', label: 'Discover', Icon: Compass },
+      { id: 'publish', label: 'Publish', Icon: Rocket },
+      { id: 'validate', label: 'Validate', Icon: CheckCircle2 },
+    ];
+
   return (
     <section className="section-padding bg-muted/30">
       <div className="container mx-auto container-padding">
@@ -59,26 +68,37 @@ export function QuickStart() {
           {/* Hero Card */}
           <Card className="card-feature shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 animate-fade-in">
             <CardHeader className="pb-6">
-              {/* Step toggle group */}
-              <div className="flex justify-center gap-4">
-                {[
-                  { id: 'discover', label: 'Discover', emoji: '🧭' },
-                  { id: 'publish', label: 'Publish', emoji: '🚀' },
-                  { id: 'validate', label: 'Validate', emoji: '✅' },
-                ].map((item, idx) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setStep(item.id as 'discover' | 'publish' | 'validate')}
-                    className={`card-interactive px-5 py-3 rounded-lg transition-all duration-200 flex flex-col items-center gap-1 text-sm font-medium shadow-soft-xs hover:shadow-soft-md ${
-                      step === item.id ? 'bg-primary text-primary-foreground hover:bg-primary' : ''
-                    }`}
-                  >
-                    <span className="text-xl leading-none">{item.emoji}</span>
-                    <span className="whitespace-nowrap">
-                      {idx + 1}. {item.label}
-                    </span>
-                  </button>
-                ))}
+              {/* Step toggle group (iconic, theme-aligned) */}
+              <div className="flex justify-center gap-3">
+                {STEPS.map((item, idx) => {
+                  const active = step === item.id;
+                  const Icon: LucideIcon = item.Icon;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setStep(item.id)}
+                      className={`card-interactive px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 text-sm font-medium border border-border/50 shadow-soft-xs hover:shadow-soft-md ${
+                        active ? 'bg-primary/10 border-primary/30' : 'bg-card/50'
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                          active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="text-left">
+                        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                          Step {idx + 1}
+                        </div>
+                        <div className={`leading-tight ${active ? 'text-foreground' : ''}`}>
+                          {item.label}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </CardHeader>
 

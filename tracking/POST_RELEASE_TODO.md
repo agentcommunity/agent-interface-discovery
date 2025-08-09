@@ -4,10 +4,10 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 
 ## P0 — Spec Conformance & Interop (highest priority)
 
-- [ ] Protocol-specific subdomain format (spec §2.4)
+- [x] Protocol-specific subdomain format (spec §2.4)
   - Spec uses `_agent._mcp.example.com` (underscore before protocol). Current code and Terraform examples use `_agent.mcp.example.com`.
   - Canonical: base `_agent.<domain>` remains default; protocol-specific subdomains are optional optimization only.
-  - Plan: All clients try underscore form first, then non-underscore for backward compatibility.
+  - Plan: Canonical base `_agent.<domain>`; protocol-specific optional. Implemented base-first discovery; underscore-first fallback when protocol explicitly requested.
   - Tasks:
     - [ ] TS (Node/Browser): try `_agent._{proto}.{domain}`, then `_agent.{proto}.{domain}`; add unit tests.
     - [ ] Python: same behavior; tests.
@@ -20,8 +20,9 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
   - Enforce: `v=aid1`, `proto` xor `p`, `desc` ≤ 60 bytes (UTF-8), `https://` for remote protocols, local scheme allowlist.
   - CI validates fixtures and samples against the schema.
 
-- [ ] Conformance suite package
+- [x] Conformance suite package
   - Externalize golden fixtures plus a small runner as `@agentcommunity/aid-conformance` so third-party ports can run parity.
+  - Status: Implemented and pushed (fixtures + runner + README + changeset).
 
 - [ ] Error semantics parity (spec §2.3 table; Appendix C)
   - Ensure symbol → numeric mapping and messages match across TS, Python, Go.
@@ -66,8 +67,9 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 - [ ] Registrar playbooks
   - Cloudflare, Route53, Vercel, GCP, Azure: screenshots, TTL 300–900 s, propagation tips.
 
-- [ ] Security best practices
+- [x] Security best practices
   - DNSSEC, redirect handling, IDN safety, local-exec safeguards, TTL & client caching expectations.
+  - Status: Added `packages/docs/security.md` and cross-links to index and quickstart.
 
 - [ ] Examples gallery
   - Add `examples/_agent.<domain>.txt` samples with multiple protocol/auth variants per `.cursorrule`.
