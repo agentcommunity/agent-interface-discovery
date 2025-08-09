@@ -378,9 +378,9 @@ function generateRustConstants(constants: ProtocolConstants): string {
     `pub const DNS_SUBDOMAIN: &str = "${constants.dns.subdomain}";\n` +
     `pub const DNS_TTL_MIN: u32 = ${constants.dns.ttlRecommendation.min};\n` +
     `pub const DNS_TTL_MAX: u32 = ${constants.dns.ttlRecommendation.max};\n\n` +
-    `pub const LOCAL_URI_SCHEMES: &[&str] = &[\n` +
-    constants.localUriSchemes.map((s) => `    "${s}",`).join('\n') +
-    `\n];\n`
+    `pub const LOCAL_URI_SCHEMES: &[&str] = &[${constants.localUriSchemes
+      .map((s) => `"${s}"`)
+      .join(', ')}];\n`
   );
 }
 
@@ -445,6 +445,9 @@ function generateJavaConstants(constants: ProtocolConstants): string {
     `  public static final String DNS_SUBDOMAIN = "${constants.dns.subdomain}";\n` +
     `  public static final int DNS_TTL_MIN = ${constants.dns.ttlRecommendation.min};\n` +
     `  public static final int DNS_TTL_MAX = ${constants.dns.ttlRecommendation.max};\n` +
+    `  public static final String[] LOCAL_URI_SCHEMES = new String[] {${constants.localUriSchemes
+      .map((s) => `"${s}"`)
+      .join(', ')} };\n` +
     `}`
   );
 }
