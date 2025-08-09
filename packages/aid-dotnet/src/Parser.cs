@@ -22,9 +22,7 @@ public static class Aid
 
     private static readonly HashSet<string> LocalUriSchemes = new(StringComparer.Ordinal)
     {
-        "docker",
-        "npx",
-        "pip",
+        .. Constants.LocalUriSchemes,
     };
 
     public static AidRecord Parse(string txt)

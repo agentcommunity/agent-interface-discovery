@@ -412,6 +412,9 @@ function generateDotnetConstants(constants: ProtocolConstants): string {
     `    public const string DnsSubdomain = "${constants.dns.subdomain}";\n` +
     `    public const int DnsTtlMin = ${constants.dns.ttlRecommendation.min};\n` +
     `    public const int DnsTtlMax = ${constants.dns.ttlRecommendation.max};\n` +
+    `    public static readonly string[] LocalUriSchemes = new string[] { ${constants.localUriSchemes
+      .map((s) => `"${s}"`)
+      .join(', ')} };\n` +
     `  }\n}`
   );
 }
