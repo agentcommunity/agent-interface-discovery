@@ -47,7 +47,7 @@ export function Problem() {
                 <CardHeader className="pb-4">
                   <div className="flex items-start gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50 border border-border/30 shadow-soft-xs transition-all duration-300 group-hover:scale-110 group-hover:shadow-soft-md">
-                      <problem.icon className="h-6 w-6 text-amber-500 transition-transform duration-300 group-hover:scale-110" />
+                      <problem.icon className="h-6 w-6 text-foreground transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-lg transition-colors duration-300 group-hover:text-foreground">
