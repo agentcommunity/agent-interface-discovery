@@ -57,12 +57,8 @@ export function Hero() {
             _agent Interface <span className=" text-muted-foreground">Discovery</span>
           </h1>
 
-          <p className="mx-auto mb-3 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
+          <p className="mx-auto mb-8 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
             DNS for agents.
-          </p>
-          <p className="mx-auto mb-8 max-w-4xl text-lg md:text-xl leading-relaxed text-muted-foreground animate-fade-in-up">
-            One <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">_agent</code> TXT
-            record for instant discovery.
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-center mb-12 animate-fade-in-up">
