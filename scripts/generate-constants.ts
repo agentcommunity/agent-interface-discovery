@@ -445,6 +445,9 @@ function generateJavaConstants(constants: ProtocolConstants): string {
     `  public static final String DNS_SUBDOMAIN = "${constants.dns.subdomain}";\n` +
     `  public static final int DNS_TTL_MIN = ${constants.dns.ttlRecommendation.min};\n` +
     `  public static final int DNS_TTL_MAX = ${constants.dns.ttlRecommendation.max};\n` +
+    `  public static final String[] LOCAL_URI_SCHEMES = new String[] {${constants.localUriSchemes
+      .map((s) => `"${s}"`)
+      .join(', ')} };\n` +
     `}`
   );
 }
