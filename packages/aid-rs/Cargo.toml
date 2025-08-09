@@ -1,0 +1,15 @@
+[package]
+name = "aid-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Agent Interface Discovery (AID) – parser and generated constants for Rust"
+license = "MIT"
+repository = "https://github.com/agentcommunity/agent-interface-discovery"
+readme = "README.md"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[dev-dependencies]
