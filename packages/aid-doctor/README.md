@@ -1,37 +1,62 @@
 # @agentcommunity/aid-doctor
 
-The official CLI tool for [Agent Interface Discovery (AID)](https://aid.agentcommunity.org) — the open, decentralized DNS-based discovery protocol for AI agents.
+Official CLI for Agent Interface Discovery (AID).
 
-## Features
+- Website: https://aid.agentcommunity.org
+- Docs: https://docs.agentcommunity.org/aid
 
-- Validate and debug AID DNS records
-- Generate new agent TXT records
-- Cross-platform CLI (Node.js)
-- Strict, spec-aligned checks
-
-## Installation
+## Install
 
 ```bash
-pnpm add -g @agentcommunity/aid-doctor
-# or
 npm install -g @agentcommunity/aid-doctor
+# or
+pnpm add -D @agentcommunity/aid-doctor
 ```
 
 ## Usage
 
 ```bash
-aid-doctor check supabase.agentcommunity.org
-# → Validates and prints the discovered agent record
+# Human-readable check
+aid-doctor check example.com
 
-aid-doctor generate --proto mcp --uri https://api.example.com/mcp --auth pat
-# → Outputs a valid TXT record for your agent
+# JSON output (machine-readable)
+aid-doctor json example.com
 ```
 
-## Documentation
+### Options
 
-- [AID Protocol Spec](https://github.com/agent-community/agent-interface-discovery/blob/main/packages/docs/specification.md)
-- [Project README](https://github.com/agent-community/agent-interface-discovery#readme)
+- `--protocol <proto>`: try a protocol-specific subdomain (e.g., `mcp` tries `_agent._mcp.<domain>` first)
+- `--timeout <ms>`: DNS query timeout (default: 5000)
+- `--code` (check): exit with specific error code on failure
+
+### Exit codes
+
+- `0` success
+- `1000` `ERR_NO_RECORD`
+- `1001` `ERR_INVALID_TXT`
+- `1002` `ERR_UNSUPPORTED_PROTO`
+- `1003` `ERR_SECURITY`
+- `1004` `ERR_DNS_LOOKUP_FAILED`
+- `1` unknown error
+
+## Generate an AID record
+
+```bash
+aid-doctor generate
+```
+
+Interactive prompts help you craft a valid TXT value for `_agent.<domain>`.
+
+## Examples
+
+```bash
+# Check with protocol hint (underscore-first fallback)
+aid-doctor check example.com --protocol mcp
+
+# JSON for CI
+aid-doctor json example.com > result.json
+```
 
 ## License
 
-MIT — see [LICENSE](../../LICENSE)
+MIT © Agent Community

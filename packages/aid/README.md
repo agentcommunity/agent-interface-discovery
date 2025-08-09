@@ -1,47 +1,69 @@
 # @agentcommunity/aid
 
-The official TypeScript/JavaScript library for [Agent Interface Discovery (AID)](https://aid.agentcommunity.org) — the open, decentralized DNS-based discovery protocol for AI agents.
+Agent Interface Discovery (AID) – Core TypeScript library for Node.js and Browsers.
 
-## Features
+- Canonical spec: see the monorepo docs and `protocol/constants.yml`
+- Website: https://aid.agentcommunity.org
+- Docs: https://docs.agentcommunity.org/aid
 
-- Discover agent endpoints via DNS TXT records
-- Supports Node.js (native DNS) and browser (DNS-over-HTTPS)
-- Protocol-agnostic: MCP, A2A, OpenAPI, local
-- Strict, spec-aligned parsing and validation
-
-## Installation
+## Install
 
 ```bash
 pnpm add @agentcommunity/aid
 # or
 npm install @agentcommunity/aid
+# or
+yarn add @agentcommunity/aid
 ```
 
-## Usage
-
-**Node.js:**
+## Quick Start (Node.js)
 
 ```ts
-import { discover } from '@agentcommunity/aid';
+import { discover, AidError } from '@agentcommunity/aid';
 
-const { record, ttl } = await discover('supabase.agentcommunity.org');
-console.log(`Found ${record.proto} agent at ${record.uri} (TTL: ${ttl}s)`);
+try {
+  const { record, ttl, queryName } = await discover('example.com');
+  console.log('Found', record.proto, 'at', record.uri, 'TTL:', ttl, 'query:', queryName);
+} catch (e) {
+  if (e instanceof AidError) {
+    console.error(`AID Error (${e.code})`, e.errorCode, e.message);
+  } else {
+    console.error('Unexpected error', e);
+  }
+}
 ```
 
-**Browser:**
+## Quick Start (Browser)
 
 ```ts
 import { discover } from '@agentcommunity/aid/browser';
 
-const { record } = await discover('supabase.agentcommunity.org');
-console.log(`Found ${record.proto} agent at ${record.uri}`);
+const { record } = await discover('example.com');
+console.log('Agent:', record.proto, record.uri);
 ```
 
-## Documentation
+## API
 
-- [AID Protocol Spec](https://github.com/agent-community/agent-interface-discovery/blob/main/packages/docs/specification.md)
-- [Project README](https://github.com/agent-community/agent-interface-discovery#readme)
+- `discover(domain: string, options?)` → `{ record, ttl, queryName }`
+  - Node uses DNS; Browser uses DNS-over-HTTPS.
+  - Canonical query is `_agent.<domain>`. When a specific protocol is requested, clients may query `_agent._<proto>.<domain>` as an optimization.
+- `parse(txt: string)` → validated AID record
+- `AidError` – error class exposing `code` (numeric) and `errorCode` (symbol)
+- Constants and types exported from `@agentcommunity/aid`
+
+## Error Codes
+
+- `1000` `ERR_NO_RECORD` – no `_agent` TXT found
+- `1001` `ERR_INVALID_TXT` – malformed record
+- `1002` `ERR_UNSUPPORTED_PROTO` – protocol not supported
+- `1003` `ERR_SECURITY` – security policy violation
+- `1004` `ERR_DNS_LOOKUP_FAILED` – DNS lookup failed
+
+## Security Notes
+
+- Remote agent URIs MUST use `https://`.
+- See the spec for redirect handling and local execution guidance.
 
 ## License
 
-MIT — see [LICENSE](../../LICENSE)
+MIT © Agent Community
