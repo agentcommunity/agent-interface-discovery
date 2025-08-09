@@ -52,9 +52,8 @@ export function timeAgo(date: Date): string {
  * Returns "0.0.0" as fallback when package.json is not available
  */
 export function getAidVersion(): string {
-  // For now, return fallback until npm package is live
-  // This can be updated to fetch from /api/version when needed
-  return '0.0.0';
+  // Default optimistic value while the async fetch resolves in the background
+  return '1.0.0';
 }
 
 /**
