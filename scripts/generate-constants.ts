@@ -378,9 +378,9 @@ function generateRustConstants(constants: ProtocolConstants): string {
     `pub const DNS_SUBDOMAIN: &str = "${constants.dns.subdomain}";\n` +
     `pub const DNS_TTL_MIN: u32 = ${constants.dns.ttlRecommendation.min};\n` +
     `pub const DNS_TTL_MAX: u32 = ${constants.dns.ttlRecommendation.max};\n\n` +
-    `pub const LOCAL_URI_SCHEMES: &[&str] = &[\n` +
-    constants.localUriSchemes.map((s) => `    "${s}",`).join('\n') +
-    `\n];\n`
+    `pub const LOCAL_URI_SCHEMES: &[&str] = &[${constants.localUriSchemes
+      .map((s) => `"${s}"`)
+      .join(', ')}];\n`
   );
 }
 

@@ -32,8 +32,4 @@ pub const DNS_SUBDOMAIN: &str = "_agent";
 pub const DNS_TTL_MIN: u32 = 300;
 pub const DNS_TTL_MAX: u32 = 900;
 
-pub const LOCAL_URI_SCHEMES: &[&str] = &[
-    "docker",
-    "npx",
-    "pip",
-];
+pub const LOCAL_URI_SCHEMES: &[&str] = &["docker", "npx", "pip"];
