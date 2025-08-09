@@ -58,9 +58,7 @@ export function Hero() {
           </h1>
 
           <p className="mx-auto mb-8 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
-            AID = single DNS TXT record (
-            <code className="bg-muted px-2 py-1 rounded text-sm font-mono">_agent.</code>) that
-            instantly tells any tool where an agent lives + which protocol (MCP, A2A, etc.).
+            DNS for agents.
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-center mb-12 animate-fade-in-up">
