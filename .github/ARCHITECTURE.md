@@ -241,6 +241,26 @@ To prevent ecosystem drift across languages, CI includes a dedicated parity job:
 
 The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go.
 
+### Language-specific CI jobs (Rust / .NET / Java)
+
+In addition to the parity job, CI runs language-specific build and test jobs:
+
+- Rust (packages/aid-rs)
+  - Setup Rust stable
+  - Cache cargo
+  - `cargo build --locked`
+  - `cargo test --locked`
+- .NET (packages/aid-dotnet)
+  - Setup .NET 8 with cache
+  - `dotnet restore`
+  - `dotnet build -c Release`
+  - `dotnet test -c Release --no-build`
+- Java (packages/aid-java)
+  - Setup JDK 21 (Temurin) with Gradle cache
+  - Use repo root Gradle wrapper from package dir: `../../gradlew build test`
+
+These jobs run independently of JS/TS/Python/Go and help validate new ports as they evolve.
+
 ## 📋 Design Principles
 
 ### 1. **Fail Fast**
@@ -274,7 +294,7 @@ The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go.
 **Pattern**: Create `packages/aid-{language}/` with:
 
 - Language-specific build tools
-- Private package.json for test running
+- Private package.json for test running (if needed)
 - Implementation following core specification
 
 Generator support
@@ -285,6 +305,11 @@ Generator support
   - .NET → `packages/aid-dotnet/src/Constants.g.cs`
   - Java → `packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java`
 - Formatters are run best-effort (`gofmt`, `rustfmt`) when available; generation is a safe no‑op if the target package is absent.
+
+Minimal scope for a new port
+
+- Parser + generated constants + parity tests first
+- DNS/Network discovery can follow later
 
 ### Remote Caching
 
