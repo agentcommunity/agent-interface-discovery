@@ -88,6 +88,8 @@ connectToMcpServer('supabase.agentcommunity.org');
 
 **Conclusion:** AID seamlessly bridges the gap between knowing a service's domain and starting the rich, stateful MCP conversation, making dynamic connections trivial.
 
+For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
+
 ---
 
 **See also:**

@@ -88,6 +88,8 @@ connectToA2aAgent('a2a.agentcommunity.org'); // Fictional example domain
 
 **Conclusion:** AID provides a clean separation of concerns. It uses DNS for network-level discovery of the `AgentCard`'s location, allowing the A2A protocol itself to handle the rich capability negotiation that follows.
 
+For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
+
 ---
 
 **See also:**
