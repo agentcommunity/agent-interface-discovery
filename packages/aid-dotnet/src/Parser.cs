@@ -20,12 +20,7 @@ public static class Aid
             .Select(f => (string)f.GetRawConstantValue()!)
             .ToHashSet(StringComparer.Ordinal);
 
-    private static readonly HashSet<string> LocalUriSchemes = new(StringComparer.Ordinal)
-    {
-        "docker",
-        "npx",
-        "pip",
-    };
+    private static readonly HashSet<string> LocalUriSchemes = new(Constants.LocalUriSchemes, StringComparer.Ordinal);
 
     public static AidRecord Parse(string txt)
     {

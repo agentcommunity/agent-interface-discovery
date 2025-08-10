@@ -114,3 +114,7 @@ __pycache__/
 .rustup/
 .cargo/
 **/target/
+# Gradle cache
+.gradle/
+/.gradle/
+/build/
