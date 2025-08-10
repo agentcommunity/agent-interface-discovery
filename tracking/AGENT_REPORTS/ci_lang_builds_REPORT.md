@@ -19,9 +19,11 @@ Result:
 - Generator check remains in the main build job and passes locally.
 - Docs updated to list WIP Rust/.NET/Java and document CI jobs and generator scope.
 
-Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+Timestamp: 2025-08-10T11:33:48Z
 
 Notes:
 
 - If any new language job flakes on CI, temporarily disable that job in the workflow while stabilizing.
 - No generated files were edited directly; `pnpm gen` produces all language constants.
+
+PR (create/view): https://github.com/agentcommunity/agent-interface-discovery/compare/main...ci/lang-builds?expand=1
