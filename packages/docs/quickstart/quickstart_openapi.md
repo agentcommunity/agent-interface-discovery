@@ -88,6 +88,8 @@ connectToOpenAPIAgent('openapi.agentcommunity.org'); // Fictional example domain
 
 **Conclusion:** AID promotes APIs from being just human-readable documentation to being machine-discoverable resources, paving the way for a new generation of autonomous agents that can find and use tools across the internet.
 
+For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
+
 ---
 
 **See also:**
