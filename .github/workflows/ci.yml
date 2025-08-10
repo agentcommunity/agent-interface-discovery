@@ -152,6 +152,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Dotnet info
+        run: dotnet --info
+
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -162,15 +165,15 @@ jobs:
 
       - name: Restore
         working-directory: packages/aid-dotnet
-        run: dotnet restore
+        run: dotnet restore AidDiscovery.sln
 
       - name: Build (Release)
         working-directory: packages/aid-dotnet
-        run: dotnet build -c Release
+        run: dotnet build AidDiscovery.sln -c Release
 
       - name: Test (Release)
         working-directory: packages/aid-dotnet
-        run: dotnet test -c Release --no-build
+        run: dotnet test AidDiscovery.sln -c Release --no-build --logger "trx;LogFileName=test_results.trx"
 
   java:
     runs-on: ubuntu-latest
