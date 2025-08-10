@@ -1,4 +1,6 @@
 {
-  "*.{js,jsx,ts,tsx}": "eslint --cache --fix",
-  "*.{js,jsx,ts,tsx,json,md,yml,yaml}": "prettier --write"
+  "packages/**/*.{js,jsx,ts,tsx}": "eslint --cache --fix",
+  "{packages,protocol,scripts}/**/*.{js,jsx,ts,tsx,json,md,yml,yaml}": "prettier --write",
+  "README.md": "prettier --write",
+  ".github/**/*.{yml,yaml,md}": "prettier --write"
 }
