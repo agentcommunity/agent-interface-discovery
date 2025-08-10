@@ -114,3 +114,69 @@ jobs:
         with:
           name: sbom
           path: sbom.xml
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/aid-rs
+
+      - name: Build (Rust)
+        working-directory: packages/aid-rs
+        run: cargo build --locked
+
+      - name: Test (Rust)
+        working-directory: packages/aid-rs
+        run: cargo test --locked
+
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          cache: true
+
+      - name: Restore
+        working-directory: packages/aid-dotnet
+        run: dotnet restore
+
+      - name: Build (Release)
+        working-directory: packages/aid-dotnet
+        run: dotnet build -c Release
+
+      - name: Test (Release)
+        working-directory: packages/aid-dotnet
+        run: dotnet test -c Release --no-build
+
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Build & Test (Gradle Wrapper)
+        working-directory: packages/aid-java
+        run: ../../gradlew build test
