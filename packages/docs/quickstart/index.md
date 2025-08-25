@@ -120,6 +120,15 @@ nslookup -q=TXT _agent.my-cool-saas.com
 
 Now let's write code to find an agent. We provide libraries in several languages to make this trivial.
 
+### Language Guides
+
+- [TypeScript / Node.js](./quickstart_ts.md)
+- [Browser](./quickstart_browser.md)
+- [Go](./quickstart_go.md)
+- [Python](./quickstart_python.md)
+- [Java](./quickstart_java.md)
+- [.NET](./quickstart_dotnet.md)
+
 ### TypeScript / JavaScript
 
 Install the library:
@@ -232,6 +241,9 @@ func main() {
 - [MCP Guide](./quickstart_mcp.md)
 - [A2A Guide](./quickstart_a2a.md)
 - [OpenAPI Guide](./quickstart_openapi.md)
+- [Protocols & Auth Tokens](../protocols.md)
+- [Troubleshooting](../troubleshooting.md)
+- [Conformance](../conformance.md)
 - [Specification](../specification.md)
 - [Security Best Practices](../security.md)
 - [Rationale](../rationale.md)

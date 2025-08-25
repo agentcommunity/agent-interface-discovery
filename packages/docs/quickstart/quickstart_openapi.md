@@ -1,4 +1,10 @@
-### Technical Guide 3: Using AID with OpenAPI
+---
+title: 'Quickstart — OpenAPI'
+description: 'Discover an OpenAPI spec URL using AID and fetch it'
+icon: material/api
+---
+
+# OpenAPI
 
 **Target Audience:** API providers and developers of tools or agents that consume APIs programmatically.
 
@@ -6,15 +12,15 @@
 
 OpenAPI provides a standard for describing REST APIs. AID makes the specification itself discoverable, transforming any API into a resource that can be understood and used by autonomous agents.
 
-#### Part 1: For OpenAPI Providers (Publishing Your Spec)
+## Publish (Providers)
 
 If your OpenAPI specification is hosted at a public URL, you can make it discoverable.
 
 1.  **Identify Your OpenAPI Spec URL:** This is the direct URL to your `openapi.json` or `openapi.yaml` file.
     - **Example:** `https://api.my-service.io/v3/openapi.json`
 
-2.  **Construct the AID TXT Record:** The protocol token is `openapi`. The `uri` points to your spec file.
-    - **Record Content:** `v=aid1;uri=https://api.my-service.io/v3/openapi.json;p=openapi;desc=My Public Service API`
+2.  **Construct the AID TXT Record:** Use `openapi` for protocol; `uri` points to your spec file.
+    - **Value:** `v=aid1;uri=https://api.my-service.io/v3/openapi.json;proto=openapi;desc=My Public Service API`
 
 3.  **Publish to DNS:** Add a `TXT` record at the `_agent` subdomain for `my-service.io`.
     - **Type:** `TXT`
@@ -23,7 +29,7 @@ If your OpenAPI specification is hosted at a public URL, you can make it discove
 
 Your API's capabilities are now discoverable by any agent or tool that understands OpenAPI.
 
-#### Part 2: For OpenAPI Clients & Agents (Dynamic Discovery)
+## Discover & Fetch (Clients)
 
 Your application or agent needs to interact with the API provided by `my-service.io`.
 
@@ -32,13 +38,11 @@ Your application or agent needs to interact with the API provided by `my-service
 3.  **Fetch the OpenAPI Spec:** Make an HTTP GET request to the discovered URI.
 4.  **Interact with the API:** Use the fetched specification to dynamically configure an API client or allow an autonomous agent to reason about the API's endpoints, schemas, and required parameters.
 
-**Complete TypeScript Example:**
+TypeScript example using fetch:
 
-```typescript
+```ts
 import { discover } from '@agentcommunity/aid';
-import axios from 'axios';
-// For a real use case, you'd use a library like 'swagger-client' or 'openapi-typescript-codegen'
-// This example just fetches and inspects the spec.
+// For production, consider 'swagger-client' or 'openapi-typescript-codegen'
 
 interface OpenApiSpec {
   openapi: string;
@@ -63,8 +67,9 @@ async function discoverAndAnalyzeApi(domain: string) {
     console.log(`Found OpenAPI spec at: ${record.uri}`);
 
     // 3. Fetch the OpenAPI specification
-    const response = await axios.get<OpenApiSpec>(record.uri);
-    const spec = response.data;
+    const res = await fetch(record.uri);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const spec = (await res.json()) as OpenApiSpec;
 
     // 4. Analyze the spec for programmatic use
     console.log(`Successfully fetched spec for API: "${spec.info.title}" (v${spec.info.version})`);
@@ -78,15 +83,16 @@ async function discoverAndAnalyzeApi(domain: string) {
     // - Know the required parameters and request body schemas.
     // - Formulate valid API calls to achieve a goal.
   } catch (error) {
-    console.error(`Failed to connect to ${domain}:`, error.message);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to connect to ${domain}:`, msg);
   }
 }
 
 // Replace with a real domain publishing an OpenAPI AID record
-connectToOpenAPIAgent('openapi.agentcommunity.org'); // Fictional example domain
+discoverAndAnalyzeApi('openapi.agentcommunity.org'); // Fictional example domain
 ```
 
-**Conclusion:** AID promotes APIs from being just human-readable documentation to being machine-discoverable resources, paving the way for a new generation of autonomous agents that can find and use tools across the internet.
+**Why AID here?** It turns a domain into the canonical OpenAPI spec URL, enabling dynamic client setup.
 
 For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
 
