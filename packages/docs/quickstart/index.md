@@ -15,15 +15,20 @@ Fast track for using Agent Interface Discovery.
 
 AID provides libraries and tools for multiple languages and use cases:
 
-| Package                                                                                             | Purpose                          | Language   | Status                                                     |
-| --------------------------------------------------------------------------------------------------- | -------------------------------- | ---------- | ---------------------------------------------------------- |
-| **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                        | Core discovery library           | TypeScript | ✅ Published                                               |
-| **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**          | CLI validation & generation      | Node.js    | ✅ Published                                               |
-| **[aid-discovery (Python)](https://pypi.org/project/aid-discovery/)**                               | Python discovery library         | Python     | 🔜 Published (not yet community-owned; transfer planned)   |
-| **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)** | Go discovery library             | Go         | ✅ Published                                               |
-| **AID Web Workbench**                                                                               | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
+| Package                                                                                                            | Purpose                          | Language   | Status                                                     |
+| ------------------------------------------------------------------------------------------------------------------ | -------------------------------- | ---------- | ---------------------------------------------------------- |
+| **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                                       | Core discovery library           | TypeScript | ✅ Published                                               |
+| **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**                         | CLI validation & generation      | Node.js    | ✅ Published                                               |
+| **[aid-discovery (Python)](https://pypi.org/project/aid-discovery/)**                                              | Python discovery library         | Python     | 🔜 Published (not yet community-owned; transfer planned)   |
+| **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)**                | Go discovery library             | Go         | ✅ Published                                               |
+| **AID Web Workbench**                                                                                              | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
+| **[aid-rs (Rust)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs)**         | Parser + generated constants     | Rust       | 🚧 WIP                                                     |
+| **[aid-dotnet (.NET)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet)** | Parser + generated constants     | .NET       | 🚧 WIP                                                     |
+| **[aid-java (Java)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java)**     | Parser + generated constants     | Java       | 🚧 WIP                                                     |
 
 ---
+
+Note: Constants across languages are generated from a single contract file via `pnpm gen` (source: `protocol/constants.yml`).
 
 ## Part 1: For Providers (Publishing Your Agent)
 

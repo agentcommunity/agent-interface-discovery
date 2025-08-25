@@ -162,9 +162,9 @@ This repository uses a PNPM/Turborepo monorepo structure. It contains the full s
 | [**@agentcommunity/aid-conformance**](https://www.npmjs.com/package/@agentcommunity/aid-conformance) | Public  | Conformance suite exporting fixtures and a CLI runner             |
 | [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                | Public  | Official Python library                                           |
 | [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)          | Public  | Official Go library                                               |
-| **aid-rs (Rust)**                                                                                    | WIP     | Parser + constants; discovery later                               |
-| **aid-dotnet (.NET)**                                                                                | WIP     | Parser + constants; discovery later                               |
-| **aid-java (Java)**                                                                                  | WIP     | Parser + constants; discovery later                               |
+| [**aid-rs (Rust)**](./packages/aid-rs)                                                               | WIP     | Parser + constants; discovery later                               |
+| [**aid-dotnet (.NET)**](./packages/aid-dotnet)                                                       | WIP     | Parser + constants; discovery later                               |
+| [**aid-java (Java)**](./packages/aid-java)                                                           | WIP     | Parser + constants; discovery later                               |
 | [**@agentcommunity/aid-web**](./packages/web)                                                        | Private | The Next.js app for the website and workbench                     |
 | **@agentcommunity/e2e-tests**                                                                        | Private | E2E tests validating our live showcase domains                    |
 | **(test runners)**                                                                                   | Private | Internal packages for orchestrating Python and Go tests via Turbo |

@@ -2,18 +2,66 @@
 
 This updates the earlier roadmap based on the v1.0.0 specification. Order: spec conformance → security/reliability → CLI/CI → docs/adoption → showcase → language ports → governance. Follow `.cursorrule` and keep `protocol/constants.yml` as the single source of truth.
 
+## Open priorities (ordered)
+
+1) P0 — Spec Conformance & Interop
+- JSON Schema for AID record and CI validation
+- Error semantics parity across TS/Py/Go
+- Redirect policy helper parity (implement in Py/Go)
+
+2) P1 — Security & Reliability
+- DNSSEC options (require/prefer) surfaced in CLI and libraries
+- DoH provider fallback/rotation with jitter/backoff
+- IDN safety hints in CLI
+- Local execution guidance docs
+
+3) P2 — CLI & CI Ergonomics
+- `aid-doctor` batch input (stdin/file) and `--format yaml|plain`
+- GitHub Action (`aid-validate`)
+- Coverage/static checks and SBOM/audit jobs
+
+4) P3 — Documentation & Adoption
+- New language port guide
+- Registrar playbooks
+- Examples gallery (`examples/_agent.<domain>.txt`)
+
+5) P4 — Showcase & Terraform
+- Cloudflare provider module
+- Propagation checks
+
+6) P5 — Language Ports
+- Tier 1 criteria verification (parity + conformance green) as needed
+
+7) P6 — Governance & Registries
+- Token registry repo
+- Global index/crawler
+
+---
+
+## Recently completed
+
+- Parity CI job (multi-language)
+- CI language builds for Tier 1 ports (Rust/.NET/Java)
+- Pre-commit lint scope tightened
+- Web toolkit reflects new ports
+- Security best practices page and cross-links
+
 ## P0 — Spec Conformance & Interop (highest priority)
 
-- [x] Protocol-specific subdomain format (spec §2.4)
-  - Spec uses `_agent._mcp.example.com` (underscore before protocol). Current code and Terraform examples use `_agent.mcp.example.com`.
-  - Canonical: base `_agent.<domain>` remains default; protocol-specific subdomains are optional optimization only.
-  - Plan: Canonical base `_agent.<domain>`; protocol-specific optional. Implemented base-first discovery; underscore-first fallback when protocol explicitly requested.
-  - Tasks:
-    - [ ] TS (Node/Browser): try `_agent._{proto}.{domain}`, then `_agent.{proto}.{domain}`; add unit tests.
-    - [ ] Python: same behavior; tests.
-    - [ ] Go: same behavior; tests.
-    - [ ] Update docs and Terraform examples to underscore form.
-    - [ ] E2E to cover both variants.
+- [ ] JSON Schema for AID record (spec §2.1)
+  - Publish `@agentcommunity/aid-schema` and include schema in docs.
+  - Enforce: `v=aid1`, `proto` xor `p`, `desc` ≤ 60 bytes (UTF-8), `https://` for remote protocols, local scheme allowlist.
+  - CI validates fixtures and samples against the schema.
+
+- [ ] Error semantics parity (spec §2.3 table; Appendix C)
+  - Ensure symbol → numeric mapping and messages match across TS, Python, Go.
+
+- [ ] Redirect policy helper parity (spec §3)
+  - Provide Python and Go equivalents to TS `enforceRedirectPolicy` with tests and usage docs.
+
+- [wontdo] Protocol-specific subdomain format (spec §2.4)
+  - Decision for v1: keep discovery base-only at `_agent.<domain>`; do not implement protocol-specific subdomain lookups.
+  - Rationale: Avoid duplication/complexity until there is clear demand; revisit for v2.
 
 - [ ] JSON Schema for AID record (spec §2.1)
   - Publish `@agentcommunity/aid-schema` and include schema in docs.
@@ -62,7 +110,16 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 - [x] Parity CI job (multi-language)
   - Added root `test:parity` and a dedicated CI job running TS/Py/Go parity.
 
+- [x] CI language builds for Tier 1 ports (Rust/.NET/Java)
+  - Added separate Rust (`cargo build/test`), .NET (`dotnet build/test`), and Java (`./gradlew build test`) jobs; preserved `pnpm gen` gen-check and existing parity job.
+
+- [x] Pre-commit lint scope tightened
+  - Scoped lint-staged globs to repo paths only (`packages/**`, `protocol/**`, `scripts/**`, root README, `.github/**`) to avoid external file traversal and reduce pre-commit noise.
+
 ## P3 — Documentation & Adoption
+
+- [x] Web toolkit reflects new ports
+  - Landing Toolkit updated with Rust/Java/.NET WIP cards linking to repo paths; kept existing cards and styles.
 
 - [ ] New language port guide
   - Scaffold, acceptance criteria, parity instructions, publishing checklist.
@@ -80,7 +137,7 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 ## P4 — Showcase & Terraform
 
 - [ ] Cloudflare provider module (in addition to Vercel)
-  - Parameterize TTL; output record URLs; use underscore protocol subdomains.
+  - Parameterize TTL; output record URLs; emphasize canonical base `_agent.<domain>` TXT records.
 
 - [ ] Propagation checks
   - Simple verification script/CI step post-apply with retries.
@@ -112,10 +169,10 @@ This updates the earlier roadmap based on the v1.0.0 specification. Order: spec 
 
 ## Suggested execution order
 
-1. P0 Spec Conformance (underscore subdomain support, JSON Schema, conformance suite, error parity, redirect helper parity)
+1. P0 Spec Conformance (JSON Schema, error parity, redirect helper parity)
 2. P1 Security & Reliability (DNSSEC options, DoH rotation, IDN hints, local-exec guidance)
 3. P2 CLI & CI (batch/outputs, GitHub Action, coverage/static checks, SBOM/audits)
-4. P3 Docs & Adoption (port guide, registrar playbooks, best practices, examples)
+4. P3 Docs & Adoption (port guide, registrar playbooks, examples)
 5. P4 Showcase & Terraform (Cloudflare module, propagation checks)
 6. P5 Language Ports (Rust/C#/Java → then Swift/Kotlin/Ruby/PHP/Elixir)
 7. P6 Governance & Registries (aid-tokens, aid-registry)
@@ -153,43 +210,6 @@ Release strategy:
 - Merge the above into a short-lived `release/1.0.1` branch; run Changesets to publish one patch for core libs.
 - Publish `@agentcommunity/aid-conformance` as a new package.
 
-## Spec extension process (for future proposals)
+## Spec extension process
 
-When expanding the spec (new tokens/fields/rules), follow this process to stay contract-first and multi-language consistent:
-
-1. Proposal issue
-
-- Open an issue labeled `spec-proposal` describing motivation, examples, security implications, and backward compatibility.
-
-2. Draft in docs
-
-- Update `packages/docs/specification.md` (draft PR) with normative language and references; mark changes as “Proposed”.
-
-3. Update canonical constants
-
-- Edit `protocol/constants.yml` only for accepted proposals.
-- Run `pnpm gen` to regenerate constants across TS/Py/Go; commit YAML + generated files.
-
-4. Multi-language guards
-
-- Implement validation and error semantics in TS first; mirror in Py/Go.
-- Add/update `test-fixtures/golden.json` and parity tests; ensure green in all languages.
-
-5. Versioning & migration notes
-
-- Add a Changeset; bump affected packages; document migration in `packages/docs/versioning.md`.
-- If breaking, gate behind opt-in flags until v2.
-
-6. Release & communicate
-
-- Merge docs + code; run full CI; publish.
-- Announce in README/docs and link to the proposal issue for rationale.
-
-Checklist for any spec change PR:
-
-- [ ] Issue with rationale and security review
-- [ ] `protocol/constants.yml` updated and regenerated
-- [ ] TS/Py/Go validation + tests updated
-- [ ] Parity suite green
-- [ ] Docs/spec updated
-- [ ] Changeset added and CI green
+Moved to `tracking/SPEC_EXTENSION_PROCESS.md`.

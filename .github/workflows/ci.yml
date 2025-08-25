@@ -114,3 +114,79 @@ jobs:
         with:
           name: sbom
           path: sbom.xml
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/aid-rs
+
+      - name: Build (Rust)
+        working-directory: packages/aid-rs
+        run: cargo build --locked
+
+      - name: Test (Rust)
+        working-directory: packages/aid-rs
+        run: cargo test --locked
+
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Dotnet info
+        run: dotnet --info
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('packages/aid-dotnet/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        working-directory: packages/aid-dotnet
+        run: dotnet restore AidDiscovery.sln
+
+      - name: Build (Release)
+        working-directory: packages/aid-dotnet
+        run: dotnet build AidDiscovery.sln -c Release
+
+      - name: Test (Release)
+        working-directory: packages/aid-dotnet
+        run: dotnet test AidDiscovery.sln -c Release --no-build --logger "trx;LogFileName=test_results.trx"
+
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Build & Test (Gradle Wrapper)
+        working-directory: packages/aid-java
+        run: ../../gradlew build test

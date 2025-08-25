@@ -57,3 +57,19 @@ flowchart LR
 - [**Rationale**](rationale.md) – _Why we chose DNS, why the manifest was removed, and why simplicity wins._
 - [**Specification**](specification.md) – _The exact `TXT` record format, client algorithm, and security rules._
 - [**Security Best Practices**](security.md) – _DNSSEC, redirect handling, local execution, IDN safety, TTL & caching._
+
+---
+
+## SDKs and Tools
+
+AID has official libraries and tools across multiple languages, with additional ports in progress.
+
+- TypeScript/Node & Browser: `@agentcommunity/aid`
+- Python: `aid-discovery` (transfer to community planned)
+- Go: `aid-go`
+- Rust: `aid-rs` (WIP)
+- .NET: `aid-dotnet` (WIP)
+- Java: `aid-java` (WIP)
+- Web Workbench: Interactive generator/resolver
+
+See the full package overview in the [Quick Start](quickstart/index.md#package-overview).

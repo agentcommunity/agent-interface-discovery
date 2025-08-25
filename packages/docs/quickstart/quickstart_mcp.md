@@ -88,6 +88,8 @@ connectToMcpServer('supabase.agentcommunity.org');
 
 **Why AID here?** It turns a domain into the exact MCP endpoint, so clients can connect without hardcoding URLs.
 
+For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
+
 ---
 
 **See also:**

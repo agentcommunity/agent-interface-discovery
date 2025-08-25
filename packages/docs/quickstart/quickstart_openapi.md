@@ -94,6 +94,8 @@ discoverAndAnalyzeApi('openapi.agentcommunity.org'); // Fictional example domain
 
 **Why AID here?** It turns a domain into the canonical OpenAPI spec URL, enabling dynamic client setup.
 
+For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
+
 ---
 
 **See also:**
