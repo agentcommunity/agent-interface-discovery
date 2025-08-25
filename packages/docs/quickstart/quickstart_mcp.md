@@ -1,24 +1,23 @@
-Excellent. Based on the technical specifications for MCP, A2A, and general best practices for OpenAPI, here are the refined, developer-focused quick-start guides. Each is tailored to its specific community, using its terminology and addressing its unique discovery challenges.
-
+---
+title: 'Quickstart — MCP'
+description: 'Discover an MCP server endpoint with AID and start a session'
+icon: material/connection
+edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/quickstart/quickstart_mcp.md
 ---
 
-### Technical Guide 1: Using AID with the Model Context Protocol (MCP)
+# MCP (Model Context Protocol)
 
-**Target Audience:** Developers building or integrating with MCP servers and clients.
+Use AID to find the MCP server endpoint, then initialize your session.
 
-**Goal:** To use AID to discover an MCP server's endpoint and initiate the stateful MCP `initialize` handshake.
-
-The Model Context Protocol (MCP) is a powerful, session-based protocol for rich, stateful interactions. Its entire lifecycle begins with a successful `initialize` request to a specific server endpoint. AID solves the critical first problem: how does a client find that endpoint automatically?
-
-#### Part 1: For MCP Server Providers (Publishing Your Endpoint)
+## Publish (Providers)
 
 If your MCP server is live and accepting JSON-RPC messages at a specific URL, you can make it instantly discoverable.
 
 1.  **Identify Your MCP Endpoint:** This is the full URL where your server listens for the initial `initialize` request.
     - **Example:** `https://api.my-mcp-service.com/v1/mcp`
 
-2.  **Construct the AID TXT Record:** The official protocol token for MCP is `mcp`. The `uri` is your endpoint from Step 1.
-    - **Record Content:** `v=aid1;uri=https://api.my-mcp-service.com/v1/mcp;p=mcp;desc=My Awesome MCP Assistant`
+2.  **Construct the AID TXT Record:** Use `mcp` for protocol; `uri` is your JSON-RPC endpoint.
+    - **Value:** `v=aid1;uri=https://api.my-mcp-service.com/v1/mcp;proto=mcp;desc=My Awesome MCP Assistant`
 
 3.  **Publish to DNS:** Go to your DNS provider and add a `TXT` record for your service's domain (`my-mcp-service.com`).
     - **Type:** `TXT`
@@ -27,7 +26,7 @@ If your MCP server is live and accepting JSON-RPC messages at a specific URL, yo
 
 Your MCP server is now discoverable by any AID-aware client.
 
-#### Part 2: For MCP Clients (Dynamic Discovery and Connection)
+## Discover & Connect (Clients)
 
 Your client application needs to connect to an MCP server, but you only know its domain name (e.g., `my-mcp-service.com`).
 
@@ -35,9 +34,9 @@ Your client application needs to connect to an MCP server, but you only know its
 2.  **Protocol Validation:** Ensure the discovered protocol (`proto`) is `mcp`.
 3.  **Initiate MCP Handshake:** Use the discovered URI to send the `initialize` request and begin the MCP session.
 
-**Complete TypeScript Example:**
+TypeScript example (pseudo MCP client shown for clarity):
 
-```typescript
+```ts
 import { discover } from '@agentcommunity/aid';
 // This is a fictional MCP client library for demonstration.
 // Use your actual MCP implementation.
@@ -78,7 +77,8 @@ async function connectToMcpServer(domain: string) {
     // The MCP session is now active. You can proceed with other MCP operations.
     // e.g., const tools = await mcpClient.tools.list();
   } catch (error) {
-    console.error(`Failed to connect to ${domain}:`, error.message);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to connect to ${domain}:`, msg);
   }
 }
 
@@ -86,7 +86,7 @@ async function connectToMcpServer(domain: string) {
 connectToMcpServer('supabase.agentcommunity.org');
 ```
 
-**Conclusion:** AID seamlessly bridges the gap between knowing a service's domain and starting the rich, stateful MCP conversation, making dynamic connections trivial.
+**Why AID here?** It turns a domain into the exact MCP endpoint, so clients can connect without hardcoding URLs.
 
 ---
 
