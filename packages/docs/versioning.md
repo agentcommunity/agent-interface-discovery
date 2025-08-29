@@ -3,7 +3,6 @@ title: 'Versioning and Changelog'
 description: 'How the AID specification evolves.'
 icon: material/git
 
-edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/versioning.md
 extra_css_class: aid-page
 ---
 

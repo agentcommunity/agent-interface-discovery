@@ -3,7 +3,6 @@ title: "Agent Interface Discovery 'aid'"
 description: 'Specification'
 icon: material/file-document-outline
 
-edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/specification.md
 extra_css_class: aid-page
 
 tags:

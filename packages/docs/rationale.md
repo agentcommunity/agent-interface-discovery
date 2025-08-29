@@ -3,7 +3,6 @@ title: 'Agent Interface Discovery - aid'
 description: 'Design Rationale'
 icon: material/head-question-outline
 
-edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/rationale.md
 extra_css_class: aid-page
 ---
 

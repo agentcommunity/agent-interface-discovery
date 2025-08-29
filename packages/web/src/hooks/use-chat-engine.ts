@@ -9,6 +9,7 @@ import type { ScenarioManifest } from '@/lib/tool-manifest-types';
 import type { DiscoveryResult, DiscoveryData, DiscoveryMetadata } from '@/hooks/use-discovery';
 import { type HandshakeResult, AuthRequiredError } from '@/hooks/use-connection';
 import { isOk } from '@/lib/types/result';
+import { selectAdapter } from '@/spec-adapters';
 
 // -----------------------------------------------------------------------------
 // 1. Chat message modelling (kept close to previous shape for UI compatibility)
@@ -151,7 +152,9 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         (scenario && !scenario.live ? new MockDatasource(domain) : new LiveDatasource());
 
       // Narrative 1 (always)
-      await (scenario?.narrative1 ? sendAssistant(scenario.narrative1.replace('{domain}', domain)) : sendAssistant('Let me see…'));
+      await (scenario?.narrative1
+        ? sendAssistant(scenario.narrative1.replace('{domain}', domain))
+        : sendAssistant('Let me see…'));
 
       // 1. Discovery phase
       setStatus('discovering');
@@ -183,6 +186,14 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
       // --- Discovery succeeded ---
       const { record: discoveryRecord } = discoveryRes.value;
 
+      // Normalize record to canonical shape (future-proof; UI currently unchanged)
+      try {
+        const adapter = selectAdapter('v1');
+        void adapter.normalizeRecord(discoveryRecord);
+      } catch {
+        // non-fatal; adapter is best-effort for now
+      }
+
       // Successful discovery narrative2
       if (scenario?.narrative2 && !scenario.narrative2.includes('{error}')) {
         const formatted = scenario.narrative2
@@ -206,6 +217,13 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
       setHandshake(handshakeRes);
 
       if (isOk(handshakeRes)) {
+        // Normalize handshake (not used yet by UI)
+        try {
+          const adapter = selectAdapter('v1');
+          void adapter.normalizeHandshake(handshakeRes.value);
+        } catch {
+          // Best-effort normalization; ignore
+        }
         // --- Handshake succeeded ---
         addMessage({
           type: 'connection_result',
@@ -268,11 +286,25 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
       if (isOk(handshakeRes)) {
         setStatus('connected');
         addMessage({ type: 'tool_event', id: uniqueId(), tool: 'connection', detail: 'succeeded' });
-        // TODO: Push a new `connection_result` message to update the UI with tools.
+        // Emit a full connection_result so UI updates with tools
+        addMessage({
+          type: 'connection_result',
+          id: uniqueId(),
+          status: 'success',
+          discovery: state.discovery.value, // safe due to early return check
+          result: handshakeRes,
+        });
       } else {
+        // Distinguish needs_auth vs generic error if we want; for now keep 'error'
         setStatus('failed');
         addMessage({ type: 'tool_event', id: uniqueId(), tool: 'connection', detail: 'failed' });
-        // TODO: Push a new `connection_result` message to show the new error.
+        addMessage({
+          type: 'connection_result',
+          id: uniqueId(),
+          status: 'error',
+          discovery: state.discovery.value,
+          result: handshakeRes,
+        });
       }
     },
     [datasource, state.status, state.discovery, state.domain, addMessage],

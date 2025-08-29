@@ -99,10 +99,12 @@ ${sortedErrorCodes
 
 export const ERROR_MESSAGES = {
 ${sortedErrorCodes
-  .map(
-    (errorName) =>
-      `  ${errorName}: '${constants.errorCodes[errorName].description ?? constants.errorCodes[errorName].message ?? ''}',`,
-  )
+  .map((errorName) => {
+    const raw =
+      constants.errorCodes[errorName].description ?? constants.errorCodes[errorName].message ?? '';
+    const escaped = String(raw).replace(/'/g, "\\'");
+    return `  ${errorName}: '${escaped}',`;
+  })
   .join('\n')}
 } as const;
 
@@ -122,57 +124,83 @@ export interface AidRecord {
   desc?: string;
 }
 
-// Alternative record format with 'p' alias
-export interface AidRecordWithAlias {
-  /** Version - must be "${constants.specVersion}" */
-  v: "${constants.specVersion}";
-  /** Absolute https:// URL or package URI */
-  uri: string;
-  /** Protocol token (shorthand alias) */
-  p: ProtocolToken;
-  /** Authentication hint token (optional) */
-  auth?: AuthToken;
-  /** Human-readable description ≤ 60 UTF-8 bytes (optional) */
-  desc?: string;
-}
-
-// Raw parsed record (before validation)
-export interface RawAidRecord {
-  v?: string;
-  uri?: string;
-  proto?: string;
-  p?: string;
-  auth?: string;
-  desc?: string;
-}
-
-// DNS configuration
-export const DNS_SUBDOMAIN = '${constants.dns.subdomain}' as const;
-export const DNS_TTL_MIN = ${constants.dns.ttlRecommendation.min} as const;
-export const DNS_TTL_MAX = ${constants.dns.ttlRecommendation.max} as const;
-
-// Local URI schemes
-export const LOCAL_URI_SCHEMES = [
-${constants.localUriSchemes.map((scheme) => `  '${scheme}',`).join('\n')}
-] as const;
-
-export type LocalUriScheme = typeof LOCAL_URI_SCHEMES[number];
-
-// Validation helpers
-export const REQUIRED_FIELDS = [
-${constants.aidRecord.required.map((field) => `  '${field}',`).join('\n')}
-] as const;
-
-export const OPTIONAL_FIELDS = [
-${constants.aidRecord.optional.map((field) => `  '${field}',`).join('\n')}
-] as const;
-
-export const FIELD_ALIASES = {
-${Object.entries(constants.aidRecord.aliases)
-  .map(([alias, field]) => `  ${alias}: '${field}',`)
-  .join('\n')}
-} as const;
 `;
+}
+
+/**
+ * Generate a TypeScript module for the Web workbench only.
+ *
+ * Purpose: expose spec-derived types and small constant maps used by the
+ * Next.js app. Keep this output tiny and tree‑shakeable — no large schemas.
+ */
+function generateWebSpecModule(constants: ProtocolConstants): string {
+  const sortedProtocolTokens = Object.keys(constants.protocolTokens).sort();
+  const sortedAuthTokens = Object.keys(constants.authTokens).sort();
+  const sortedErrorCodes = Object.keys(constants.errorCodes).sort();
+
+  const header = `// GENERATED FILE - DO NOT EDIT\n\n// Auto-generated from protocol/constants.yml by scripts/generate-constants.ts\n// Run 'pnpm gen' after updating the YAML.\n`;
+
+  const aidRecordDoc = `/**\n * AID TXT record as specified by the current spec version.\n * This is the raw, spec-shaped record (before any UI normalization).\n */`;
+
+  return (
+    header +
+    `\n// ---- Version ----\n` +
+    `export const SPEC_VERSION = '${constants.specVersion}' as const;\n` +
+    `\n// ---- Tokens ----\n` +
+    sortedProtocolTokens
+      .map((t) => `export const PROTO_${t.toUpperCase()} = '${t}' as const;`)
+      .join('\n') +
+    `\n` +
+    sortedAuthTokens
+      .map((t) => `export const AUTH_${t.toUpperCase()} = '${t}' as const;`)
+      .join('\n') +
+    `\n\nexport const PROTOCOL_TOKENS = {\n` +
+    sortedProtocolTokens.map((t) => `  ${t}: '${t}',`).join('\n') +
+    `\n} as const;\n` +
+    `export type ProtocolToken = keyof typeof PROTOCOL_TOKENS;\n` +
+    `\nexport const AUTH_TOKENS = {\n` +
+    sortedAuthTokens.map((t) => `  ${t}: '${t}',`).join('\n') +
+    `\n} as const;\n` +
+    `export type AuthToken = keyof typeof AUTH_TOKENS;\n` +
+    `\n// ---- Error codes ----\n` +
+    `export const ERROR_CODES = {\n` +
+    sortedErrorCodes.map((name) => `  ${name}: ${constants.errorCodes[name].code},`).join('\n') +
+    `\n} as const;\n` +
+    `export type ErrorCodeName = keyof typeof ERROR_CODES;\n` +
+    `export type ErrorCode = (typeof ERROR_CODES)[ErrorCodeName];\n` +
+    `\nexport const ERROR_CATALOG: Record<ErrorCodeName, { code: number; message: string }> = {\n` +
+    sortedErrorCodes
+      .map((name) => {
+        const msg =
+          constants.errorCodes[name].description ?? constants.errorCodes[name].message ?? '';
+        return `  ${name}: { code: ${constants.errorCodes[name].code}, message: '${msg.replace(/'/g, "\\'")}' },`;
+      })
+      .join('\n') +
+    `\n};\n` +
+    `\n// ---- DNS / Local Schemes ----\n` +
+    `export const DNS_SUBDOMAIN = '${constants.dns.subdomain}' as const;\n` +
+    `export const DNS_TTL_MIN = ${constants.dns.ttlRecommendation.min} as const;\n` +
+    `export const DNS_TTL_MAX = ${constants.dns.ttlRecommendation.max} as const;\n` +
+    `export const LOCAL_URI_SCHEMES = [${constants.localUriSchemes.map((s) => `'${s}'`).join(', ')}] as const;\n` +
+    `export type LocalUriScheme = (typeof LOCAL_URI_SCHEMES)[number];\n` +
+    `\n// ---- Record types ----\n` +
+    `${aidRecordDoc}\n` +
+    `export interface AidRecordV1 {\n` +
+    `  v: '${constants.specVersion}';\n` +
+    `  uri: string;\n` +
+    `  proto: ProtocolToken;\n` +
+    `  auth?: AuthToken;\n` +
+    `  desc?: string;\n` +
+    `}\n` +
+    `\n/** Raw, partially parsed record shape (before validation) */\n` +
+    `export interface RawAidRecord {\n  v?: string; uri?: string; proto?: string; p?: string; auth?: string; desc?: string;\n}\n` +
+    `\n// ---- Handshake types (minimal for UI) ----\n` +
+    `export interface HandshakeV1 {\n` +
+    `  protocolVersion: string;\n` +
+    `  serverInfo: { name: string; version: string };\n` +
+    `  capabilities: { id: string; type: 'tool' | 'resource'; name?: string; description?: string }[];\n` +
+    `}\n`
+  );
 }
 
 function generatePythonConstants(constants: ProtocolConstants): string {
@@ -471,19 +499,47 @@ try {
 
   // Use project's prettier configuration for consistency
   const prettierOptions = await prettier.resolveConfig(process.cwd());
-  const tsFormatted = await prettier.format(tsContent, {
-    // Use project's prettier config with explicit fallbacks
-    semi: prettierOptions?.semi ?? true,
-    singleQuote: prettierOptions?.singleQuote ?? true,
-    trailingComma: (prettierOptions?.trailingComma as 'all' | 'es5' | 'none') ?? 'all',
-    printWidth: prettierOptions?.printWidth ?? 100,
-    parser: 'typescript',
-  });
+  let tsFormatted: string;
+  try {
+    tsFormatted = await prettier.format(tsContent, {
+      // Use project's prettier config with explicit fallbacks
+      semi: prettierOptions?.semi ?? true,
+      singleQuote: prettierOptions?.singleQuote ?? true,
+      trailingComma: (prettierOptions?.trailingComma as 'all' | 'es5' | 'none') ?? 'all',
+      printWidth: prettierOptions?.printWidth ?? 100,
+      parser: 'typescript',
+    });
+  } catch {
+    console.warn('⚠️ Prettier formatting (TS constants) failed. Writing unformatted output.');
+    tsFormatted = tsContent;
+  }
 
   writeFileSync(tsOutputPath, tsFormatted);
 
   console.log('✅ Generated constants.ts from protocol/constants.yml');
   console.log(`   Output: ${tsOutputPath}`);
+
+  // Generate Web spec module (Next.js app)
+  const webSpec = generateWebSpecModule(constants);
+  const webSpecDir = path.resolve(process.cwd(), 'packages/web/src/generated');
+  const webSpecPath = path.resolve(webSpecDir, 'spec.ts');
+  mkdirSync(webSpecDir, { recursive: true });
+  let webSpecFormatted: string;
+  try {
+    webSpecFormatted = await prettier.format(webSpec, {
+      semi: prettierOptions?.semi ?? true,
+      singleQuote: prettierOptions?.singleQuote ?? true,
+      trailingComma: (prettierOptions?.trailingComma as 'all' | 'es5' | 'none') ?? 'all',
+      printWidth: prettierOptions?.printWidth ?? 100,
+      parser: 'typescript',
+    });
+  } catch {
+    console.warn('⚠️ Prettier formatting (web spec) failed. Writing unformatted output.');
+    webSpecFormatted = webSpec;
+  }
+  writeFileSync(webSpecPath, webSpecFormatted);
+  console.log('✅ Generated web spec.ts from protocol/constants.yml');
+  console.log(`   Output: ${webSpecPath}`);
 
   // Generate Python constants
   const pyContent = generatePythonConstants(constants);
