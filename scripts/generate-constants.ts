@@ -124,6 +124,28 @@ export interface AidRecord {
   desc?: string;
 }
 
+// Raw parsed record (before validation)
+export interface RawAidRecord {
+  v?: string;
+  uri?: string;
+  proto?: string;
+  p?: string;
+  auth?: string;
+  desc?: string;
+}
+
+// DNS configuration
+export const DNS_SUBDOMAIN = '${constants.dns.subdomain}' as const;
+export const DNS_TTL_MIN = ${constants.dns.ttlRecommendation.min} as const;
+export const DNS_TTL_MAX = ${constants.dns.ttlRecommendation.max} as const;
+
+// Local URI schemes
+export const LOCAL_URI_SCHEMES = [
+${constants.localUriSchemes.map((scheme) => `  '${scheme}',`).join('\n')}
+] as const;
+
+export type LocalUriScheme = typeof LOCAL_URI_SCHEMES[number];
+
 `;
 }
 
