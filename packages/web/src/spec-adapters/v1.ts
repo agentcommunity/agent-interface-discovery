@@ -36,7 +36,7 @@ const normalizeRecord = (raw: unknown): CanonicalRecord | null => {
   const auth = (raw as { auth?: unknown }).auth;
 
   const extra: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+  for (const [k, v] of Object.entries(raw as unknown as Record<string, unknown>)) {
     if (!['v', 'uri', 'proto', 'host', 'port', 'desc', 'auth'].includes(k)) extra[k] = v;
   }
 
@@ -85,7 +85,7 @@ const normalizeHandshake = (raw: unknown): CanonicalHandshake | null => {
     : [];
 
   const extra: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+  for (const [k, v] of Object.entries(raw as unknown as Record<string, unknown>)) {
     if (!['protocolVersion', 'serverInfo', 'capabilities'].includes(k)) extra[k] = v;
   }
 
