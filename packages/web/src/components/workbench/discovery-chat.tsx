@@ -17,7 +17,13 @@ import { ConnectionToolBlock } from '@/components/workbench/tool-blocks';
 import type { HandshakeResult } from '@/hooks/use-connection';
 import type { DiscoveryResult } from '@/hooks/use-discovery';
 
-function Message({ message }: { message: ChatLogMessage }) {
+function Message({
+  message,
+  onProvideAuth,
+}: {
+  message: ChatLogMessage;
+  onProvideAuth?: (token: string) => void;
+}) {
   const isUser = message.type === 'user';
 
   const renderContent = () => {
@@ -59,7 +65,7 @@ function Message({ message }: { message: ChatLogMessage }) {
             status={message.status}
             result={message.result}
             discoveryResult={{ ok: true, value: message.discovery } as DiscoveryResult}
-            onProvideAuth={() => {}}
+            onProvideAuth={onProvideAuth}
           />
         );
       case 'summary':
@@ -179,7 +185,15 @@ export function DiscoveryChat() {
 
         <div className="max-w-3xl mx-auto w-full">
           {state.messages.map((msg) => (
-            <Message key={msg.id} message={msg} />
+            <Message
+              key={msg.id}
+              message={msg}
+              onProvideAuth={
+                msg.type === 'connection_result'
+                  ? (token: string) => dispatch({ type: 'PROVIDE_AUTH', payload: token })
+                  : undefined
+              }
+            />
           ))}
           <div ref={messagesEndRef} />
         </div>

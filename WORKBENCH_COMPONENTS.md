@@ -225,6 +225,109 @@ This architecture cleanly separates concerns: manifests define the "story", the 
 
 ---
 
+## 🧭 Spec Upgrade Guide (How-To)
+
+Goal: keep the current linear flow (discovery → handshake) while making upgrades fast when the spec adds/changes fields. Follow this playbook whenever `protocol/constants.yml` changes.
+
+### Quick Steps
+
+- Update spec: edit `protocol/constants.yml` and run `pnpm gen`.
+- Commit YAML and all generated outputs (CI enforces sync).
+- Run locally: `pnpm dev:web` (or `pnpm dev:all`).
+- Parity: `pnpm test:parity` for TS/Go/Python consistency.
+
+### Generated Web Spec Module
+
+- `pnpm gen` also emits `packages/web/src/generated/spec.ts` for the Next.js app.
+- Exposes: `SPEC_VERSION`, `PROTOCOL_TOKENS`, `AUTH_TOKENS`, `ERROR_CODES`, `ERROR_CATALOG`, `DNS_*`, `LOCAL_URI_SCHEMES`, `AidRecordV1`, `HandshakeV1`.
+- UI guidance: Prefer importing these generated constants/types over hardcoding literals. Adapters map spec-shaped data into stable, canonical types for the engine/UI.
+
+### What Changes Where
+
+- Discovery (web): `packages/web/src/hooks/use-discovery.ts`
+  - Wraps `@agentcommunity/aid/browser.discover` and returns a UI-friendly `DiscoveryResult`.
+  - New record keys from the spec arrive here automatically. If you don’t need to render them, no action required.
+  - To render new keys, update `DiscoveryToolBlock` formatting only.
+
+- Handshake (web): `packages/web/src/hooks/use-connection.ts` and proxy `packages/web/src/app/api/handshake/route.ts`
+  - Handshake responses are shaped into `HandshakeResult` for the UI.
+  - If the spec adds handshake fields, include them as `value.extra.<field>` or render explicitly in `ConnectionToolBlock`.
+
+- Errors and Auth
+  - New error codes from the spec can be shown as-is or mapped to friendlier labels in tool blocks.
+  - If auth descriptors evolve, extend the proxy’s auth metadata probe and pass through new fields in the `needsAuth` response; the UI will render them where helpful.
+
+### Minimal, Upgrade-Friendly Pattern
+
+- Keep UI stable: Prefer adding new spec fields to an `extra` object in success values and render only when useful.
+- Engine remains agnostic: Engine consumes typed results and emits messages; UI decides on presentation.
+- Proxy stays strict: For new auth hints/headers, augment the proxy and propagate data rather than branching client logic.
+
+### Step-by-Step Examples
+
+1) New record key (e.g., `region`)
+- Edit `protocol/constants.yml` → run `pnpm gen` → commit.
+- The key flows through `use-discovery`. To display it:
+  - Update `packages/web/src/components/workbench/tool-blocks.tsx` → `DiscoveryToolBlock` to include `region` in the parsed record section.
+  - No engine changes needed.
+
+2) New handshake field (e.g., `limits`)
+- Update the spec → run `pnpm gen`.
+- In `use-connection`, include the new field in the success shape as `value.extra.limits` (if not already returned from the proxy). Render in `ConnectionToolBlock` if desired.
+
+3) New error code/category
+- Add to the spec → regenerate.
+- Optionally keep a tiny map `code → title/description` in UI or reuse generated catalog (when available) so tool blocks show a friendly label next to the code.
+
+4) New auth descriptor (e.g., richer metadata URI or challenge details)
+- Extend the proxy (`/api/handshake`) to pass back the new fields as part of `needsAuth`.
+- `use-connection` preserves them on `AuthRequiredError` (e.g., `metadataUri`, `metadata`).
+- `ConnectionToolBlock` can render the new fields without engine changes.
+
+### Validation & CI
+
+- Local: `pnpm dev:web` → sanity check demo scenarios and a few real domains.
+- Parity: `pnpm test:parity` ensures constants align across TS/Go/Python.
+- Commit policy: always include `protocol/constants.yml` + generated outputs in the same PR.
+
+### Notes on Future-Proofing (Optional, Non-Blocking)
+
+- If/when a thin adapter layer and generated web types are added, the upgrade surface gets even smaller:
+  - Codegen writes `packages/web/src/generated/spec.ts` (types/constants).
+  - Adapters in `packages/web/src/spec-adapters/` map new spec fields into canonical shapes with an `extra` bag.
+  - Engine/UI consume canonical types only; spec additions mostly touch the adapter.
+- This can be adopted incrementally without changing the UI or flow.
+
+## 🌐 Well-Known Fallback (Future)
+
+Some developers may not control DNS. A spec-compliant fallback via a well-known file can bridge this gap without changing the workbench flow.
+
+Proposed approach (pending spec):
+
+- Discovery strategy chain:
+  - First attempt DNS (current behavior).
+  - If the error class is “no record/NXDOMAIN”, attempt a well-known fetch over HTTPS.
+- Server route: `GET /api/wellknown?domain=<d>`
+  - Fetch `https://<domain>/.well-known/agent` (final path TBD by spec; e.g., `/.well-known/aid.json`).
+  - Guards: block private IPs (same SSRF guard as `/api/handshake`), 2s timeout, ≤64KB response, JSON content-type.
+  - Response: convert to the same record shape as DNS and return as `DiscoveryResult`.
+- Datasource integration:
+  - Add fallback inside `LiveDatasource.discover(domain)`: DNS → if “no record”, call `/api/wellknown`.
+  - Return a unified `DiscoveryResult` with `metadata.source: 'DNS' | 'WELL_KNOWN'` for optional UI hints.
+- Adapters:
+  - No engine/UI changes needed. `normalizeRecord` handles both inputs; new fields go into `extra`.
+- UI (optional polish):
+  - `DiscoveryToolBlock` may show a small badge like “Fallback: well-known” based on `metadata.source`.
+- Feature flag:
+  - Gate behind `NEXT_PUBLIC_FEATURE_WELLKNOWN=true` until the spec merges. Default: off.
+- Testing notes:
+  - E2E: add a showcase domain serving the well-known file to assert the fallback path.
+  - Parity unaffected; the generator and adapters keep types consistent.
+
+Spec impact:
+
+- Once the spec formalizes path/format, `pnpm gen` can add constants to `packages/web/src/generated/spec.ts` (e.g., `WELL_KNOWN_PATH`) and any new record keys. Adapters remain the only place requiring logic updates.
+
 ## 🚀 Workbench Improvement Plan (Road to v2)
 
 This section outlines the plan to evolve the workbench from a powerful demo into a production-grade, reliable discovery tool.

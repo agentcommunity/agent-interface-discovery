@@ -2,7 +2,6 @@
 title: 'Quickstart — MCP'
 description: 'Discover an MCP server endpoint with AID and start a session'
 icon: material/connection
-edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/quickstart/quickstart_mcp.md
 ---
 
 # MCP (Model Context Protocol)
@@ -87,8 +86,6 @@ connectToMcpServer('supabase.agentcommunity.org');
 ```
 
 **Why AID here?** It turns a domain into the exact MCP endpoint, so clients can connect without hardcoding URLs.
-
-For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
 
 ---
 

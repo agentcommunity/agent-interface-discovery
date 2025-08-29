@@ -87,20 +87,6 @@ export interface AidRecord {
   desc?: string;
 }
 
-// Alternative record format with 'p' alias
-export interface AidRecordWithAlias {
-  /** Version - must be "aid1" */
-  v: 'aid1';
-  /** Absolute https:// URL or package URI */
-  uri: string;
-  /** Protocol token (shorthand alias) */
-  p: ProtocolToken;
-  /** Authentication hint token (optional) */
-  auth?: AuthToken;
-  /** Human-readable description ≤ 60 UTF-8 bytes (optional) */
-  desc?: string;
-}
-
 // Raw parsed record (before validation)
 export interface RawAidRecord {
   v?: string;
@@ -120,12 +106,3 @@ export const DNS_TTL_MAX = 900 as const;
 export const LOCAL_URI_SCHEMES = ['docker', 'npx', 'pip'] as const;
 
 export type LocalUriScheme = (typeof LOCAL_URI_SCHEMES)[number];
-
-// Validation helpers
-export const REQUIRED_FIELDS = ['v', 'uri', 'proto'] as const;
-
-export const OPTIONAL_FIELDS = ['auth', 'desc'] as const;
-
-export const FIELD_ALIASES = {
-  p: 'proto',
-} as const;

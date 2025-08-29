@@ -3,7 +3,6 @@ title: 'Quick Start'
 description: 'Publish and discover your first agent in minutes.'
 icon: material/rocket-launch
 
-edit_url: https://github.com/agentcommunity/agent-interface-discovery/edit/main/packages/docs/index.md
 extra_css_class: aid-page
 ---
 

@@ -75,6 +75,22 @@ export const baseConfig = defineConfig({
 });
 ```
 
+### Spec Code Generation
+
+**Decision**: Use a single YAML source of truth (`protocol/constants.yml`) and generate language-specific constants and types, including a Web-only module for the Next.js app.
+
+**Outputs (via `pnpm gen`)**:
+
+- TypeScript (core): `packages/aid/src/constants.ts`
+- TypeScript (web): `packages/web/src/generated/spec.ts` (small, tree‑shakeable; types + maps used by UI)
+- Python: `packages/aid-py/aid_py/constants.py`
+- Go: `packages/aid-go/constants_gen.go`
+- Rust: `packages/aid-rs/src/constants_gen.rs`
+- .NET: `packages/aid-dotnet/src/Constants.g.cs`
+- Java: `packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java`
+
+The web module is consumed by the UI via a thin adapter layer that normalizes spec-shaped data into canonical types, insulating the UI from spec churn.
+
 ### Cross-Platform Compatibility
 
 **Decision**: Use rimraf instead of `rm -rf` for all clean scripts.
