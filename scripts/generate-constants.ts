@@ -57,6 +57,33 @@ function generateTypeScriptConstants(constants: ProtocolConstants): string {
   const sortedAuthTokens = Object.keys(constants.authTokens).sort();
   const sortedErrorCodes = Object.keys(constants.errorCodes).sort();
 
+  // Build dynamic AidRecord and RawAidRecord shapes from YAML
+  const req = constants.aidRecord.required;
+  const opt = constants.aidRecord.optional;
+  const aliasMap = constants.aidRecord.aliases || {};
+
+  const allCanonKeys = [...new Set([...req, ...opt])];
+  const allAliasKeys = Object.keys(aliasMap);
+
+  const tsTypeForField = (field: string): string => {
+    if (field === 'v') return `"${constants.specVersion}"`;
+    if (field === 'proto') return 'ProtocolToken';
+    if (field === 'auth') return 'AuthToken';
+    return 'string';
+  };
+
+  const aidRecordInterface = `// AID Record structure
+export interface AidRecord {
+${req.map((f) => `  /** ${f} */\n  ${f === 'v' ? 'v' : f}: ${tsTypeForField(f)};`).join('\n')}
+${opt.map((f) => `  /** ${f} (optional) */\n  ${f}?: ${tsTypeForField(f)};`).join('\n')}
+}`;
+
+  const rawAidRecordInterface = `// Raw parsed record (before validation)
+export interface RawAidRecord {
+${allCanonKeys.map((f) => `  ${f}?: string;`).join('\n')}
+${allAliasKeys.map((f) => `  ${f}?: string;`).join('\n')}
+}`;
+
   return `${GENERATED_WARNING}
 
 // Specification version
@@ -110,29 +137,9 @@ ${sortedErrorCodes
 
 export type ErrorCode = keyof typeof ERROR_CODES;
 
-// AID Record structure
-export interface AidRecord {
-  /** Version - must be "${constants.specVersion}" */
-  v: "${constants.specVersion}";
-  /** Absolute https:// URL or package URI */
-  uri: string;
-  /** Protocol token */
-  proto: ProtocolToken;
-  /** Authentication hint token (optional) */
-  auth?: AuthToken;
-  /** Human-readable description ≤ 60 UTF-8 bytes (optional) */
-  desc?: string;
-}
+${aidRecordInterface}
 
-// Raw parsed record (before validation)
-export interface RawAidRecord {
-  v?: string;
-  uri?: string;
-  proto?: string;
-  p?: string;
-  auth?: string;
-  desc?: string;
-}
+${rawAidRecordInterface}
 
 // DNS configuration
 export const DNS_SUBDOMAIN = '${constants.dns.subdomain}' as const;
@@ -159,6 +166,17 @@ function generateWebSpecModule(constants: ProtocolConstants): string {
   const sortedProtocolTokens = Object.keys(constants.protocolTokens).sort();
   const sortedAuthTokens = Object.keys(constants.authTokens).sort();
   const sortedErrorCodes = Object.keys(constants.errorCodes).sort();
+  const req = constants.aidRecord.required;
+  const opt = constants.aidRecord.optional;
+  const aliasMap = constants.aidRecord.aliases || {};
+  const allCanonKeys = [...new Set([...req, ...opt])];
+  const allAliasKeys = Object.keys(aliasMap);
+  const tsTypeForField = (field: string): string => {
+    if (field === 'v') return `"${constants.specVersion}"`;
+    if (field === 'proto') return 'ProtocolToken';
+    if (field === 'auth') return 'AuthToken';
+    return 'string';
+  };
 
   const header = `// GENERATED FILE - DO NOT EDIT\n\n// Auto-generated from protocol/constants.yml by scripts/generate-constants.ts\n// Run 'pnpm gen' after updating the YAML.\n`;
 
@@ -208,14 +226,16 @@ function generateWebSpecModule(constants: ProtocolConstants): string {
     `\n// ---- Record types ----\n` +
     `${aidRecordDoc}\n` +
     `export interface AidRecordV1 {\n` +
-    `  v: '${constants.specVersion}';\n` +
-    `  uri: string;\n` +
-    `  proto: ProtocolToken;\n` +
-    `  auth?: AuthToken;\n` +
-    `  desc?: string;\n` +
-    `}\n` +
+    req.map((f) => `  ${f}: ${tsTypeForField(f)};`).join('\n') +
+    '\n' +
+    opt.map((f) => `  ${f}?: ${tsTypeForField(f)};`).join('\n') +
+    `\n}\n` +
     `\n/** Raw, partially parsed record shape (before validation) */\n` +
-    `export interface RawAidRecord {\n  v?: string; uri?: string; proto?: string; p?: string; auth?: string; desc?: string;\n}\n` +
+    `export interface RawAidRecord {\n` +
+    allCanonKeys.map((f) => `  ${f}?: string;`).join(' ') +
+    ' ' +
+    allAliasKeys.map((f) => `  ${f}?: string;`).join(' ') +
+    `\n}\n` +
     `\n// ---- Handshake types (minimal for UI) ----\n` +
     `export interface HandshakeV1 {\n` +
     `  protocolVersion: string;\n` +
@@ -541,14 +561,14 @@ try {
   console.log('✅ Generated constants.ts from protocol/constants.yml');
   console.log(`   Output: ${tsOutputPath}`);
 
-  // Generate Web spec module (Next.js app)
-  const webSpec = generateWebSpecModule(constants);
-  const webSpecDir = path.resolve(process.cwd(), 'packages/web/src/generated');
-  const webSpecPath = path.resolve(webSpecDir, 'spec.ts');
-  mkdirSync(webSpecDir, { recursive: true });
-  let webSpecFormatted: string;
+  // Generate spec module (canonical) next to YAML
+  const specModule = generateWebSpecModule(constants);
+  const protoDir = path.resolve(process.cwd(), 'protocol');
+  const protoSpecPath = path.resolve(protoDir, 'spec.ts');
+  mkdirSync(protoDir, { recursive: true });
+  let specFormatted: string;
   try {
-    webSpecFormatted = await prettier.format(webSpec, {
+    specFormatted = await prettier.format(specModule, {
       semi: prettierOptions?.semi ?? true,
       singleQuote: prettierOptions?.singleQuote ?? true,
       trailingComma: (prettierOptions?.trailingComma as 'all' | 'es5' | 'none') ?? 'all',
@@ -556,11 +576,19 @@ try {
       parser: 'typescript',
     });
   } catch {
-    console.warn('⚠️ Prettier formatting (web spec) failed. Writing unformatted output.');
-    webSpecFormatted = webSpec;
+    console.warn('⚠️ Prettier formatting (protocol spec.ts) failed. Writing unformatted output.');
+    specFormatted = specModule;
   }
-  writeFileSync(webSpecPath, webSpecFormatted);
-  console.log('✅ Generated web spec.ts from protocol/constants.yml');
+  writeFileSync(protoSpecPath, specFormatted);
+  console.log('✅ Generated protocol/spec.ts from protocol/constants.yml');
+  console.log(`   Output: ${protoSpecPath}`);
+
+  // Back-compat: also write a mirrored copy for the Web app
+  const webSpecDir = path.resolve(process.cwd(), 'packages/web/src/generated');
+  const webSpecPath = path.resolve(webSpecDir, 'spec.ts');
+  mkdirSync(webSpecDir, { recursive: true });
+  writeFileSync(webSpecPath, specFormatted);
+  console.log('✅ Mirrored spec.ts for Web (back-compat)');
   console.log(`   Output: ${webSpecPath}`);
 
   // Generate Python constants

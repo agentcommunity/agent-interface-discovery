@@ -10,15 +10,23 @@ export const SPEC_VERSION = 'aid1' as const;
 
 // Protocol tokens
 export const PROTO_A2A = 'a2a' as const;
+export const PROTO_GRAPHQL = 'graphql' as const;
+export const PROTO_GRPC = 'grpc' as const;
 export const PROTO_LOCAL = 'local' as const;
 export const PROTO_MCP = 'mcp' as const;
 export const PROTO_OPENAPI = 'openapi' as const;
+export const PROTO_WEBSOCKET = 'websocket' as const;
+export const PROTO_ZEROCONF = 'zeroconf' as const;
 
 export const PROTOCOL_TOKENS = {
   a2a: 'a2a',
+  graphql: 'graphql',
+  grpc: 'grpc',
   local: 'local',
   mcp: 'mcp',
   openapi: 'openapi',
+  websocket: 'websocket',
+  zeroconf: 'zeroconf',
 } as const;
 
 export type ProtocolToken = keyof typeof PROTOCOL_TOKENS;
@@ -48,6 +56,7 @@ export type AuthToken = keyof typeof AUTH_TOKENS;
 
 // Error codes
 export const ERR_DNS_LOOKUP_FAILED = 1004 as const;
+export const ERR_FALLBACK_FAILED = 1005 as const;
 export const ERR_INVALID_TXT = 1001 as const;
 export const ERR_NO_RECORD = 1000 as const;
 export const ERR_SECURITY = 1003 as const;
@@ -55,6 +64,7 @@ export const ERR_UNSUPPORTED_PROTO = 1002 as const;
 
 export const ERROR_CODES = {
   ERR_DNS_LOOKUP_FAILED: 1004,
+  ERR_FALLBACK_FAILED: 1005,
   ERR_INVALID_TXT: 1001,
   ERR_NO_RECORD: 1000,
   ERR_SECURITY: 1003,
@@ -63,6 +73,7 @@ export const ERROR_CODES = {
 
 export const ERROR_MESSAGES = {
   ERR_DNS_LOOKUP_FAILED: 'The DNS query failed for a network-related reason',
+  ERR_FALLBACK_FAILED: 'The .well-known fallback failed or returned invalid data',
   ERR_INVALID_TXT: 'A record was found but is malformed or missing required keys',
   ERR_NO_RECORD: 'No _agent TXT record was found for the domain',
   ERR_SECURITY:
@@ -75,16 +86,24 @@ export type ErrorCode = keyof typeof ERROR_CODES;
 
 // AID Record structure
 export interface AidRecord {
-  /** Version - must be "aid1" */
+  /** v */
   v: 'aid1';
-  /** Absolute https:// URL or package URI */
+  /** uri */
   uri: string;
-  /** Protocol token */
+  /** proto */
   proto: ProtocolToken;
-  /** Authentication hint token (optional) */
+  /** auth (optional) */
   auth?: AuthToken;
-  /** Human-readable description ≤ 60 UTF-8 bytes (optional) */
+  /** desc (optional) */
   desc?: string;
+  /** docs (optional) */
+  docs?: string;
+  /** dep (optional) */
+  dep?: string;
+  /** pka (optional) */
+  pka?: string;
+  /** kid (optional) */
+  kid?: string;
 }
 
 // Raw parsed record (before validation)
@@ -92,9 +111,20 @@ export interface RawAidRecord {
   v?: string;
   uri?: string;
   proto?: string;
-  p?: string;
   auth?: string;
   desc?: string;
+  docs?: string;
+  dep?: string;
+  pka?: string;
+  kid?: string;
+  p?: string;
+  u?: string;
+  a?: string;
+  s?: string;
+  d?: string;
+  e?: string;
+  k?: string;
+  i?: string;
 }
 
 // DNS configuration
