@@ -67,9 +67,20 @@ public static class Aid
             throw new AidError(nameof(Constants.ERR_INVALID_TXT), $"Unsupported version: {v}. Expected: {Constants.SpecVersion}");
         }
 
+        // Alias duplication checks
+        var aliasPairs = new (string full, string alias)[] { ("proto","p"), ("uri","u"), ("auth","a"), ("desc","s"), ("docs","d"), ("dep","e"), ("pka","k"), ("kid","i") };
+        foreach (var (full, alias) in aliasPairs)
+        {
+            if (raw.ContainsKey(full) && raw.ContainsKey(alias))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), $"Cannot specify both \"{full}\" and \"{alias}\"");
+            }
+        }
+
         if (!raw.TryGetValue("uri", out var uri))
         {
-            throw new AidError(nameof(Constants.ERR_INVALID_TXT), "Missing required field: uri");
+            if (!raw.TryGetValue("u", out uri))
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), "Missing required field: uri");
         }
 
         var hasProto = raw.TryGetValue("proto", out var protoVal);
@@ -89,7 +100,8 @@ public static class Aid
             throw new AidError(nameof(Constants.ERR_UNSUPPORTED_PROTO), $"Unsupported protocol: {proto}");
         }
 
-        if (raw.TryGetValue("auth", out var auth))
+        var auth = raw.TryGetValue("auth", out var authFull) ? authFull : (raw.TryGetValue("a", out var authAlias) ? authAlias : null);
+        if (auth is not null)
         {
             if (!AuthTokens.Contains(auth))
             {
@@ -97,11 +109,40 @@ public static class Aid
             }
         }
 
-        if (raw.TryGetValue("desc", out var desc))
+        var desc = raw.TryGetValue("desc", out var descFull) ? descFull : (raw.TryGetValue("s", out var descAlias) ? descAlias : null);
+        if (desc is not null)
         {
             if (Encoding.UTF8.GetByteCount(desc) > 60)
             {
                 throw new AidError(nameof(Constants.ERR_INVALID_TXT), "Description field must be ≤ 60 UTF-8 bytes");
+            }
+        }
+
+        // docs (https URL)
+        var docs = raw.TryGetValue("docs", out var docsFull) ? docsFull : (raw.TryGetValue("d", out var docsAlias) ? docsAlias : null);
+        if (docs is not null)
+        {
+            if (!docs.StartsWith("https://", StringComparison.Ordinal))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), "docs MUST be an absolute https:// URL");
+            }
+            if (!Uri.TryCreate(docs, UriKind.Absolute, out var du) || !string.Equals(du.Scheme, Uri.UriSchemeHttps, StringComparison.Ordinal))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), $"Invalid docs URL: {docs}");
+            }
+        }
+
+        // dep (ISO 8601 Z)
+        var dep = raw.TryGetValue("dep", out var depFull) ? depFull : (raw.TryGetValue("e", out var depAlias) ? depAlias : null);
+        if (dep is not null)
+        {
+            if (!dep.EndsWith("Z", StringComparison.Ordinal))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)");
+            }
+            if (!DateTime.TryParseExact(dep, "yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal, out _))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)");
             }
         }
 
@@ -111,6 +152,24 @@ public static class Aid
             if (!IsValidLocalUri(uri))
             {
                 throw new AidError(nameof(Constants.ERR_INVALID_TXT), $"Invalid URI scheme for local protocol. Must be one of: {string.Join(", ", LocalUriSchemes)}");
+            }
+        }
+        else if (proto == "zeroconf")
+        {
+            if (!uri.StartsWith("zeroconf:", StringComparison.Ordinal))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), "Invalid URI scheme for 'zeroconf'. MUST be 'zeroconf:'");
+            }
+        }
+        else if (proto == "websocket")
+        {
+            if (!uri.StartsWith("wss://", StringComparison.Ordinal))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), "Invalid URI scheme for 'websocket'. MUST be 'wss:'");
+            }
+            if (!Uri.TryCreate(uri, UriKind.Absolute, out var wu) || !string.Equals(wu.Scheme, "wss", StringComparison.Ordinal))
+            {
+                throw new AidError(nameof(Constants.ERR_INVALID_TXT), $"Invalid URI format: {uri}");
             }
         }
         else
@@ -125,12 +184,23 @@ public static class Aid
             }
         }
 
+        var pka = raw.TryGetValue("pka", out var kfull) ? kfull : (raw.TryGetValue("k", out var kalias) ? kalias : null);
+        var kid = raw.TryGetValue("kid", out var ifull) ? ifull : (raw.TryGetValue("i", out var ialias) ? ialias : null);
+        if (pka is not null && kid is null)
+        {
+            throw new AidError(nameof(Constants.ERR_INVALID_TXT), "kid is required when pka is present");
+        }
+
         return new AidRecord(
             v: Constants.SpecVersion,
             uri: uri,
             proto: proto,
-            auth: raw.TryGetValue("auth", out var a) ? a : null,
-            desc: raw.TryGetValue("desc", out var d) ? d : null
+            auth: auth,
+            desc: desc,
+            docs: docs,
+            dep: dep,
+            pka: pka,
+            kid: kid
         );
     }
 

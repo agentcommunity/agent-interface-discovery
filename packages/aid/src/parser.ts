@@ -33,6 +33,15 @@ export class AidError extends Error {
  */
 export function parseRawRecord(txtRecord: string): RawAidRecord {
   const record: RawAidRecord = {};
+  // Track if alias form has been seen to enforce alias+full duplication
+  let sawU = false;
+  let sawA = false;
+  let sawS = false;
+  let sawD = false;
+  let sawE = false;
+  let sawK = false;
+  let sawI = false;
+  let sawP = false;
 
   // Split by semicolon and process each pair
   const pairs = txtRecord
@@ -63,19 +72,88 @@ export function parseRawRecord(txtRecord: string): RawAidRecord {
         record.v = value;
         break;
       case 'uri':
+        if (sawU) throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "uri" and "u" fields');
+        record.uri = value;
+        break;
+      case 'u':
+        if (record.uri)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "uri" and "u" fields');
+        sawU = true;
         record.uri = value;
         break;
       case 'proto':
+        if (sawP)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "proto" and "p" fields');
         record.proto = value;
         break;
       case 'p':
-        record.p = value;
+        if (record.proto)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "proto" and "p" fields');
+        sawP = true;
+        record.proto = value;
         break;
       case 'auth':
+        if (sawA)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "auth" and "a" fields');
+        record.auth = value;
+        break;
+      case 'a':
+        if (record.auth)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "auth" and "a" fields');
+        sawA = true;
         record.auth = value;
         break;
       case 'desc':
+        if (sawS)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "desc" and "s" fields');
         record.desc = value;
+        break;
+      case 's':
+        if (record.desc)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "desc" and "s" fields');
+        sawS = true;
+        record.desc = value;
+        break;
+      case 'docs':
+        if (sawD)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "docs" and "d" fields');
+        record.docs = value;
+        break;
+      case 'd':
+        if (record.docs)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "docs" and "d" fields');
+        sawD = true;
+        record.docs = value;
+        break;
+      case 'dep':
+        if (sawE) throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "dep" and "e" fields');
+        record.dep = value;
+        break;
+      case 'e':
+        if (record.dep)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "dep" and "e" fields');
+        sawE = true;
+        record.dep = value;
+        break;
+      case 'pka':
+        if (sawK) throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "pka" and "k" fields');
+        record.pka = value;
+        break;
+      case 'k':
+        if (record.pka)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "pka" and "k" fields');
+        sawK = true;
+        record.pka = value;
+        break;
+      case 'kid':
+        if (sawI) throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "kid" and "i" fields');
+        record.kid = value;
+        break;
+      case 'i':
+        if (record.kid)
+          throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "kid" and "i" fields');
+        sawI = true;
+        record.kid = value;
         break;
       default:
         // Ignore unknown keys for forward compatibility
@@ -94,6 +172,9 @@ export function parseRawRecord(txtRecord: string): RawAidRecord {
  * @throws AidError if validation fails
  */
 export function validateRecord(rawRecord: RawAidRecord): AidRecord {
+  // Disallow alias + full-key duplicates per spec
+  // Duplicates between alias and full were handled during parsing
+
   // Check required fields
   if (!rawRecord.v) {
     throw new AidError('ERR_INVALID_TXT', 'Missing required field: v');
@@ -103,12 +184,8 @@ export function validateRecord(rawRecord: RawAidRecord): AidRecord {
     throw new AidError('ERR_INVALID_TXT', 'Missing required field: uri');
   }
 
-  // Check protocol field (either 'proto' or 'p', but not both)
-  if (rawRecord.proto && rawRecord.p) {
-    throw new AidError('ERR_INVALID_TXT', 'Cannot specify both "proto" and "p" fields');
-  }
-
-  if (!rawRecord.proto && !rawRecord.p) {
+  // Check protocol presence (either 'proto' or 'p')
+  if (!rawRecord.proto) {
     throw new AidError('ERR_INVALID_TXT', 'Missing required field: proto (or p)');
   }
 
@@ -121,7 +198,7 @@ export function validateRecord(rawRecord: RawAidRecord): AidRecord {
   }
 
   // Get protocol value (prefer 'proto' over 'p')
-  const protoValue = rawRecord.proto || rawRecord.p;
+  const protoValue = rawRecord.proto;
   if (!protoValue) {
     throw new AidError('ERR_INVALID_TXT', 'Missing protocol value');
   }
@@ -141,6 +218,33 @@ export function validateRecord(rawRecord: RawAidRecord): AidRecord {
     throw new AidError('ERR_INVALID_TXT', 'Description field must be ≤ 60 UTF-8 bytes');
   }
 
+  // Validate metadata keys (basic format checks)
+  if (rawRecord.docs) {
+    if (!rawRecord.docs.startsWith('https://')) {
+      throw new AidError('ERR_INVALID_TXT', 'docs MUST be an absolute https:// URL');
+    }
+    try {
+      new URL(rawRecord.docs);
+    } catch {
+      throw new AidError('ERR_INVALID_TXT', `Invalid docs URL: ${rawRecord.docs}`);
+    }
+  }
+
+  if (rawRecord.dep) {
+    // Rudimentary ISO 8601 check: Date parse must not be NaN and must end with Z
+    if (!/Z$/.test(rawRecord.dep) || Number.isNaN(Date.parse(rawRecord.dep))) {
+      throw new AidError(
+        'ERR_INVALID_TXT',
+        'dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)',
+      );
+    }
+  }
+
+  // If PKA is present, kid is required for rotation
+  if (rawRecord.pka && !rawRecord.kid) {
+    throw new AidError('ERR_INVALID_TXT', 'kid is required when pka is present');
+  }
+
   // URI validation based on protocol type
   if (protoValue === 'local') {
     // Local protocols MUST use a supported local scheme
@@ -149,6 +253,24 @@ export function validateRecord(rawRecord: RawAidRecord): AidRecord {
         'ERR_INVALID_TXT',
         `Invalid URI scheme for local protocol. Must be one of: ${LOCAL_URI_SCHEMES.join(', ')}`,
       );
+    }
+  } else if (protoValue === 'zeroconf') {
+    // Zeroconf requires zeroconf: scheme
+    if (!rawRecord.uri.startsWith('zeroconf:')) {
+      throw new AidError(
+        'ERR_INVALID_TXT',
+        `Invalid URI scheme for 'zeroconf'. MUST be 'zeroconf:'.`,
+      );
+    }
+  } else if (protoValue === 'websocket') {
+    // WebSocket requires wss://
+    if (!rawRecord.uri.startsWith('wss://')) {
+      throw new AidError('ERR_INVALID_TXT', `Invalid URI scheme for 'websocket'. MUST be 'wss:'.`);
+    }
+    try {
+      new URL(rawRecord.uri);
+    } catch {
+      throw new AidError('ERR_INVALID_TXT', `Invalid URI format: ${rawRecord.uri}`);
     }
   } else {
     // Remote protocols MUST use https://
@@ -173,6 +295,10 @@ export function validateRecord(rawRecord: RawAidRecord): AidRecord {
     proto: protoValue as keyof typeof PROTOCOL_TOKENS,
     ...(rawRecord.auth && { auth: rawRecord.auth as keyof typeof AUTH_TOKENS }),
     ...(rawRecord.desc && { desc: rawRecord.desc }),
+    ...(rawRecord.docs && { docs: rawRecord.docs }),
+    ...(rawRecord.dep && { dep: rawRecord.dep }),
+    ...(rawRecord.pka && { pka: rawRecord.pka }),
+    ...(rawRecord.kid && { kid: rawRecord.kid }),
   };
 }
 
