@@ -238,7 +238,7 @@ Goal: keep the current linear flow (discovery → handshake) while making upgrad
 
 ### Generated Web Spec Module
 
-- `pnpm gen` also emits `packages/web/src/generated/spec.ts` for the Next.js app.
+- `pnpm gen` emits the canonical `protocol/spec.ts`, mirrored to `packages/web/src/generated/spec.ts` for this app.
 - Exposes: `SPEC_VERSION`, `PROTOCOL_TOKENS`, `AUTH_TOKENS`, `ERROR_CODES`, `ERROR_CATALOG`, `DNS_*`, `LOCAL_URI_SCHEMES`, `AidRecordV1`, `HandshakeV1`.
 - UI guidance: Prefer importing these generated constants/types over hardcoding literals. Adapters map spec-shaped data into stable, canonical types for the engine/UI.
 
@@ -293,7 +293,7 @@ Goal: keep the current linear flow (discovery → handshake) while making upgrad
 ### Notes on Future-Proofing (Optional, Non-Blocking)
 
 - If/when a thin adapter layer and generated web types are added, the upgrade surface gets even smaller:
-  - Codegen writes `packages/web/src/generated/spec.ts` (types/constants).
+- Codegen writes canonical `protocol/spec.ts` (types/constants) and mirrors to `packages/web/src/generated/spec.ts`.
   - Adapters in `packages/web/src/spec-adapters/` map new spec fields into canonical shapes with an `extra` bag.
   - Engine/UI consume canonical types only; spec additions mostly touch the adapter.
 - This can be adopted incrementally without changing the UI or flow.
@@ -302,13 +302,13 @@ Goal: keep the current linear flow (discovery → handshake) while making upgrad
 
 Some developers may not control DNS. A spec-compliant fallback via a well-known file can bridge this gap without changing the workbench flow.
 
-Proposed approach (pending spec):
+Proposed approach (aligned with spec v1.1):
 
 - Discovery strategy chain:
   - First attempt DNS (current behavior).
   - If the error class is “no record/NXDOMAIN”, attempt a well-known fetch over HTTPS.
 - Server route: `GET /api/wellknown?domain=<d>`
-  - Fetch `https://<domain>/.well-known/agent` (final path TBD by spec; e.g., `/.well-known/aid.json`).
+  - Fetch `https://<domain>/.well-known/agent`.
   - Guards: block private IPs (same SSRF guard as `/api/handshake`), 2s timeout, ≤64KB response, JSON content-type.
   - Response: convert to the same record shape as DNS and return as `DiscoveryResult`.
 - Datasource integration:
@@ -319,7 +319,7 @@ Proposed approach (pending spec):
 - UI (optional polish):
   - `DiscoveryToolBlock` may show a small badge like “Fallback: well-known” based on `metadata.source`.
 - Feature flag:
-  - Gate behind `NEXT_PUBLIC_FEATURE_WELLKNOWN=true` until the spec merges. Default: off.
+  - Gate behind `NEXT_PUBLIC_FEATURE_WELLKNOWN=true` (default: off).
 - Testing notes:
   - E2E: add a showcase domain serving the well-known file to assert the fallback path.
   - Parity unaffected; the generator and adapters keep types consistent.

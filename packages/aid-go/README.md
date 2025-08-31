@@ -269,3 +269,9 @@ go test -v ./...
 ## License
 
 MIT - see [LICENSE](https://github.com/agentcommunity/agent-interface-discovery/blob/main/LICENSE) for details.
+
+## v1.1 Notes (PKA + Fallback)
+
+- PKA handshake: When a record includes `pka` (`k`) and `kid` (`i`), the client verifies endpoint control using HTTP Message Signatures (RFC 9421) with Ed25519. This package uses Go's `crypto/ed25519` for verification and triggers the handshake automatically during discovery.
+
+- `.well-known` fallback: When DNS lookup fails (`ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`), the client fetches `https://<domain>/.well-known/agent` (TLS-anchored) and validates the JSON document (accepts aliases). TTL defaults to `DnsTtlMin` (300s) for this path.

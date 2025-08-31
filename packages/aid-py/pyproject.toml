@@ -17,4 +17,6 @@ Homepage = "https://github.com/agent-community/agent-interface-discovery"
 Repository = "https://github.com/agent-community/agent-interface-discovery"
 
 [project.optional-dependencies]
-dev = ["pytest>=8"] 
+dev = ["pytest>=8"]
+# Preferred PKA backend (security-focused). Install to enable Ed25519 verification.
+pka = ["cryptography>=42"]

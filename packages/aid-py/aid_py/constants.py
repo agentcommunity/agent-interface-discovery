@@ -18,15 +18,23 @@ SPEC_VERSION: Final[str] = "aid1"
 # Protocol tokens
 # ---------------------------------------------------------------------------
 PROTO_A2A: Final[str] = "a2a"
+PROTO_GRAPHQL: Final[str] = "graphql"
+PROTO_GRPC: Final[str] = "grpc"
 PROTO_LOCAL: Final[str] = "local"
 PROTO_MCP: Final[str] = "mcp"
 PROTO_OPENAPI: Final[str] = "openapi"
+PROTO_WEBSOCKET: Final[str] = "websocket"
+PROTO_ZEROCONF: Final[str] = "zeroconf"
 
 PROTOCOL_TOKENS: Final[Dict[str, str]] = {
     "a2a": "a2a",
+    "graphql": "graphql",
+    "grpc": "grpc",
     "local": "local",
     "mcp": "mcp",
     "openapi": "openapi",
+    "websocket": "websocket",
+    "zeroconf": "zeroconf",
 }
 
 # ---------------------------------------------------------------------------
@@ -57,6 +65,7 @@ AUTH_TOKENS: Final[Dict[str, str]] = {
 # ---------------------------------------------------------------------------
 
 ERR_DNS_LOOKUP_FAILED: Final[int] = 1004
+ERR_FALLBACK_FAILED: Final[int] = 1005
 ERR_INVALID_TXT: Final[int] = 1001
 ERR_NO_RECORD: Final[int] = 1000
 ERR_SECURITY: Final[int] = 1003
@@ -64,6 +73,7 @@ ERR_UNSUPPORTED_PROTO: Final[int] = 1002
 
 ERROR_CODES: Final[Dict[str, int]] = {
     "ERR_DNS_LOOKUP_FAILED": ERR_DNS_LOOKUP_FAILED,
+    "ERR_FALLBACK_FAILED": ERR_FALLBACK_FAILED,
     "ERR_INVALID_TXT": ERR_INVALID_TXT,
     "ERR_NO_RECORD": ERR_NO_RECORD,
     "ERR_SECURITY": ERR_SECURITY,
@@ -72,6 +82,7 @@ ERROR_CODES: Final[Dict[str, int]] = {
 
 ERROR_MESSAGES: Final[Dict[str, str]] = {
     "ERR_DNS_LOOKUP_FAILED": "The DNS query failed for a network-related reason",
+    "ERR_FALLBACK_FAILED": "The .well-known fallback failed or returned invalid data",
     "ERR_INVALID_TXT": "A record was found but is malformed or missing required keys",
     "ERR_NO_RECORD": "No _agent TXT record was found for the domain",
     "ERR_SECURITY": "Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied)",

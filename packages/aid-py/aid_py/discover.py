@@ -14,8 +14,14 @@ from typing import Tuple
 import dns.exception
 import dns.resolver
 
-from .constants import DNS_SUBDOMAIN
+from .constants import DNS_SUBDOMAIN, DNS_TTL_MIN
 from .parser import AidError, parse
+from . import parser as _parser
+
+try:  # Optional import to avoid circulars in type checkers
+    from .pka import perform_pka_handshake  # type: ignore
+except Exception:  # pragma: no cover - import-time optional
+    perform_pka_handshake = None  # type: ignore
 
 __all__ = ["discover"]
 
@@ -42,7 +48,14 @@ def _query_txt_record(fqdn: str, timeout: float) -> Tuple[list[str], int]:
 DNS_TTL_DEFAULT = 300  # fallback
 
 
-def discover(domain: str, *, protocol: str | None = None, timeout: float = 5.0) -> Tuple[dict, int]:
+def discover(
+    domain: str,
+    *,
+    protocol: str | None = None,
+    timeout: float = 5.0,
+    well_known_fallback: bool = True,
+    well_known_timeout: float = 2.0,
+) -> Tuple[dict, int]:
     """Discover and validate the AID record for *domain*.
 
     Can optionally try a protocol-specific subdomain first.
@@ -78,16 +91,77 @@ def discover(domain: str, *, protocol: str | None = None, timeout: float = 5.0) 
             raise last_error
         raise AidError("ERR_NO_RECORD", f"No valid _agent TXT record found for {query_name}")
 
-    # Try protocol-specific subdomain first if specified
-    if protocol:
-        protocol_fqdn = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
-        try:
-            return _query_and_parse(protocol_fqdn)
-        except AidError as exc:
-            if exc.error_code != "ERR_NO_RECORD":
-                raise exc
-            # else: fall through to base domain query
+    def _fetch_well_known_json(host: str, timeout_s: float) -> dict:
+        import json, urllib.request, urllib.error
 
-    # Fallback or default: query the base _agent subdomain
-    base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
-    return _query_and_parse(base_fqdn) 
+        url = f"https://{host}/.well-known/agent"
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # nosec B310
+                if resp.status != 200:
+                    raise AidError("ERR_FALLBACK_FAILED", f"Well-known HTTP {resp.status}")
+                ctype = (resp.headers.get("Content-Type") or "").lower()
+                if not ctype.startswith("application/json"):
+                    raise AidError("ERR_FALLBACK_FAILED", "Invalid content-type for well-known (expected application/json)")
+                data = resp.read()
+                if len(data) > 64 * 1024:
+                    raise AidError("ERR_FALLBACK_FAILED", "Well-known response too large (>64KB)")
+                try:
+                    doc = json.loads(data.decode("utf-8"))
+                except Exception:
+                    raise AidError("ERR_FALLBACK_FAILED", "Invalid JSON in well-known response") from None
+                if not isinstance(doc, dict):
+                    raise AidError("ERR_FALLBACK_FAILED", "Well-known JSON must be an object")
+                return doc
+        except AidError:
+            raise
+        except (urllib.error.URLError, urllib.error.HTTPError) as exc:
+            raise AidError("ERR_FALLBACK_FAILED", str(exc)) from None
+
+    def _canonicalize_well_known(doc: dict) -> dict:
+        # Accept aliases the same as TXT parsing
+        def _get(k: str):
+            v = doc.get(k)
+            return v.strip() if isinstance(v, str) else None
+
+        raw: _parser.RawAidRecord = {}
+        if (v := _get("v")):
+            raw["v"] = v
+        if (u := _get("uri")) or (u := _get("u")):
+            raw["uri"] = u
+        if (p := _get("proto")) or (p := _get("p")):
+            raw["proto"] = p
+        if (a := _get("auth")) or (a := _get("a")):
+            raw["auth"] = a
+        if (s := _get("desc")) or (s := _get("s")):
+            raw["desc"] = s
+        if (d := _get("docs")) or (d := _get("d")):
+            raw["docs"] = d
+        if (e := _get("dep")) or (e := _get("e")):
+            raw["dep"] = e
+        if (k := _get("pka")) or (k := _get("k")):
+            raw["pka"] = k
+        if (i := _get("kid")) or (i := _get("i")):
+            raw["kid"] = i
+        return _parser.validate_record(raw)
+
+    # Try protocol-specific subdomain first if specified
+    try:
+        if protocol:
+            protocol_fqdn = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
+            return _query_and_parse(protocol_fqdn)
+        # Default: base _agent subdomain
+        base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
+        return _query_and_parse(base_fqdn)
+    except AidError as exc:
+        if well_known_fallback and exc.error_code in ("ERR_NO_RECORD", "ERR_DNS_LOOKUP_FAILED"):
+            # Attempt .well-known fallback
+            doc = _fetch_well_known_json(domain_alabel, well_known_timeout)
+            record = _canonicalize_well_known(doc)
+            # Perform PKA handshake if present
+            if record.get("pka"):
+                if perform_pka_handshake is None:
+                    raise AidError("ERR_SECURITY", "PKA handshake not supported in this environment")
+                perform_pka_handshake(record["uri"], record["pka"], record.get("kid") or "", timeout=well_known_timeout)
+            return record, DNS_TTL_MIN
+        raise

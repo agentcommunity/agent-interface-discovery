@@ -26,7 +26,7 @@ fn main() -> Result<(), aid_rs::AidError> {
 
 ## Errors
 
-See `packages/docs/specification.md` for standard error codes (1000–1004).
+See `packages/docs/specification.md` for standard error codes (1000–1005).
 
 ## Development
 

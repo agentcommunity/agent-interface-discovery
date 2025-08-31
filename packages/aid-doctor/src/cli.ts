@@ -79,15 +79,30 @@ program
   .description('Check a domain for AID records and display a human-readable report')
   .option('-p, --protocol <protocol>', 'Try protocol-specific subdomain first')
   .option('-t, --timeout <ms>', 'DNS query timeout in milliseconds', '5000')
+  .option('--no-fallback', 'Disable .well-known fallback on DNS miss', false)
+  .option('--fallback-timeout <ms>', 'Timeout for .well-known fetch (ms)', '2000')
+  .option('--show-details', 'Show fallback/PKA details in output', false)
   .option('--code', 'Exit with the specific error code on failure (for scripting)')
   .action(
-    async (domain: string, options: { protocol?: string; timeout: string; code?: boolean }) => {
+    async (
+      domain: string,
+      options: {
+        protocol?: string;
+        timeout: string;
+        noFallback?: boolean;
+        fallbackTimeout?: string;
+        showDetails?: boolean;
+        code?: boolean;
+      },
+    ) => {
       const spinner = ora(`Checking AID record for ${domain}...`).start();
 
       try {
         const result = await discover(domain, {
           ...(options.protocol && { protocol: options.protocol }),
           timeout: Number.parseInt(options.timeout),
+          wellKnownFallback: options.noFallback ? false : true,
+          wellKnownTimeoutMs: Number.parseInt(options.fallbackTimeout || '2000'),
         });
 
         // Enforce redirect security unless explicitly skipped (CI placeholder URIs)
@@ -97,7 +112,21 @@ program
         }
 
         spinner.stop();
-        console.log(formatDiscoveryResult(result, domain));
+        // Base output
+        const base = formatDiscoveryResult(result, domain);
+        const extras: string[] = [];
+        // Show fallback usage
+        const fallbackUsed = result.queryName.startsWith('http://') || result.queryName.startsWith('https://');
+        if (options.showDetails) {
+          extras.push(`  Fallback: ${fallbackUsed ? chalk.yellow('used (.well-known)') : chalk.green('not used (DNS)')}`);
+          if ((result.record as any).pka) {
+            const kid = (result.record as any).kid ?? '(none)';
+            extras.push(`  PKA: ${chalk.green('present')}, kid=${chalk.cyan(kid)}; handshake=${chalk.green('OK')}`);
+          } else {
+            extras.push(`  PKA: ${chalk.gray('absent')}`);
+          }
+        }
+        console.log([base, ...(extras.length ? [''].concat(extras) : [])].join('\n'));
 
         // Exit with success code
         process.exit(0);

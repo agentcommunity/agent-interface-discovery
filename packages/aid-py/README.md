@@ -33,13 +33,17 @@ except AidError as e:
 
 ## API Reference
 
-### `discover(domain: str) -> DiscoveryResult`
+### `discover(domain: str, *, protocol: str | None = None, timeout: float = 5.0, well_known_fallback: bool = True, well_known_timeout: float = 2.0) -> (dict, int)`
 
 Discovers an agent by looking up the `_agent` TXT record for the given domain.
 
 **Parameters:**
 
 - `domain` (str): The domain name to discover
+- `protocol` (str, optional): Try protocol-specific subdomain first (e.g., `mcp`)
+- `timeout` (float): DNS timeout in seconds (default 5.0)
+- `well_known_fallback` (bool): If true, falls back to `https://<domain>/.well-known/agent` on `ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED` (default True)
+- `well_known_timeout` (float): Timeout for the `.well-known` HTTP fetch (default 2.0)
 
 **Returns:**
 
@@ -100,6 +104,7 @@ Exception raised when discovery or parsing fails:
 | 1002 | `ERR_UNSUPPORTED_PROTO` | Protocol not supported       |
 | 1003 | `ERR_SECURITY`          | Security policy violation    |
 | 1004 | `ERR_DNS_LOOKUP_FAILED` | DNS query failed             |
+| 1005 | `ERR_FALLBACK_FAILED`    | `.well-known` fallback failed |
 
 ## Advanced Usage
 
@@ -133,6 +138,15 @@ try:
 except AidError as e:
     print(f"Invalid record: {e}")
 ```
+
+### v1.1 Notes (PKA + Fallback)
+
+- PKA handshake: When a record includes `pka` (`k`) and `kid` (`i`), the client performs an Ed25519 HTTP Message Signatures handshake to verify endpoint control. This requires an Ed25519 verification backend. Install one of:
+  - `pip install aid-discovery[pka]` (installs `PyNaCl` and `cryptography`)
+  - Or add `PyNaCl>=1.5` or `cryptography>=42` to your environment
+  If no backend is available, discovery raises `ERR_SECURITY` when PKA is present.
+
+- `.well-known` fallback: On DNS issues (`ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`), the client may fetch `https://<domain>/.well-known/agent` (TLS-anchored). Disable with `well_known_fallback=False`.
 
 ## Development
 

@@ -11,5 +11,14 @@ readme = "README.md"
 path = "src/lib.rs"
 
 [dependencies]
+base64 = { version = "0.22", optional = true }
+bs58 = { version = "0.5", optional = true }
+ed25519-dalek = { version = "2", features = ["pkcs8"], optional = true }
+httpdate = { version = "1", optional = true }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "http2"], optional = true }
+
+[features]
+default = []
+handshake = ["base64", "bs58", "ed25519-dalek", "httpdate", "reqwest"]
 
 [dev-dependencies]

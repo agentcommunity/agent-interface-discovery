@@ -6,9 +6,13 @@ namespace AidDiscovery {
   public static class Constants {
     public const string SpecVersion = "aid1";
     public const string PROTO_A2A = "a2a";
+    public const string PROTO_GRAPHQL = "graphql";
+    public const string PROTO_GRPC = "grpc";
     public const string PROTO_LOCAL = "local";
     public const string PROTO_MCP = "mcp";
     public const string PROTO_OPENAPI = "openapi";
+    public const string PROTO_WEBSOCKET = "websocket";
+    public const string PROTO_ZEROCONF = "zeroconf";
     public const string AUTH_APIKEY = "apikey";
     public const string AUTH_BASIC = "basic";
     public const string AUTH_CUSTOM = "custom";
@@ -18,6 +22,7 @@ namespace AidDiscovery {
     public const string AUTH_OAUTH2_DEVICE = "oauth2_device";
     public const string AUTH_PAT = "pat";
     public const int ERR_DNS_LOOKUP_FAILED = 1004;
+    public const int ERR_FALLBACK_FAILED = 1005;
     public const int ERR_INVALID_TXT = 1001;
     public const int ERR_NO_RECORD = 1000;
     public const int ERR_SECURITY = 1003;

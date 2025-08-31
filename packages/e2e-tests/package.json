@@ -18,6 +18,7 @@
   },
   "scripts": {
     "e2e": "tsx src/e2e.ts",
+    "e2e:pka": "tsx src/pka_e2e.ts",
     "clean": "rimraf dist"
   },
   "devDependencies": {
