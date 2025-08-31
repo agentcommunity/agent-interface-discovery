@@ -1,6 +1,6 @@
 ---
 title: 'Troubleshooting'
-description: 'DNS propagation, TTL, and common AID errors (1000–1004)'
+description: 'DNS propagation, TTL, and common AID errors (1000–1005)'
 icon: material/tools
 ---
 
@@ -32,6 +32,8 @@ icon: material/tools
   - DNSSEC failures, invalid local execution, or disallowed scheme.
 - 1004 ERR_DNS_LOOKUP_FAILED: DNS/network timeout/failure
   - Retry, try different resolver, increase client timeout.
+- 1005 ERR_FALLBACK_FAILED: .well-known fetch failed/invalid
+  - Ensure `/.well-known/agent` exists, returns JSON, and uses HTTPS.
 
 ## Quick checks
 
