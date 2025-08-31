@@ -43,6 +43,31 @@ async function runFixture(fix: GoldenFixture) {
     }
   }
 
+  // Negative cases: expect parse to throw
+  if (fix.invalid && Array.isArray(fix.invalid)) {
+    for (const nc of fix.invalid) {
+      try {
+        await parseAid(nc.raw);
+        failed += 1;
+        console.error(`✗ ${nc.name}: expected error but parse succeeded`);
+      } catch (err) {
+        const ok =
+          !nc.errorCode ||
+          (err &&
+            typeof err === 'object' &&
+            err !== null &&
+            'errorCode' in err &&
+            (err as { errorCode?: string }).errorCode === nc.errorCode);
+        if (ok) {
+          passed += 1;
+        } else {
+          failed += 1;
+          console.error(`✗ ${nc.name}: error code mismatch`, err);
+        }
+      }
+    }
+  }
+
   console.log(`AID Conformance: ${passed} passed, ${failed} failed, total ${passed + failed}`);
   process.exitCode = failed === 0 ? 0 : 1;
 }

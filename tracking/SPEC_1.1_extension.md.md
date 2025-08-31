@@ -18,7 +18,7 @@ This document has been updated to incorporate the specific requirements for **AI
 
 Date: August 31, 2025  
 Editor: Agent Community  
-Status: Proposed  
+Status: In-Progress (multi-language parity nearing completion)  
 
 Summary: This section tracks the draft changes from v1.0 to v1.1. It focuses on security, usability, and extensibility while keeping the spec minimal. Key additions include endpoint verification (PKA), key aliases, optional metadata keys, protocol extensions, and a client-side .well-known fallback. All changes are backward-compatible with v1.0.
 
@@ -189,33 +189,59 @@ This section summarizes what’s complete and what’s next so the next agent ca
 - `packages/aid/src/parser.v11.test.ts`: aliases, duplicates, docs/dep, websocket/zeroconf, kid-with-pka.
 - `packages/aid/src/client.fallback.test.ts`: fallback success + content-type guard failure.
 - `packages/aid/src/client.pka.test.ts`: confirms handshake is invoked when `k` + `i` present.
-- `packages/aid/src/client.pka.integration.test.ts`: Ed25519 end-to-end; valid signature passes; alg mismatch fails (add created/kid mismatch if desired).
+- `packages/aid/src/client.pka.integration.test.ts`: Ed25519 end-to-end; valid signature passes; alg mismatch, keyid mismatch, created skew fail.
+- `packages/aid/src/pka.vectors.test.ts`: vector-driven parity (valid/negative cases).
 - Vitest config: `packages/aid/vitest.config.ts` uses `pool: 'forks'` to avoid tinypool recursion in constrained envs.
 
-### Other SDKs (parsers updated)
-- Python/Go/Rust/.NET/Java parsers accept aliases and metadata; enforce schemes; require `kid` with `pka`. Constants regenerated in each.
-- Handshake + `.well-known` fallback not yet added for these SDKs (TS is the reference impl).
+### Other SDKs (v1.1 parity)
+- Python (`packages/aid-py`):
+  - Parser: aliases, metadata, scheme enforcement, require `kid` with `pka`.
+  - Discovery: DNS-first, guarded `.well-known` fallback; PKA handshake via `cryptography` Ed25519; multibase z/base58btc.
+  - Tests: parser, discovery, fallback; PKA unit + vector-driven tests (requires `cryptography`).
+- Go (`packages/aid-go`):
+  - Parser: aliases/metadata, scheme enforcement, require `kid` with `pka`.
+  - Discovery: DNS-first, `.well-known` fallback; PKA via `crypto/ed25519`.
+  - Tests: vector-driven PKA tests + existing parser/discovery tests.
+- Rust (`packages/aid-rs`):
+  - Parser: aliases/metadata, scheme enforcement, require `kid` with `pka`.
+  - Handshake: implemented behind `handshake` feature using `reqwest`, `ed25519-dalek`, `bs58`, `httpdate`; tests added (httpmock) incl. negatives.
+- .NET (`packages/aid-dotnet`):
+  - Parser: aliases/metadata, scheme enforcement, require `kid` with `pka`.
+  - Fallback + Handshake: `.well-known` fetch and Ed25519 verification; uses Chaos.NaCl (or NSec) for Ed25519; vector-driven integration tests (opt-in).
+- Java (`packages/aid-java`):
+  - Parser: aliases/metadata, scheme enforcement, require `kid` with `pka`.
+  - Fallback + Handshake: Java 11+ HttpClient; Ed25519 using JDK provider; tests with local HttpServer; Jackson used for test JSON.
+
+### Status Snapshot (2025-09-01)
+- TS: complete (parser + client + PKA + fallback), all tests green.
+- Go: complete (parser + discovery + PKA + fallback), tests green.
+- Python: complete (parser + discovery + PKA + fallback); tests require `cryptography` and pass locally after serialization fix.
+- Rust: handshake implemented (feature `handshake`); tests added; run in CI/toolchain env.
+- .NET: handshake + fallback implemented; integration tests require Chaos.NaCl; run in toolchain env.
+- Java: handshake + fallback implemented; tests pass with JDK Ed25519 and Jackson.
+- aid-doctor: v1.1 flags added; PKA/fallback indicators; PKA e2e mock available.
+- aid-conformance: fixtures updated for v1.1; runner supports negative cases.
 
 ### Runbook
 - Generate: `pnpm gen`
-- TS tests: `pnpm -C packages/aid test` (or `test:coverage`)
-- Python tests: `python3 -m pip install -e './packages/aid-py[dev]' && python3 -m pytest packages/aid-py`
+- TS tests: `pnpm -C packages/aid test`
 - Go tests: `cd packages/aid-go && go test ./...`
+- Python tests: `python3 -m pip install -e './packages/aid-py[dev,pka]' && python3 -m pytest packages/aid-py`
+- Rust tests: `cd packages/aid-rs && cargo test --features handshake`
+- .NET tests: `dotnet build packages/aid-dotnet/AidDiscovery.sln && AID_RUN_INTEGRATION=1 dotnet test packages/aid-dotnet/AidDiscovery.sln`
+- Java tests: `AID_RUN_INTEGRATION=1 ./gradlew :aid-java:test`
+- aid-doctor e2e (mock): `pnpm -C packages/e2e-tests run e2e:pka` (uses `AID_ALLOW_INSECURE_WELL_KNOWN=1`)
 
 ### Next Agent TODOs
-1) PKA handshake + Fallback in other SDKs
-   - Python: use `cryptography` (Ed25519) + base58btc; HTTP fallback with JSON guards.
-   - Go: `crypto/ed25519`, base58; net/http fallback with guards.
-   - Optional: Rust/.NET/Java handshake (or leave as parser-only if scope-limited).
-2) TS Tests (optional additions)
-   - PKA created skew outside ±300s → `ERR_SECURITY`.
-   - PKA keyid mismatch → `ERR_SECURITY`.
-3) Docs & READMEs
-   - Update each SDK README with v1.1 notes (aliases, metadata, `websocket`/`zeroconf`, PKA, fallback).
-   - Main README highlights v1.1 features; migration examples for aliases; PKA explanation.
-4) Workbench integration (last)
-   - Optionally import canonical `protocol/spec.ts` directly (mirror remains for now).
-   - UI: show PKA verification status; fallback indicator; feature flag remains (`NEXT_PUBLIC_FEATURE_WELLKNOWN`).
+1) Workbench integration (last)
+   - Import canonical `protocol/spec.ts` (mirror already present).
+   - UI: show PKA verification status (kid, timestamp window), fallback indicator.
+2) CI/tooling
+   - Add matrix jobs to exercise Rust `--features handshake`, .NET Chaos.NaCl integration tests, and Java with JDK Ed25519 + Jackson.
+3) Parity vectors
+   - Expand `protocol/pka_vectors.json` with additional corner cases if needed (quotes/spacing variants, multi-headers), and wire to .NET/Java runners.
+4) Docs polish
+   - Finalize docs for v1.1 in `packages/docs/specification.md` (status → Final) once all CI gates are green.
 
 ### Notes / Decisions
 - We avoided DOM lib dependencies by adding minimal local types for fetch/headers/crypto in `pka.ts`.
@@ -228,7 +254,9 @@ This section summarizes what’s complete and what’s next so the next agent ca
 - 2025-08-31: Rust parser (`packages/aid-rs/src/parser.rs` + `record.rs`): Added new protocols, alias support, optional fields, and scheme rules; errors mapping includes `ERR_FALLBACK_FAILED`.
 - 2025-08-31: .NET parser (`packages/aid-dotnet/src/Parser.cs` + `Record.cs`): Alias support and duplicate checks; optional fields and scheme rules; docs/dep validation.
 - 2025-08-31: Java parser (`packages/aid-java/src/main/java/org/agentcommunity/aid/Parser.java` + `AidRecord.java`): Alias support and duplicate checks; optional fields; scheme rules; updated valid protocol list.
-- 2025-08-31: Docs: Updated references to include error 1005 in troubleshooting; minor spec tag/date finalized.
+- 2025-09-01: aid-doctor: added `--no-fallback`, `--fallback-timeout`, `--show-details`; JSON includes fallback/PKA details; PKA e2e mock added.
+- 2025-09-01: aid-conformance: fixtures updated for v1.1 (docs/dep, pka/kid, negative pka-missing-kid); runner supports invalid cases.
+- 2025-09-01: Multi-language parity achieved for PKA + fallback across TS/Go/Py/Rust(.feature)/.NET/Java; READMEs updated with v1.1 notes.
 
 ## 1) Open a proposal issue
 - Label: `spec-proposal`

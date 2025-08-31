@@ -27,6 +27,9 @@ aid-doctor json example.com
 
 - `--protocol <proto>`: try a protocol-specific subdomain (e.g., `mcp` tries `_agent._mcp.<domain>` first)
 - `--timeout <ms>`: DNS query timeout (default: 5000)
+- `--no-fallback`: disable `.well-known` fallback on DNS miss
+- `--fallback-timeout <ms>`: HTTP timeout for `.well-known` (default: 2000)
+- `--show-details`: include fallback usage and PKA status in output
 - `--code` (check): exit with specific error code on failure
 
 ### Exit codes
@@ -55,6 +58,13 @@ aid-doctor check example.com --protocol mcp
 
 # JSON for CI
 aid-doctor json example.com > result.json
+
+# Show PKA/fallback details (v1.1)
+aid-doctor check example.com --show-details
+
+# Local testing with a mock HTTP server (insecure well-known)
+# (Use only for local dev)
+AID_ALLOW_INSECURE_WELL_KNOWN=1 aid-doctor check localhost:19081 --show-details --fallback-timeout 2000
 ```
 
 ## License

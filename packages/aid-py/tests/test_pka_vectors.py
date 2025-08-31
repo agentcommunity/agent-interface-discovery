@@ -10,6 +10,7 @@ from aid_py import discover, AidError  # noqa: E402
 
 cryptography = pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives.asymmetric import ed25519  # type: ignore # noqa: E402
+from cryptography.hazmat.primitives import serialization  # type: ignore # noqa: E402
 
 
 def _load_vectors():
@@ -63,7 +64,10 @@ def test_pka_vectors(monkeypatch, vector):
 
     seed = base64.b64decode(vector["key"]["seed_b64"])  # 32 bytes
     priv = ed25519.Ed25519PrivateKey.from_private_bytes(seed)
-    pub = priv.public_key().public_bytes()
+    pub = priv.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
     pka = "z" + _b58encode(pub)
 
     import urllib.request

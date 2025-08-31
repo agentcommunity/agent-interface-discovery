@@ -61,7 +61,7 @@ jobs:
 
       - name: Test (Python)
         run: |
-          python -m pip install -e './packages/aid-py[dev]' pytest
+          python -m pip install -e './packages/aid-py[dev,pka]' pytest
           python -m pytest packages/aid-py
 
       - name: Setup Go 1.23
@@ -76,6 +76,8 @@ jobs:
 
       - name: E2E Tests
         run: pnpm e2e
+      - name: E2E PKA (aid-doctor mock)
+        run: pnpm -C packages/aid-doctor build && pnpm -C packages/e2e-tests run e2e:pka
 
   parity:
     runs-on: ubuntu-latest
@@ -140,7 +142,7 @@ jobs:
 
       - name: Test (Rust)
         working-directory: packages/aid-rs
-        run: cargo test --locked
+        run: cargo test --locked --features handshake
 
   dotnet:
     runs-on: ubuntu-latest
@@ -173,6 +175,8 @@ jobs:
 
       - name: Test (Release)
         working-directory: packages/aid-dotnet
+        env:
+          AID_RUN_INTEGRATION: '1'
         run: dotnet test AidDiscovery.sln -c Release --no-build --logger "trx;LogFileName=test_results.trx"
 
   java:
@@ -189,4 +193,6 @@ jobs:
 
       - name: Build & Test (Gradle Wrapper)
         working-directory: packages/aid-java
+        env:
+          AID_RUN_INTEGRATION: '1'
         run: ../../gradlew build test

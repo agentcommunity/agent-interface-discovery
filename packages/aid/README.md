@@ -51,6 +51,29 @@ console.log('Agent:', record.proto, record.uri);
 - `AidError` – error class exposing `code` (numeric) and `errorCode` (symbol)
 - Constants and types exported from `@agentcommunity/aid`
 
+## v1.1 Notes (PKA + .well-known)
+
+- New fields: `pka` (`k`) and `kid` (`i`). When a record includes `pka`, the client performs a Public Key for Agent (PKA) handshake using HTTP Message Signatures (Ed25519).
+- `pka` is a multibase string using base58btc (`z...`) of the raw 32‑byte Ed25519 public key.
+- Handshake coverage: required fields are `"AID-Challenge" "@method" "@target-uri" "host" "date"`.
+- Time window: both `created` and HTTP `Date` must be within ±300 seconds of now.
+- Fallback: when DNS has `ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`, discovery may fetch `https://<domain>/.well-known/agent` (TLS‑anchored) and validate the same data model; if the JSON contains `pka`, the handshake runs.
+
+### Example: guarded `.well-known` fallback
+
+```ts
+import { discover } from '@agentcommunity/aid';
+
+const { record, queryName } = await discover('example.com', {
+  wellKnownFallback: true,
+  wellKnownTimeoutMs: 2000,
+});
+
+console.log('Query:', queryName); // either DNS name or https://<domain>/.well-known/agent
+```
+
+PKA handshake runs automatically when `record.pka` is present.
+
 ## Error Codes
 
 - `1000` `ERR_NO_RECORD` – no `_agent` TXT found
@@ -58,11 +81,13 @@ console.log('Agent:', record.proto, record.uri);
 - `1002` `ERR_UNSUPPORTED_PROTO` – protocol not supported
 - `1003` `ERR_SECURITY` – security policy violation
 - `1004` `ERR_DNS_LOOKUP_FAILED` – DNS lookup failed
+- `1005` `ERR_FALLBACK_FAILED` – `.well‑known` fallback failed or invalid
 
 ## Security Notes
 
 - Remote agent URIs MUST use `https://`.
-- See the spec for redirect handling and local execution guidance.
+- Handshake verifies endpoint control when `pka` is present (Ed25519 HTTP Message Signatures).
+- `.well-known` is optional and TLS‑anchored; use DNS first.
 
 ## License
 

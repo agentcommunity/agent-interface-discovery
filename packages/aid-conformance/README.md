@@ -2,7 +2,7 @@
 
 Conformance fixtures and a tiny runner for Agent Interface Discovery (AID).
 
-- Exposes the shared `test-fixtures/golden.json` via a typed export
+- Exposes the shared `test-fixtures/golden.json` via a typed export (includes v1.1 fields like `docs`/`dep` and `pka`/`kid`)
 - Provides a simple Node runner to execute the fixtures against a parser
 
 ## Install
@@ -42,6 +42,12 @@ npx aid-conformance ./some-fixture.json
 ```
 
 Exit code is non-zero if any case fails. Output includes a concise summary.
+
+### v1.1 Notes
+
+- Fixtures now contain records exercising v1.1 additions:
+  - `docs` (https URL), `dep` (ISO 8601 Z)
+  - `pka`/`kid` presence (parsing only — handshake is out of scope for fixtures)
 
 ## Development
 

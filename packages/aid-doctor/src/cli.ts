@@ -116,12 +116,17 @@ program
         const base = formatDiscoveryResult(result, domain);
         const extras: string[] = [];
         // Show fallback usage
-        const fallbackUsed = result.queryName.startsWith('http://') || result.queryName.startsWith('https://');
+        const fallbackUsed =
+          result.queryName.startsWith('http://') || result.queryName.startsWith('https://');
         if (options.showDetails) {
-          extras.push(`  Fallback: ${fallbackUsed ? chalk.yellow('used (.well-known)') : chalk.green('not used (DNS)')}`);
-          if ((result.record as any).pka) {
-            const kid = (result.record as any).kid ?? '(none)';
-            extras.push(`  PKA: ${chalk.green('present')}, kid=${chalk.cyan(kid)}; handshake=${chalk.green('OK')}`);
+          extras.push(
+            `  Fallback: ${fallbackUsed ? chalk.yellow('used (.well-known)') : chalk.green('not used (DNS)')}`,
+          );
+          if (result.record.pka) {
+            const kid = result.record.kid ?? '(none)';
+            extras.push(
+              `  PKA: ${chalk.green('present')}, kid=${chalk.cyan(kid)}; handshake=${chalk.green('OK')}`,
+            );
           } else {
             extras.push(`  PKA: ${chalk.gray('absent')}`);
           }
@@ -150,47 +155,44 @@ program
   .description('Check a domain for AID records and output machine-readable JSON')
   .option('-p, --protocol <protocol>', 'Try protocol-specific subdomain first')
   .option('-t, --timeout <ms>', 'DNS query timeout in milliseconds', '5000')
-  .action(async (domain: string, options: { protocol?: string; timeout: string }) => {
-    try {
-      const result = await discover(domain, {
-        ...(options.protocol && { protocol: options.protocol }),
-        timeout: Number.parseInt(options.timeout),
-      });
+  .option('--no-fallback', 'Disable .well-known fallback on DNS miss', false)
+  .option('--fallback-timeout <ms>', 'Timeout for .well-known fetch (ms)', '2000')
+  .action(
+    async (
+      domain: string,
+      options: {
+        protocol?: string;
+        timeout: string;
+        noFallback?: boolean;
+        fallbackTimeout?: string;
+      },
+    ) => {
+      try {
+        const result = await discover(domain, {
+          ...(options.protocol && { protocol: options.protocol }),
+          timeout: Number.parseInt(options.timeout),
+          wellKnownFallback: options.noFallback ? false : true,
+          wellKnownTimeoutMs: Number.parseInt(options.fallbackTimeout || '2000'),
+        });
 
-      // Optionally enforce redirect policy
-      if (result.record.proto !== 'local') {
-        await enforceRedirectPolicy(result.record.uri, Number.parseInt(options.timeout));
-      }
+        // Optionally enforce redirect policy
+        if (result.record.proto !== 'local') {
+          await enforceRedirectPolicy(result.record.uri, Number.parseInt(options.timeout));
+        }
 
-      // Output successful result
-      console.log(
-        JSON.stringify(
-          {
-            success: true,
-            domain,
-            queryName: result.queryName,
-            record: result.record,
-            timestamp: new Date().toISOString(),
-          },
-          null,
-          2,
-        ),
-      );
-
-      process.exit(0);
-    } catch (error) {
-      // Output error result
-      if (error instanceof AidError) {
+        // Output successful result
+        const fallbackUsed =
+          result.queryName.startsWith('http://') || result.queryName.startsWith('https://');
+        const pkaPresent = Boolean(result.record.pka);
+        const kid = result.record.kid ?? null;
         console.log(
           JSON.stringify(
             {
-              success: false,
+              success: true,
               domain,
-              error: {
-                code: error.code,
-                errorCode: error.errorCode,
-                message: error.message,
-              },
+              queryName: result.queryName,
+              record: result.record,
+              details: { fallbackUsed, pka: { present: pkaPresent, kid } },
               timestamp: new Date().toISOString(),
             },
             null,
@@ -198,29 +200,51 @@ program
           ),
         );
 
-        process.exit(error.code);
-      } else {
-        console.log(
-          JSON.stringify(
-            {
-              success: false,
-              domain,
-              error: {
-                code: 1,
-                errorCode: 'UNKNOWN_ERROR',
-                message: error instanceof Error ? error.message : String(error),
+        process.exit(0);
+      } catch (error) {
+        // Output error result
+        if (error instanceof AidError) {
+          console.log(
+            JSON.stringify(
+              {
+                success: false,
+                domain,
+                error: {
+                  code: error.code,
+                  errorCode: error.errorCode,
+                  message: error.message,
+                },
+                timestamp: new Date().toISOString(),
               },
-              timestamp: new Date().toISOString(),
-            },
-            null,
-            2,
-          ),
-        );
+              null,
+              2,
+            ),
+          );
 
-        process.exit(1);
+          process.exit(error.code);
+        } else {
+          console.log(
+            JSON.stringify(
+              {
+                success: false,
+                domain,
+                error: {
+                  code: 1,
+                  errorCode: 'UNKNOWN_ERROR',
+                  message: error instanceof Error ? error.message : String(error),
+                },
+                timestamp: new Date().toISOString(),
+              },
+              null,
+              2,
+            ),
+          );
+
+          process.exit(1);
+        }
       }
-    }
-  });
+    },
+  );
 
 // Generator command
 program

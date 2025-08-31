@@ -12,6 +12,7 @@ from aid_py import discover, AidError  # noqa: E402
 
 cryptography = pytest.importorskip("cryptography")
 from cryptography.hazmat.primitives.asymmetric import ed25519  # type: ignore # noqa: E402
+from cryptography.hazmat.primitives import serialization  # type: ignore # noqa: E402
 
 
 class _FakeHTTPMessage(dict):
@@ -67,7 +68,10 @@ def test_pka_accepts_quoted_keyid(monkeypatch):
     # Generate an Ed25519 keypair
     private_key = ed25519.Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
-    raw_pub = public_key.public_bytes()
+    raw_pub = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
 
     # Base58btc (z...) encode manually in test using Python's int conversion
     ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -132,7 +136,10 @@ def test_pka_rejects_missing_required_fields(monkeypatch):
 
     private_key = ed25519.Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
-    raw_pub = public_key.public_bytes()
+    raw_pub = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
     ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
     def b58encode(data: bytes) -> str:
