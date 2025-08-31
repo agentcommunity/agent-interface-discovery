@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "vectors": [
+    {
+      "id": "valid-ed25519",
+      "desc": "Valid PKA proof with required covered fields",
+      "record": {
+        "v": "aid1",
+        "u": "https://api.example.com/mcp",
+        "p": "mcp",
+        "i": "g1"
+      },
+      "key": {
+        "public": "z1111111111111111111111111111111111111111111",
+        "seed_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      },
+      "covered": ["AID-Challenge", "@method", "@target-uri", "host", "date"],
+      "created": 1735689600,
+      "httpDate": "Thu, 01 Jan 2026 00:00:00 GMT",
+      "expect": "pass"
+    },
+    {
+      "id": "alg-mismatch",
+      "desc": "Header alg is rsa (should fail)",
+      "record": { "v": "aid1", "u": "https://api.example.com/mcp", "p": "mcp", "i": "g1" },
+      "key": {
+        "public": "z1111111111111111111111111111111111111111111",
+        "seed_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      },
+      "covered": ["AID-Challenge", "@method", "@target-uri", "host", "date"],
+      "created": 1735689600,
+      "httpDate": "Thu, 01 Jan 2026 00:00:00 GMT",
+      "overrideAlg": "rsa",
+      "expect": "fail"
+    },
+    {
+      "id": "kid-mismatch",
+      "desc": "Signature keyid does not match record kid",
+      "record": { "v": "aid1", "u": "https://api.example.com/mcp", "p": "mcp", "i": "g1" },
+      "key": {
+        "public": "z1111111111111111111111111111111111111111111",
+        "seed_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      },
+      "covered": ["AID-Challenge", "@method", "@target-uri", "host", "date"],
+      "created": 1735689600,
+      "httpDate": "Thu, 01 Jan 2026 00:00:00 GMT",
+      "overrideKeyId": "b2",
+      "expect": "fail"
+    },
+    {
+      "id": "missing-fields",
+      "desc": "Required covered fields missing",
+      "record": { "v": "aid1", "u": "https://api.example.com/mcp", "p": "mcp", "i": "g1" },
+      "key": {
+        "public": "z1111111111111111111111111111111111111111111",
+        "seed_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      },
+      "covered": ["AID-Challenge", "@method"],
+      "created": 1735689600,
+      "httpDate": "Thu, 01 Jan 2026 00:00:00 GMT",
+      "expect": "fail"
+    },
+    {
+      "id": "date-skew",
+      "desc": "HTTP Date outside acceptance window",
+      "record": { "v": "aid1", "u": "https://api.example.com/mcp", "p": "mcp", "i": "g1" },
+      "key": {
+        "public": "z1111111111111111111111111111111111111111111",
+        "seed_b64": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+      },
+      "covered": ["AID-Challenge", "@method", "@target-uri", "host", "date"],
+      "created": 1609455600,
+      "httpDate": "Thu, 31 Dec 2020 23:00:00 GMT",
+      "expect": "fail"
+    }
+  ]
+}
