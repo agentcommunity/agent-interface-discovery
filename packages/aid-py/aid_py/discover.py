@@ -107,6 +107,10 @@ def discover(
         for txt in txt_records:
             try:
                 record = parse(txt)
+                # If a protocol is specified, ensure the record matches
+                if protocol and record.get("proto") != protocol:
+                    last_error = AidError("ERR_UNSUPPORTED_PROTO", f"Record found, but protocol does not match requested '{protocol}'")
+                    continue
                 return record, ttl
             except AidError as exc:
                 # Save and try the next TXT string (if multiple records exist)
@@ -179,28 +183,45 @@ def discover(
             raw["kid"] = i
         return _parser.validate_record(raw)
 
-    # Try protocol-specific subdomains, then base, mirroring TS client behavior
+    # --- Discovery Logic ---
+    # 1. Start with the base domain query
+    base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
     try:
-        if protocol:
-            # 1) underscore form: _agent._<proto>.<domain>
-            proto_underscore = f"{DNS_SUBDOMAIN}._{protocol}.{domain_alabel}".rstrip(".")
-            try:
-                return _query_and_parse(proto_underscore)
-            except AidError as e:
-                if getattr(e, "error_code", None) != "ERR_NO_RECORD":
-                    raise
-            # 2) non-underscore form: _agent.<proto>.<domain>
-            proto_plain = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
-            try:
-                return _query_and_parse(proto_plain)
-            except AidError as e:
-                if getattr(e, "error_code", None) != "ERR_NO_RECORD":
-                    raise
-            # 3) base: _agent.<domain>
-            base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
-            return _query_and_parse(base_fqdn)
-        # Default: base _agent subdomain
-        base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
+        record, ttl = _query_and_parse(base_fqdn)
+        # If no specific protocol is requested, or if the found record matches, we're done.
+        if not protocol or record.get("proto") == protocol:
+            return record, ttl
+    except AidError as e:
+        # If the base lookup fails with anything other than no record, we might still fallback.
+        # But if it's a critical error, we shouldn't continue to protocol-specific lookups.
+        if e.error_code not in ("ERR_NO_RECORD", "ERR_UNSUPPORTED_PROTO"):
+            # Re-raise unless we can fallback later
+            if not (well_known_fallback and e.error_code == "ERR_DNS_LOOKUP_FAILED"):
+                 raise
+
+    # 2. If a specific protocol was requested and the base record didn't match (or was missing),
+    # try the protocol-specific subdomains.
+    if protocol:
+        # a) underscore form: _agent._<proto>.<domain>
+        proto_underscore = f"{DNS_SUBDOMAIN}._{protocol}.{domain_alabel}".rstrip(".")
+        try:
+            return _query_and_parse(proto_underscore)
+        except AidError as e:
+            if getattr(e, "error_code", None) != "ERR_NO_RECORD":
+                 raise
+
+        # b) non-underscore form (as a fallback for older specs or misconfigurations)
+        proto_plain = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
+        try:
+            return _query_and_parse(proto_plain)
+        except AidError as e:
+            if getattr(e, "error_code", None) != "ERR_NO_RECORD":
+                 raise
+
+    # 3. If all DNS lookups fail, handle the final fallback or error state.
+    try:
+        # This will re-query the base and fail with a clear error if nothing is found.
+        # Or, it will trigger the .well-known fallback if applicable.
         return _query_and_parse(base_fqdn)
     except AidError as exc:
         if well_known_fallback and exc.error_code in ("ERR_NO_RECORD", "ERR_DNS_LOOKUP_FAILED"):
