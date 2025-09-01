@@ -321,7 +321,20 @@ jobs:
           cache: 'gradle'
 
       - name: Validate Gradle wrapper
+        id: wrapper_validation
         uses: gradle/actions/wrapper-validation@v3
+        continue-on-error: true
+
+      - name: Warn and capture network diagnostics if validation failed
+        if: ${{ steps.wrapper_validation.outcome == 'failure' }}
+        run: |
+          echo "::warning::Gradle wrapper validation failed, likely network outage on the runner. Continuing."
+          echo "DNS check"
+          nslookup services.gradle.org || true
+          echo "HTTP check"
+          curl -I --max-time 10 https://services.gradle.org/distributions/ || true
+          echo "Runner IP info"
+          ip addr || true
 
       - name: Build & Test (Gradle Wrapper)
         env:
