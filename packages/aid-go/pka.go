@@ -31,6 +31,8 @@ func performPKAHandshake(uri, pka, kid string, timeout time.Duration) error {
     req.Header.Set("Date", date)
     client := *httpClient
     client.Timeout = timeout
+    // Do not follow redirects for handshake per security policy
+    client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
     resp, err := client.Do(req)
     if err != nil {
         return newAidError("ERR_SECURITY", err.Error())
@@ -69,11 +71,13 @@ func performPKAHandshake(uri, pka, kid string, timeout time.Duration) error {
     }
 
     dateHeader := resp.Header.Get("Date")
-    // Validate Date header if present
+    // Validate Date header if present (±300s window)
     if dateHeader != "" {
         if t, e := http.ParseTime(dateHeader); e == nil {
             now := time.Now().UTC()
-            if now.Sub(t) > 300*time.Second && t.Sub(now) > 300*time.Second {
+            diff := t.Sub(now)
+            if diff < 0 { diff = -diff }
+            if diff > 300*time.Second {
                 return newAidError("ERR_SECURITY", "HTTP Date header outside acceptance window")
             }
         } else {

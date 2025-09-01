@@ -155,12 +155,12 @@ func ValidateRecord(raw map[string]string) (AidRecord, error) {
     }
 
     rec := AidRecord{V: SpecVersion, URI: uri, Proto: proto}
-    if auth, ok := get("auth"); ok { rec.Auth = auth } else if a, ok := get("a"); ok { rec.Auth = a }
-    if desc, ok := get("desc"); ok { rec.Desc = desc } else if s, ok := get("s"); ok { rec.Desc = s }
-    if docs, ok := get("docs"); ok { rec.Docs = docs } else if d, ok := get("d"); ok { rec.Docs = d }
-    if dep, ok := get("dep"); ok { rec.Dep = dep } else if e, ok := get("e"); ok { rec.Dep = e }
-    if pka, ok := get("pka"); ok { rec.Pka = pka } else if k, ok := get("k"); ok { rec.Pka = k }
-    if kid, ok := get("kid"); ok { rec.Kid = kid } else if i, ok := get("i"); ok { rec.Kid = i }
+    if auth, ok, err := getAliased("auth", "a"); err != nil { return AidRecord{}, err } else if ok { rec.Auth = auth }
+    if desc, ok, err := getAliased("desc", "s"); err != nil { return AidRecord{}, err } else if ok { rec.Desc = desc }
+    if docs, ok, err := getAliased("docs", "d"); err != nil { return AidRecord{}, err } else if ok { rec.Docs = docs }
+    if dep, ok, err := getAliased("dep", "e"); err != nil { return AidRecord{}, err } else if ok { rec.Dep = dep }
+    if pka, ok, err := getAliased("pka", "k"); err != nil { return AidRecord{}, err } else if ok { rec.Pka = pka }
+    if kid, ok, err := getAliased("kid", "i"); err != nil { return AidRecord{}, err } else if ok { rec.Kid = kid }
     if rec.Pka != "" && rec.Kid == "" {
         return AidRecord{}, newAidError("ERR_INVALID_TXT", "kid is required when pka is present")
     }

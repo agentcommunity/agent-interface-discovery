@@ -5,6 +5,7 @@ import (
     "fmt"
     "io"
     "net/http"
+    "strings"
     "time"
 )
 
@@ -18,6 +19,8 @@ func fetchWellKnown(domain string, timeout time.Duration) (AidRecord, error) {
     req.Header.Set("Accept", "application/json")
     client := *httpClient
     client.Timeout = timeout
+    // Do not follow redirects for well-known fetch per spec guard
+    client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
     resp, err := client.Do(req)
     if err != nil {
         return AidRecord{}, newAidError("ERR_FALLBACK_FAILED", err.Error())
@@ -26,7 +29,7 @@ func fetchWellKnown(domain string, timeout time.Duration) (AidRecord, error) {
     if resp.StatusCode != 200 {
         return AidRecord{}, newAidError("ERR_FALLBACK_FAILED", fmt.Sprintf("Well-known HTTP %d", resp.StatusCode))
     }
-    if ct := resp.Header.Get("Content-Type"); ct == "" || len(ct) < 16 || ct[:16] != "application/json" {
+    if ct := strings.ToLower(resp.Header.Get("Content-Type")); ct == "" || !strings.HasPrefix(ct, "application/json") {
         return AidRecord{}, newAidError("ERR_FALLBACK_FAILED", "Invalid content-type for well-known (expected application/json)")
     }
     data, err := io.ReadAll(resp.Body)
@@ -65,4 +68,3 @@ func fetchWellKnown(domain string, timeout time.Duration) (AidRecord, error) {
 
     return ValidateRecord(raw)
 }
-
