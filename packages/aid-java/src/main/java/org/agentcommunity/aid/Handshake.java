@@ -138,7 +138,7 @@ public final class Handshake {
     String respDate = sd.responseDate;
     if (respDate != null) {
       try {
-        long epoch = java.time.ZonedDateTime.parse(respDate, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME).toEpochSecond();
+        long epoch = java.time.ZonedDateTime.parse(respDate, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.US)).toEpochSecond();
         if (Math.abs(now - epoch) > 300) throw new AidError("ERR_SECURITY", "HTTP Date header outside acceptance window");
       } catch (Exception e) {
         throw new AidError("ERR_SECURITY", "Invalid Date header");
