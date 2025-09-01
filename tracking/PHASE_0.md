@@ -12,3 +12,4 @@ Started: 2025-07-05
 - **[2025-07-05]** Extended Turbo pipeline with `dev` and `clean` tasks.
 - **[2025-07-05]** Added `docs/CONTRIBUTING-spec.md` detailing YAML contract workflow.
 - **[2025-07-05]** GitHub Discussions enabled in repository settings.
+- **[2024-07-26]** Completed: Fixed Python timing attacks and empty excepts, Java NumberFormatException, and TypeScript type narrowing. Also updated security workflow with `workflow_dispatch` trigger for manual runs.

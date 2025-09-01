@@ -13,9 +13,12 @@ import java.time.Duration;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.security.SecureRandom;
 
 public final class Handshake {
   private Handshake() {}
+
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   private static byte[] multibaseDecode(String s) {
     if (s == null || s.isEmpty()) throw new AidError("ERR_SECURITY", "Empty PKA");
@@ -53,7 +56,12 @@ public final class Handshake {
     Matcher mk = Pattern.compile("(?:^|;)\\s*keyid=([^;\\s]+)", Pattern.CASE_INSENSITIVE).matcher(sigInput);
     Matcher ma = Pattern.compile("(?:^|;)\\s*alg=\"([^\"]+)\"", Pattern.CASE_INSENSITIVE).matcher(sigInput);
     if (!mc.find() || !mk.find() || !ma.find()) throw new AidError("ERR_SECURITY", "Invalid Signature-Input");
-    long created = Long.parseLong(mc.group(1));
+    long created;
+    try {
+      created = Long.parseLong(mc.group(1));
+    } catch (NumberFormatException e) {
+      throw new AidError("ERR_SECURITY", "Invalid created timestamp");
+    }
     String keyidRaw = mk.group(1);
     String keyid = keyidRaw.replaceAll("^\"(.+)\"$", "$1");
     String alg = ma.group(1).toLowerCase(Locale.ROOT);
@@ -123,7 +131,7 @@ public final class Handshake {
     if (kid == null || kid.isEmpty()) throw new AidError("ERR_SECURITY", "Missing kid for PKA");
     URI u = URI.create(uri);
     HttpClient http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).connectTimeout(timeout).build();
-    byte[] nonce = new byte[32]; new java.security.SecureRandom().nextBytes(nonce);
+    byte[] nonce = new byte[32]; SECURE_RANDOM.nextBytes(nonce);
     String challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(nonce);
     String date = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
     HttpRequest req = HttpRequest.newBuilder(URI.create(uri)).timeout(timeout).header("AID-Challenge", challenge).header("Date", date).GET().build();
@@ -140,7 +148,7 @@ public final class Handshake {
       try {
         long epoch = java.time.ZonedDateTime.parse(respDate, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.withLocale(Locale.US)).toEpochSecond();
         if (Math.abs(now - epoch) > 300) throw new AidError("ERR_SECURITY", "HTTP Date header outside acceptance window");
-      } catch (Exception e) {
+      } catch (java.time.format.DateTimeParseException e) {
         throw new AidError("ERR_SECURITY", "Invalid Date header");
       }
     }

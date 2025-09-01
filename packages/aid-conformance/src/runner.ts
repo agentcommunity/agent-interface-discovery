@@ -50,11 +50,10 @@ async function runFixture(fix: GoldenFixture) {
         await parseAid(nc.raw);
         failed += 1;
         console.error(`✗ ${nc.name}: expected error but parse succeeded`);
-      } catch (err) {
+      } catch (err: unknown) {
         const ok =
           !nc.errorCode ||
-          (err &&
-            typeof err === 'object' &&
+          (typeof err === 'object' &&
             err !== null &&
             'errorCode' in err &&
             (err as { errorCode?: string }).errorCode === nc.errorCode);

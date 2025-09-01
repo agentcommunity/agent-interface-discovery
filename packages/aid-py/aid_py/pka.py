@@ -169,7 +169,8 @@ def perform_pka_handshake(uri: str, pka: str, kid: str, *, timeout: float = 2.0)
 
             dt = parsedate_to_datetime(date_header)
             epoch = int(dt.timestamp())
-        except Exception:
+        except ValueError as e:
+            logging.exception(f"Failed to parse Date header: {e}")
             raise AidError("ERR_SECURITY", "Invalid Date header") from None
         if abs(now - epoch) > 300:
             raise AidError("ERR_SECURITY", "HTTP Date header outside acceptance window")
@@ -205,7 +206,8 @@ def perform_pka_handshake(uri: str, pka: str, kid: str, *, timeout: float = 2.0)
             vk = VerifyKey(pub)
             vk.verify(base, signature)  # raises on failure
             return
-        except Exception:
+        except ImportError as e:
+            logging.debug(f"PyNaCl not available, falling back to cryptography: {e}")
             # Fallback to cryptography if available
             from cryptography.hazmat.primitives.asymmetric import ed25519  # type: ignore
             from cryptography.exceptions import InvalidSignature  # type: ignore
