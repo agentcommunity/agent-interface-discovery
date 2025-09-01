@@ -9,20 +9,25 @@ import base64
 import os
 import re
 import time
+import hmac # Added for constant-time comparisons
 from urllib.parse import urlparse
 import urllib.request
 import urllib.error
 
 from .parser import AidError
 import pathlib
+import logging # Added for logging in empty except block
 
 def _debug_write(name: str, data: str) -> None:
     try:
         d = pathlib.Path(__file__).resolve().parent / "_debug"
         d.mkdir(exist_ok=True)
         (d / name).write_text(data)
-    except Exception:
-        pass
+    except Exception as e:
+        # Intentionally swallowing error here for debug writing,
+        # as failure to write debug data should not stop the main flow.
+        # Log for visibility in debug builds.
+        logging.debug(f"Failed to write debug data: {e}")
 
 
 def _b58_decode(s: str) -> bytes:
@@ -168,9 +173,9 @@ def perform_pka_handshake(uri: str, pka: str, kid: str, *, timeout: float = 2.0)
             raise AidError("ERR_SECURITY", "Invalid Date header") from None
         if abs(now - epoch) > 300:
             raise AidError("ERR_SECURITY", "HTTP Date header outside acceptance window")
-    if keyid != kid:
+    if not hmac.compare_digest(keyid.encode('utf-8'), kid.encode('utf-8')):
         raise AidError("ERR_SECURITY", "Signature keyid mismatch")
-    if alg != "ed25519":
+    if not hmac.compare_digest(alg.encode('utf-8'), b"ed25519"):
         raise AidError("ERR_SECURITY", "Unsupported signature algorithm")
 
     host = parsed.netloc

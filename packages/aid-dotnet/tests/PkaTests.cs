@@ -47,7 +47,7 @@ public class PkaTests
             _vector = vector;
             _seed = SeedFromVector(vector);
             // pick free port
-            var l = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
+            using var l = new System.Net.Sockets.TcpListener(IPAddress.Loopback, 0);
             l.Start();
             Port = ((IPEndPoint)l.LocalEndpoint).Port;
             l.Stop();

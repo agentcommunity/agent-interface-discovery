@@ -56,6 +56,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run parity
-        run: |
-          chmod +x scripts/parity-check.sh
-          ./scripts/parity-check.sh
+        run: pnpm test:parity

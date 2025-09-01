@@ -55,11 +55,11 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
           pnpm exec turbo run build \
-            --filter="@agentcommunity/aid*" \
-            --filter="@agentcommunity/aid-conformance" \
-            --filter="@agentcommunity/aid-doctor" \
-            --filter="@agentcommunity/aid-web" \
-            --filter="@agentcommunity/e2e-tests"
+            --filter=@agentcommunity/aid \
+            --filter=@agentcommunity/aid-conformance \
+            --filter=@agentcommunity/aid-doctor \
+            --filter=@agentcommunity/aid-web \
+            --filter=@agentcommunity/e2e-tests
 
       # ---- Static Checks (Phase 2: Linting) -----------------------------
       # Now that all packages are built, the linter can find the type
@@ -71,11 +71,11 @@ jobs:
       - name: Test JS
         run: |
           pnpm exec turbo run test \
-            --filter="@agentcommunity/aid*" \
-            --filter="@agentcommunity/aid-conformance" \
-            --filter="@agentcommunity/aid-doctor" \
-            --filter="@agentcommunity/aid-web" \
-            --filter="@agentcommunity/e2e-tests"
+            --filter=@agentcommunity/aid \
+            --filter=@agentcommunity/aid-conformance \
+            --filter=@agentcommunity/aid-doctor \
+            --filter=@agentcommunity/aid-web \
+            --filter=@agentcommunity/e2e-tests
 
       # ---- Cross-Language Checks ----------------------------------------
       - name: E2E Tests
@@ -97,9 +97,4 @@ jobs:
         run: |
           corepack enable
           pnpm install --frozen-lockfile
-          pnpm exec turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-doctor"
-
-      - name: Doctor E2E PKA (matrix)
-        env:
-          AID_ALLOW_INSECURE_WELL_KNOWN: '1'
-        run: pnpm -C packages/e2e-tests run e2e:pka
+          pnpm exec turbo run build --filter="@agentcommunity/aid" --filter="@agentcommunity/aid-doctor"

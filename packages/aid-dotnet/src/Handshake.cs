@@ -80,7 +80,7 @@ public static class Pka
         System.Security.Cryptography.RandomNumberGenerator.Fill(challengeBytes);
         var challenge = Convert.ToBase64String(challengeBytes).TrimEnd('=');
         var date = DateTimeOffset.UtcNow.ToString("r");
-        var req = new HttpRequestMessage(HttpMethod.Get, uri);
+        using var req = new HttpRequestMessage(HttpMethod.Get, uri);
         req.Headers.TryAddWithoutValidation("AID-Challenge", challenge);
         req.Headers.Date = DateTimeOffset.Parse(date);
         using var res = await http.SendAsync(req).ConfigureAwait(false);
