@@ -257,6 +257,14 @@ This section summarizes what’s complete and what’s next so the next agent ca
 - 2025-09-01: aid-doctor: added `--no-fallback`, `--fallback-timeout`, `--show-details`; JSON includes fallback/PKA details; PKA e2e mock added.
 - 2025-09-01: aid-conformance: fixtures updated for v1.1 (docs/dep, pka/kid, negative pka-missing-kid); runner supports invalid cases.
 - 2025-09-01: Multi-language parity achieved for PKA + fallback across TS/Go/Py/Rust(.feature)/.NET/Java; READMEs updated with v1.1 notes.
+- **[2025-01-XX]: **PHASE 1 DOCTOR E2E VALIDATION SUCCESSFUL**: Confirmed well-known URL fallback and loopback relax functionality:
+  - ✅ Rebuilt SDK and doctor packages to avoid stale bundling
+  - ✅ Well-known query URL correctly shows: `http://127.0.0.1:19081/.well-known/agent`
+  - ✅ Fallback mechanism engaged successfully: "Fallback: used (.well-known)"
+  - ✅ Loopback relax working: No ERR_INVALID_TXT error for http:// scheme (AID_ALLOW_INSECURE_WELL_KNOWN=1)
+  - ✅ PKA handshake functional: "PKA: present, kid=g1; handshake=OK"
+  - ✅ Fixed mock server Date header bug in pka_e2e.ts for reliable testing
+  - ✅ Verified workspace dependency resolution: doctor correctly resolves @agentcommunity/aid
 
 ## 1) Open a proposal issue
 - Label: `spec-proposal`

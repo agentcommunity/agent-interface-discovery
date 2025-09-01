@@ -98,6 +98,19 @@ program
       const spinner = ora(`Checking AID record for ${domain}...`).start();
 
       try {
+        // If details are requested, print the predicted well-known URL the SDK will use
+        if (options.showDetails) {
+          try {
+            const parsed = new URL(`http://${domain}`);
+            const host = parsed.host; // preserves :port and IPv6 brackets
+            const insecure = process.env.AID_ALLOW_INSECURE_WELL_KNOWN === '1';
+            const scheme = insecure ? 'http' : 'https';
+            const predicted = `${scheme}://${host}/.well-known/agent`;
+            spinner.text = `${spinner.text} (well-known → ${predicted})`;
+          } catch {
+            // ignore
+          }
+        }
         const result = await discover(domain, {
           ...(options.protocol && { protocol: options.protocol }),
           timeout: Number.parseInt(options.timeout),
