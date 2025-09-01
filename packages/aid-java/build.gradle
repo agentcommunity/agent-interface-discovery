@@ -26,6 +26,8 @@ test {
 
 tasks.withType(Test).configureEach {
     jvmArgs '-Dfile.encoding=UTF-8'
+    systemProperty 'user.language', 'en'
+    systemProperty 'user.region', 'US'
     environment 'LC_ALL', 'C'
     environment 'LANG', 'C'
 }
