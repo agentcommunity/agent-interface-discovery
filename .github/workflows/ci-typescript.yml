@@ -54,7 +54,7 @@ jobs:
         run: |
           corepack enable
           pnpm install --frozen-lockfile
-          pnpm turbo run build \
+          pnpm exec turbo run build \
             --filter="@agentcommunity/aid*" \
             --filter="@agentcommunity/aid-conformance" \
             --filter="@agentcommunity/aid-doctor" \
@@ -70,7 +70,7 @@ jobs:
       # ---- Testing Phase ------------------------------------------------
       - name: Test JS
         run: |
-          pnpm turbo run test \
+          pnpm exec turbo run test \
             --filter="@agentcommunity/aid*" \
             --filter="@agentcommunity/aid-conformance" \
             --filter="@agentcommunity/aid-doctor" \
@@ -98,7 +98,7 @@ jobs:
         run: |
           corepack enable
           pnpm install --frozen-lockfile
-          pnpm turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-doctor"
+          pnpm exec turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-doctor"
 
       - name: Doctor E2E PKA (matrix)
         env:
