@@ -195,6 +195,11 @@ jobs:
           node-version: 20
           cache: pnpm
 
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
