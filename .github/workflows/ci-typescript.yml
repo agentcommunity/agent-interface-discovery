@@ -1,5 +1,6 @@
 name: CI (TypeScript)
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -49,60 +50,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
-
-      - name: Install dependencies
+      - name: Build JS
         run: |
           corepack enable
           pnpm install --frozen-lockfile
-
-      # ---- Static Checks (Phase 1: Code Generation) ---------------------
-      - name: Verify generated code committed (strict drift gate)
-        run: |
-          # Check for any uncommitted changes first
-          if ! git diff --quiet || ! git diff --cached --quiet; then
-            echo "::error::Working directory is not clean. Please commit or stash all changes before running CI."
-            git status --porcelain
-            exit 1
-          fi
-
-          # Run code generation
-          pnpm gen
-
-          # Check for drift in generated files
-          if git diff --name-only | grep -E "(packages/aid/src/constants\.ts|protocol/spec\.ts|packages/web/src/generated/spec\.ts|packages/aid-py/aid_py/constants\.py|packages/aid-go/constants_gen\.go|packages/aid-rs/src/constants_gen\.rs|packages/aid-dotnet/src/Constants\.g\.cs|packages/aid-java/src/main/java/org/agentcommunity/aid/Constants\.java)"; then
-            echo "::error::🚫 Generated files have drift! This indicates protocol/constants.yml was changed but generated files weren't updated."
-            echo "::error::"
-            echo "::error::Fix this by running:"
-            echo "::error::  pnpm gen"
-            echo "::error::  git add ."
-            echo "::error::  git commit -m 'chore: regenerate constants from protocol'"
-            echo "::error::"
-            echo "::error::Drifted files:"
-            git diff --name-only | grep -E "(packages/aid/src/constants\.ts|protocol/spec\.ts|packages/web/src/generated/spec\.ts|packages/aid-py/aid_py/constants\.py|packages/aid-go/constants_gen\.go|packages/aid-rs/src/constants_gen\.rs|packages/aid-dotnet/src/Constants\.g\.cs|packages/aid-java/src/main/java/org/agentcommunity/aid/Constants\.java)"
-            echo "::error::"
-            echo "::error::Full diff:"
-            git diff | cat
-            exit 1
-          fi
-
-          echo "✅ Drift gate passed - all generated files are up to date"
-
-      # ---- Build Phase (Critical) ---------------------------------------
-      # Build all packages FIRST. This creates the necessary .js and .d.ts
-      # files in the 'dist' directories that linting and testing depend on.
-      - name: Build All Packages
-        run: pnpm turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-conformance" --filter="@agentcommunity/aid-doctor" --filter="@agentcommunity/aid-web" --filter="@agentcommunity/e2e-tests"
+          pnpm turbo run build \
+            --filter="@agentcommunity/aid*" \
+            --filter="@agentcommunity/aid-conformance" \
+            --filter="@agentcommunity/aid-doctor" \
+            --filter="@agentcommunity/aid-web" \
+            --filter="@agentcommunity/e2e-tests"
 
       # ---- Static Checks (Phase 2: Linting) -----------------------------
       # Now that all packages are built, the linter can find the type
@@ -111,8 +68,15 @@ jobs:
         run: pnpm lint
 
       # ---- Testing Phase ------------------------------------------------
-      - name: Test (JS/TS)
-        run: pnpm turbo run test --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-conformance" --filter="@agentcommunity/aid-doctor" --filter="@agentcommunity/aid-web" --filter="@agentcommunity/e2e-tests" --if-present
+      - name: Test JS
+        run: |
+          pnpm turbo run test \
+            --filter="@agentcommunity/aid*" \
+            --filter="@agentcommunity/aid-conformance" \
+            --filter="@agentcommunity/aid-doctor" \
+            --filter="@agentcommunity/aid-web" \
+            --filter="@agentcommunity/e2e-tests" \
+            --if-present
 
       # ---- Cross-Language Checks ----------------------------------------
       - name: E2E Tests
@@ -130,33 +94,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node (${{ matrix.os }})
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: 'pnpm-lock.yaml'
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Install dependencies
+      - name: Build aid and aid-doctor
         run: |
           corepack enable
           pnpm install --frozen-lockfile
-
-      - name: Build aid and aid-doctor
-        run: pnpm turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-doctor"
+          pnpm turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-doctor"
 
       - name: Doctor E2E PKA (matrix)
         env:

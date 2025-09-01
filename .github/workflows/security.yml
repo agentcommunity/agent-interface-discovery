@@ -1,5 +1,6 @@
 name: Security Scan
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 2 * * *'
   push:
@@ -102,7 +103,7 @@ jobs:
         with:
           output: ./sbom-${{ matrix.language }}.xml
 
-      - name: Upload SBOM artifact
+      - name: Upload SBOM
         uses: actions/upload-artifact@v4
         with:
           name: sbom-${{ matrix.language }}

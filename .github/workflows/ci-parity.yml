@@ -1,5 +1,6 @@
 name: CI • Parity
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'protocol/**'
@@ -33,6 +34,28 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - run: corepack enable
-      - run: chmod +x scripts/parity-check.sh
-      - run: ./scripts/parity-check.sh
+
+      - name: Node and pnpm
+        run: |
+          corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run parity
+        run: |
+          chmod +x scripts/parity-check.sh
+          ./scripts/parity-check.sh
