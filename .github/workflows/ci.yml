@@ -29,13 +29,36 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # ---- Static Checks (Phase 1: Code Generation) ---------------------
-      - name: Generate constants
-        run: pnpm gen
-
-      - name: Verify generated code committed
+      - name: Verify generated code committed (strict drift gate)
         run: |
-          git diff --exit-code || \
-          (echo "::error::Generated code is out of date. Run 'pnpm gen' and commit." && exit 1)
+          # Check for any uncommitted changes first
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            echo "::error::Working directory is not clean. Please commit or stash all changes before running CI."
+            git status --porcelain
+            exit 1
+          fi
+
+          # Run code generation
+          pnpm gen
+
+          # Check for drift in generated files
+          if git diff --name-only | grep -E "(packages/aid/src/constants\.ts|protocol/spec\.ts|packages/web/src/generated/spec\.ts|packages/aid-py/aid_py/constants\.py|packages/aid-go/constants_gen\.go|packages/aid-rs/src/constants_gen\.rs|packages/aid-dotnet/src/Constants\.g\.cs|packages/aid-java/src/main/java/org/agentcommunity/aid/Constants\.java)"; then
+            echo "::error::🚫 Generated files have drift! This indicates protocol/constants.yml was changed but generated files weren't updated."
+            echo "::error::"
+            echo "::error::Fix this by running:"
+            echo "::error::  pnpm gen"
+            echo "::error::  git add ."
+            echo "::error::  git commit -m 'chore: regenerate constants from protocol'"
+            echo "::error::"
+            echo "::error::Drifted files:"
+            git diff --name-only | grep -E "(packages/aid/src/constants\.ts|protocol/spec\.ts|packages/web/src/generated/spec\.ts|packages/aid-py/aid_py/constants\.py|packages/aid-go/constants_gen\.go|packages/aid-rs/src/constants_gen\.rs|packages/aid-dotnet/src/Constants\.g\.cs|packages/aid-java/src/main/java/org/agentcommunity/aid/Constants\.java)"
+            echo "::error::"
+            echo "::error::Full diff:"
+            git diff | cat
+            exit 1
+          fi
+
+          echo "✅ Drift gate passed - all generated files are up to date"
 
       # ---- Build Phase (Critical) ---------------------------------------
       # Build all packages FIRST. This creates the necessary .js and .d.ts
@@ -59,6 +82,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('packages/aid-py/pyproject.toml', 'packages/aid-py/setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Test (Python)
         run: |
           python -m pip install -e './packages/aid-py[dev,pka]' pytest
@@ -68,6 +99,16 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('packages/aid-go/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Test (Go)
         run: |
@@ -98,10 +139,30 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
+      - name: Cache pip packages (parity)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-parity-${{ hashFiles('packages/aid-py/pyproject.toml', 'packages/aid-py/setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-parity-
+
       - name: Setup Go 1.23
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
+
+      - name: Cache Go modules (parity)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-parity-${{ hashFiles('packages/aid-go/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-parity-
+
       - name: Run parity tests (TS/Py/Go)
         run: pnpm test:parity
 
@@ -116,6 +177,59 @@ jobs:
         with:
           name: sbom
           path: sbom.xml
+
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: License compliance check
+        run: |
+          # Check for license headers in source files
+          find packages -name "*.ts" -o -name "*.js" -o -name "*.rs" -o -name "*.go" -o -name "*.cs" -o -name "*.java" | head -10 | xargs -I {} sh -c 'head -5 "{}" | grep -q "MIT\|License\|Copyright" || echo "Missing license header: {}"'
+
+      - name: Dependency vulnerability scan
+        run: |
+          pnpm audit --prod --audit-level high
+          # Check for known security issues in dependencies
+
+      - name: CodeQL Analysis (SAST)
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, go, rust, csharp, java, python
+          config-file: ./.github/codeql-config.yml
+
+      - name: CodeQL Analysis (Autobuild)
+        uses: github/codeql-action/autobuild@v3
+
+      - name: CodeQL Analysis (Results)
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:javascript'
+          upload: true
 
   rust:
     runs-on: ubuntu-latest
@@ -149,10 +263,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Dotnet info
         run: dotnet --info
@@ -196,3 +310,42 @@ jobs:
         env:
           AID_RUN_INTEGRATION: '1'
         run: ../../gradlew build test
+
+  doctor-e2e-matrix:
+    name: Doctor E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node (${{ matrix.os }})
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build aid and aid-doctor
+        run: pnpm build && pnpm -C packages/aid-doctor build
+
+      - name: Doctor E2E PKA (matrix)
+        env:
+          AID_ALLOW_INSECURE_WELL_KNOWN: '1'
+        run: pnpm -C packages/e2e-tests run e2e:pka
