@@ -1,5 +1,7 @@
 package org.agentcommunity.aid;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -14,13 +16,10 @@ import java.util.regex.Pattern;
 public final class WellKnown {
   private WellKnown() {}
 
-  private static Map<String, String> parseSimpleJsonObject(String json) {
-    Map<String, String> out = new HashMap<>();
-    Matcher m = Pattern.compile("\"([^\"]+)\"\\s*:\\s*\"([^\"]*)\"").matcher(json);
-    while (m.find()) {
-      out.put(m.group(1), m.group(2));
-    }
-    return out;
+  private static Map<String, String> parseSimpleJsonObject(String json) throws java.io.IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    TypeReference<HashMap<String, String>> typeRef = new TypeReference<>() {};
+    return mapper.readValue(json, typeRef);
   }
 
   private static String canonicalizeToTxt(Map<String, String> obj) {
@@ -63,7 +62,12 @@ public final class WellKnown {
     if (!ct.startsWith("application/json")) throw new AidError("ERR_FALLBACK_FAILED", "Invalid content-type for well-known (expected application/json)");
     String text = res.body();
     if (text.length() > 64 * 1024) throw new AidError("ERR_FALLBACK_FAILED", "Well-known response too large (>64KB)");
-    Map<String, String> map = parseSimpleJsonObject(text);
+    Map<String, String> map;
+    try {
+      map = parseSimpleJsonObject(text);
+    } catch (Exception e) {
+      throw new AidError("ERR_FALLBACK_FAILED", "Failed to parse Well-known JSON: " + e.getMessage());
+    }
     if (map.isEmpty()) throw new AidError("ERR_FALLBACK_FAILED", "Well-known JSON must be an object");
     String txt = canonicalizeToTxt(map);
     AidRecord rec;

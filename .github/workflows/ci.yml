@@ -310,11 +310,13 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
       - name: Build & Test (Gradle Wrapper)
-        working-directory: packages/aid-java
         env:
           AID_RUN_INTEGRATION: '1'
-        run: ../../gradlew build test
+        run: ./gradlew :aid-java:build :aid-java:test
 
   doctor-e2e-matrix:
     name: Doctor E2E (${{ matrix.os }})

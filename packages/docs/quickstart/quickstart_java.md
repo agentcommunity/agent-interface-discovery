@@ -24,6 +24,7 @@ opts.protocol = "mcp";                        // Try _agent._mcp., then _agent.m
 opts.timeout = java.time.Duration.ofSeconds(5);
 opts.wellKnownFallback = true;                 // Only on ERR_NO_RECORD / ERR_DNS_LOOKUP_FAILED
 opts.wellKnownTimeout = java.time.Duration.ofSeconds(2);
+opts.requireDnssec = true;                     // Optional: fail if DNSSEC validation is missing
 
 var result = Discovery.discover("example.com", opts);
 ```

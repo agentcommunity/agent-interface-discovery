@@ -75,6 +75,7 @@ public class HandshakeTest {
 
     for (var v : vectors) {
       @SuppressWarnings("unchecked") Map<String,String> keyMap = (Map<String,String>) v.get("key");
+      String expect = (String) v.get("expect");
       byte[] seed = Base64.getDecoder().decode(keyMap.get("seed_b64"));
 
       // Generate a deterministic Ed25519 keypair from the provided seed so pub/priv match
@@ -137,7 +138,11 @@ public class HandshakeTest {
       });
       server.start();
       try {
-        assertDoesNotThrow(() -> WellKnown.fetch(domain, Duration.ofSeconds(3), true));
+        if ("pass".equals(expect)) {
+          assertDoesNotThrow(() -> WellKnown.fetch(domain, Duration.ofSeconds(3), true));
+        } else if ("fail".equals(expect)) {
+          assertThrows(AidError.class, () -> WellKnown.fetch(domain, Duration.ofSeconds(3), true));
+        }
       } finally {
         server.stop(0);
       }
