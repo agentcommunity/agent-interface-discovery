@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
@@ -76,24 +77,22 @@ public class HandshakeTest {
     for (var v : vectors) {
       @SuppressWarnings("unchecked") Map<String,String> keyMap = (Map<String,String>) v.get("key");
       String expect = (String) v.get("expect");
-      byte[] seed = Base64.getDecoder().decode(keyMap.get("seed_b64"));
+      byte[] privBytes = Base64.getDecoder().decode(keyMap.get("priv_b64"));
+      String pka = keyMap.get("pub_b58");
 
-      // Generate a deterministic Ed25519 keypair from the provided seed so pub/priv match
-      KeyPairGenerator kpg = KeyPairGenerator.getInstance("Ed25519");
-      kpg.initialize(new NamedParameterSpec("Ed25519"), new FixedRandom(seed));
-      KeyPair kp = kpg.generateKeyPair();
-      PrivateKey priv = kp.getPrivate();
-      byte[] spki = kp.getPublic().getEncoded();
-      // Extract raw 32-byte public key from SPKI encoding
-      byte[] rawPub = java.util.Arrays.copyOfRange(spki, spki.length - 32, spki.length);
+      // Reconstruct private key from raw bytes using PKCS#8 encoding. This avoids
+      // depending on the JVM's KeyPairGenerator which may not be deterministic
+      // across platforms from the same seed.
+      byte[] pkcs8Prefix = new byte[] { 0x30, 0x2E, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20 };
+      byte[] pkcs8Key = new byte[pkcs8Prefix.length + privBytes.length];
+      System.arraycopy(pkcs8Prefix, 0, pkcs8Key, 0, pkcs8Prefix.length);
+      System.arraycopy(privBytes, 0, pkcs8Key, pkcs8Prefix.length, privBytes.length);
+      PrivateKey priv = KeyFactory.getInstance("Ed25519").generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(pkcs8Key));
 
       HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
       int port = server.getAddress().getPort();
       String domain = "127.0.0.1:" + port;
       String uri = "http://" + domain + "/mcp";
-
-      // Generate PKA from the derived public key
-      String pka = "z" + b58encode(rawPub);
 
       server.createContext("/.well-known/agent", new HttpHandler() {
         @Override public void handle(HttpExchange ex) throws IOException {
