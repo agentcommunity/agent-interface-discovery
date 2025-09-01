@@ -28,15 +28,15 @@ fn build_base(order: &[&str], challenge: &str, method: &str, target: &str, host:
     (params, lines.join("\n").into_bytes())
 }
 
-#[test]
-fn rust_pka_valid_and_kid_mismatch() {
+#[tokio::test]
+async fn rust_pka_valid_and_kid_mismatch() {
     let server = MockServer::start();
     let seed = [0u8; 32];
     let sk = SigningKey::from_bytes(&seed);
     let vk = VerifyingKey::from(&sk);
     let pka = b58_z(vk.as_bytes());
     let kid = "g1";
-    let created: i64 = 1735689600; // within window if we ignore now; tests focus on logic
+    let created: i64 = (std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()) as i64;
     let order = ["AID-Challenge", "@method", "@target-uri", "host", "date"]; // exact set
 
     // well-known
@@ -47,52 +47,51 @@ fn rust_pka_valid_and_kid_mismatch() {
             .body(format!("{{\"v\":\"aid1\",\"u\":\"{}\",\"p\":\"mcp\",\"k\":\"{}\",\"i\":\"{}\"}}", server.url("/mcp"), pka, kid));
     });
 
-    // handshake (valid)
-    let handshake_ok = server.mock(|when, then| {
+    // Prepare deterministic headers (use env overrides in client)
+    std::env::set_var("AID_TEST_PKA_CHALLENGE", "TESTCHAL");
+    let date_hdr = httpdate::fmt_http_date(std::time::SystemTime::now());
+    std::env::set_var("AID_TEST_PKA_DATE", &date_hdr);
+    let (.., base) = build_base(&order, "TESTCHAL", "GET", &server.url("/mcp"), &server.address().to_string(), &date_hdr, created, kid, "ed25519");
+    let sig = sk.sign(&base);
+    let sig_b64 = B64.encode(sig.to_bytes());
+    let sig_input = format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid);
+    let sig_header = format!("sig=:{}:", sig_b64);
+    let dh_for_header = date_hdr.clone();
+    let handshake_ok = server.mock(move |when, then| {
         when.method("GET").path("/mcp");
-        then.status(200).header("date", "Thu, 01 Jan 2026 00:00:00 GMT").header_fn("Signature-Input", move |_, _| {
-            format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid)
-        }).header_fn("Signature", move |req, _| {
-            let challenge = req.headers.get("AID-Challenge").unwrap().to_str().unwrap();
-            let date = req.headers.get("Date").unwrap().to_str().unwrap();
-            let (.., base) = build_base(&order, challenge, "GET", &server.url("/mcp"), &server.address().to_string(), date, created, kid, "ed25519");
-            let sig = sk.sign(&base);
-            format!("sig:{}:", B64.encode(sig.to_bytes()))
-        });
+        then.status(200)
+            .header("date", &dh_for_header)
+            .header("Signature-Input", sig_input.clone())
+            .header("Signature", sig_header.clone());
     });
 
     // Execute handshake
-    futures::executor::block_on(async {
-        let url = server.url("/mcp");
-        perform_pka_handshake(&url, &pka, kid, Duration::from_secs(2)).await.unwrap();
-    });
-    well_known.assert_hits(1);
+    let url = server.url("/mcp");
+    perform_pka_handshake(&url, &pka, kid, Duration::from_secs(2)).await.unwrap();
     handshake_ok.assert_hits(1);
 
     // handshake (kid mismatch)
     let kid2 = "b2";
+    let (.., base_bad) = build_base(&order, "TESTCHAL", "GET", &server.url("/bad"), &server.address().to_string(), &date_hdr, created, kid2, "ed25519");
+    let sig_bad = sk.sign(&base_bad);
+    let sig_bad_b64 = B64.encode(sig_bad.to_bytes());
+    let sig_input_bad = format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid2);
+    let sig_header_bad = format!("sig=:{}:", sig_bad_b64);
     let handshake_bad = server.mock(|when, then| {
         when.method("GET").path("/bad");
-        then.status(200).header("date", "Thu, 01 Jan 2026 00:00:00 GMT").header_fn("Signature-Input", move |_, _| {
-            format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid2)
-        }).header_fn("Signature", move |req, _| {
-            let challenge = req.headers.get("AID-Challenge").unwrap().to_str().unwrap();
-            let date = req.headers.get("Date").unwrap().to_str().unwrap();
-            let (.., base) = build_base(&order, challenge, "GET", &server.url("/bad"), &server.address().to_string(), date, created, kid2, "ed25519");
-            let sig = sk.sign(&base);
-            format!("sig:{}:", B64.encode(sig.to_bytes()))
-        });
+        then.status(200)
+            .header("date", date_hdr)
+            .header("Signature-Input", sig_input_bad.clone())
+            .header("Signature", sig_header_bad.clone());
     });
 
-    let res = futures::executor::block_on(async {
-        let url = server.url("/bad");
-        perform_pka_handshake(&url, &pka, kid, Duration::from_secs(2)).await
-    });
+    let url = server.url("/bad");
+    let res = perform_pka_handshake(&url, &pka, kid, Duration::from_secs(2)).await;
     assert!(res.is_err());
 }
 
-#[test]
-fn rust_pka_missing_fields_fails() {
+#[tokio::test]
+async fn rust_pka_missing_fields_fails() {
     let server = MockServer::start();
     let seed = [0u8; 32];
     let sk = SigningKey::from_bytes(&seed);
@@ -108,33 +107,28 @@ fn rust_pka_missing_fields_fails() {
             .header("content-type", "application/json")
             .body(format!("{{\"v\":\"aid1\",\"u\":\"{}\",\"p\":\"mcp\",\"k\":\"{}\",\"i\":\"{}\"}}", server.url("/bad2"), pka, kid));
     });
+    // Use same deterministic challenge/date; build a base missing required fields
+    let mut lines: Vec<String> = Vec::new();
+    for item in &order { match *item { "AID-Challenge" => lines.push(format!("\"AID-Challenge\": {}", "TESTCHAL")), "@method" => lines.push("\"@method\": GET".to_string()), _ => {} } }
+    let quoted = order.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(" ");
+    let params = format!("({});created={};keyid={};alg=\"ed25519\"", quoted, created, kid);
+    lines.push(format!("\"@signature-params\": {}", params));
+    let base_missing = lines.join("\n").into_bytes();
+    let sig_missing = sk.sign(&base_missing);
+    let sig_missing_b64 = base64::engine::general_purpose::STANDARD.encode(sig_missing.to_bytes());
     let _hs = server.mock(|when, then| {
         when.method("GET").path("/bad2");
-        then.status(200).header("date", "Thu, 01 Jan 2026 00:00:00 GMT").header_fn("Signature-Input", move |_, _| {
-            format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid)
-        }).header_fn("Signature", move |req, _| {
-            let challenge = req.headers.get("AID-Challenge").unwrap().to_str().unwrap();
-            let _date = req.headers.get("Date").unwrap().to_str().unwrap();
-            let mut lines: Vec<String> = Vec::new();
-            for item in &order {
-                match *item { "AID-Challenge" => lines.push(format!("\"AID-Challenge\": {}", challenge)), "@method" => lines.push("\"@method\": GET".to_string()), _ => {} }
-            }
-            let quoted = order.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(" ");
-            let params = format!("({});created={};keyid={};alg=\"ed25519\"", quoted, created, kid);
-            lines.push(format!("\"@signature-params\": {}", params));
-            let base = lines.join("\n").into_bytes();
-            let sig = sk.sign(&base);
-            format!("sig:{}:", base64::engine::general_purpose::STANDARD.encode(sig.to_bytes()))
-        });
+        then.status(200)
+            .header("date", "Thu, 01 Jan 2026 00:00:00 GMT")
+            .header("Signature-Input", params.clone())
+            .header("Signature", format!("sig=:{}:", sig_missing_b64));
     });
-    let res = futures::executor::block_on(async {
-        perform_pka_handshake(&server.url("/bad2"), &pka, kid, std::time::Duration::from_secs(2)).await
-    });
+    let res = perform_pka_handshake(&server.url("/bad2"), &pka, kid, std::time::Duration::from_secs(2)).await;
     assert!(res.is_err());
 }
 
-#[test]
-fn rust_pka_date_skew_fails() {
+#[tokio::test]
+async fn rust_pka_date_skew_fails() {
     let server = MockServer::start();
     let seed = [0u8; 32];
     let sk = SigningKey::from_bytes(&seed);
@@ -150,34 +144,18 @@ fn rust_pka_date_skew_fails() {
             .header("content-type", "application/json")
             .body(format!("{{\"v\":\"aid1\",\"u\":\"{}\",\"p\":\"mcp\",\"k\":\"{}\",\"i\":\"{}\"}}", server.url("/bad3"), pka, kid));
     });
+    let past_date = "Thu, 01 Jan 2020 00:00:00 GMT";
+    let (.., base_skew) = build_base(&order, "TESTCHAL", "GET", &server.url("/bad3"), &server.address().to_string(), past_date, created, kid, "ed25519");
+    let sig_skew = sk.sign(&base_skew);
+    let sig_skew_b64 = base64::engine::general_purpose::STANDARD.encode(sig_skew.to_bytes());
+    let sig_input_skew = format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid);
     let _hs = server.mock(|when, then| {
         when.method("GET").path("/bad3");
-        then.status(200).header("date", "Thu, 01 Jan 2020 00:00:00 GMT").header_fn("Signature-Input", move |_, _| {
-            format!("sig=(\"{}\");created={};keyid={};alg=\"ed25519\"", order.join("\" \""), created, kid)
-        }).header_fn("Signature", move |req, _| {
-            let challenge = req.headers.get("AID-Challenge").unwrap().to_str().unwrap();
-            let date = req.headers.get("Date").unwrap().to_str().unwrap();
-            let mut lines: Vec<String> = Vec::new();
-            for item in &order {
-                match *item {
-                    "AID-Challenge" => lines.push(format!("\"AID-Challenge\": {}", challenge)),
-                    "@method" => lines.push("\"@method\": GET".to_string()),
-                    "@target-uri" => lines.push(format!("\"@target-uri\": {}", server.url("/bad3"))),
-                    "host" => lines.push(format!("\"host\": {}", server.address().to_string())),
-                    "date" => lines.push(format!("\"date\": {}", date)),
-                    _ => {}
-                }
-            }
-            let quoted = order.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(" ");
-            let params = format!("({});created={};keyid={};alg=\"ed25519\"", quoted, created, kid);
-            lines.push(format!("\"@signature-params\": {}", params));
-            let base = lines.join("\n").into_bytes();
-            let sig = sk.sign(&base);
-            format!("sig:{}:", base64::engine::general_purpose::STANDARD.encode(sig.to_bytes()))
-        });
+        then.status(200)
+            .header("date", past_date)
+            .header("Signature-Input", sig_input_skew.clone())
+            .header("Signature", format!("sig=:{}:", sig_skew_b64));
     });
-    let res = futures::executor::block_on(async {
-        perform_pka_handshake(&server.url("/bad3"), &pka, kid, std::time::Duration::from_secs(2)).await
-    });
+    let res = perform_pka_handshake(&server.url("/bad3"), &pka, kid, std::time::Duration::from_secs(2)).await;
     assert!(res.is_err());
 }

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use crate::constants_gen::{
     AUTH_APIKEY, AUTH_BASIC, AUTH_CUSTOM, AUTH_MTLS, AUTH_NONE, AUTH_OAUTH2_CODE, AUTH_OAUTH2_DEVICE,
     AUTH_PAT, PROTO_A2A, PROTO_GRAPHQL, PROTO_GRPC, PROTO_LOCAL, PROTO_MCP, PROTO_OPENAPI,
-    PROTO_WEBSOCKET, PROTO_ZEROCONF, SPEC_VERSION,
+    PROTO_WEBSOCKET, PROTO_ZEROCONF, SPEC_VERSION, LOCAL_URI_SCHEMES,
 };
 use crate::errors::AidError;
 use crate::record::AidRecord;
@@ -114,28 +114,63 @@ pub fn parse(txt: &str) -> Result<AidRecord, AidError> {
         if !dv.starts_with("https://") {
             return Err(AidError::invalid_txt("docs MUST be an absolute https:// URL"));
         }
-        // Basic check: must contain host separator after scheme
-        if !dv[8..].contains('/') && !dv[8..].contains(':') {
-            return Err(AidError::invalid_txt("Invalid docs URL"));
+        // Minimal absolute-URL check: ensure non-empty host after scheme
+        let rest = &dv[8..];
+        let host_end = rest.find(&['/', '?', '#'][..]).unwrap_or(rest.len());
+        let host = &rest[..host_end];
+        if host.is_empty() {
+            return Err(AidError::invalid_txt(format!("Invalid docs URL: {}", dv)));
         }
     }
 
     // dep must end with Z (basic check)
     if let Some(ref dp) = dep {
-        if !dp.ends_with('Z') {
-            return Err(AidError::invalid_txt("dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)"));
+        // Strict RFC3339-like check: YYYY-MM-DDTHH:MM:SSZ
+        let s = dp.as_str();
+        let ok = s.len() == 20
+            && s.as_bytes()[4] == b'-'
+            && s.as_bytes()[7] == b'-'
+            && s.as_bytes()[10] == b'T'
+            && s.as_bytes()[13] == b':'
+            && s.as_bytes()[16] == b':'
+            && s.as_bytes()[19] == b'Z'
+            && s[..4].chars().all(|c| c.is_ascii_digit())
+            && s[5..7].chars().all(|c| c.is_ascii_digit())
+            && s[8..10].chars().all(|c| c.is_ascii_digit())
+            && s[11..13].chars().all(|c| c.is_ascii_digit())
+            && s[14..16].chars().all(|c| c.is_ascii_digit())
+            && s[17..19].chars().all(|c| c.is_ascii_digit());
+        if !ok {
+            return Err(AidError::invalid_txt(
+                "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)",
+            ));
         }
     }
 
     // URI validation based on protocol
     if proto_value == PROTO_LOCAL {
-        // local scheme already minimally validated by consumers in other languages; here we accept
+        // Enforce local scheme allowlist per spec
+        // Extract scheme before ':'
+        let scheme = uri.split(':').next().unwrap_or("");
+        let allowed = LOCAL_URI_SCHEMES.iter().any(|s| *s == scheme);
+        if !allowed {
+            let list = LOCAL_URI_SCHEMES.join(", ");
+            return Err(AidError::invalid_txt(format!(
+                "Invalid URI scheme for local protocol. Must be one of: {}",
+                list
+            )));
+        }
     } else if proto_value == PROTO_ZEROCONF {
         if !uri.starts_with("zeroconf:") { return Err(AidError::invalid_txt("Invalid URI scheme for 'zeroconf'. MUST be 'zeroconf:'")); }
     } else if proto_value == PROTO_WEBSOCKET {
         if !uri.starts_with("wss://") { return Err(AidError::invalid_txt("Invalid URI scheme for 'websocket'. MUST be 'wss:'")); }
     } else {
         if !uri.starts_with("https://") { return Err(AidError::invalid_txt(format!("Invalid URI scheme for remote protocol '{}'. MUST be 'https:'", proto_value))); }
+    }
+
+    // If PKA is present, kid is required
+    if pka.is_some() && kid.is_none() {
+        return Err(AidError::invalid_txt("kid is required when pka is present"));
     }
 
     Ok(AidRecord { v, uri, proto: proto_value, auth, desc, docs, dep, pka, kid })

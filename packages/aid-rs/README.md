@@ -14,6 +14,41 @@ aid-rs = { path = "../aid-rs" }
 
 ## Usage
 
+### One-liner discovery
+
+```rust
+use aid_rs::discover;
+
+#[tokio::main]
+async fn main() -> Result<(), aid_rs::AidError> {
+    let record = discover("supabase.agentcommunity.org", std::time::Duration::from_secs(2)).await?;
+    println!("Found {} agent at {}", record.proto, record.uri);
+    Ok(())
+}
+```
+
+### Options form
+
+```rust
+use aid_rs::{discover_with_options, DiscoveryOptions};
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> Result<(), aid_rs::AidError> {
+    let opts = DiscoveryOptions {
+        protocol: Some("mcp".to_string()),
+        timeout: Duration::from_secs(5),
+        well_known_fallback: true,
+        well_known_timeout: Duration::from_secs(2),
+    };
+    let rec = discover_with_options("example.com", opts).await?;
+    println!("{} {}", rec.proto, rec.uri);
+    Ok(())
+}
+```
+
+### Parse TXT records
+
 ```rust
 use aid_rs::parse;
 
@@ -45,6 +80,22 @@ async fn main() -> Result<(), aid_rs::AidError> {
     Ok(())
 }
 ```
+
+#### Handshake expectations (summary)
+
+- Covered fields (exact set): `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- `alg="ed25519"`
+- `keyid` equals record `kid` (compare normalized; keep raw in signature base)
+- `created` ± 300s and HTTP `Date` ± 300s of now
+- `pka` is `z...` (base58btc) for a 32‑byte Ed25519 public key
+
+## Redirect Security
+
+Discovered URIs that return a 301/302/307/308 to a different origin (hostname or port) are treated as a potential security risk. Clients should not auto‑follow such redirects.
+
+## More on PKA
+
+See the documentation “Quick Start → PKA handshake expectations” for the exact requirements.
 
 ## Errors
 

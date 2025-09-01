@@ -4,7 +4,7 @@
 use crate::errors::AidError;
 use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine as _;
-use ed25519_dalek::{Signature, VerifyingKey};
+use ed25519_dalek::{Signature, VerifyingKey, Verifier};
 use httpdate::parse_http_date;
 use reqwest::header::HeaderMap;
 use reqwest::Client;
@@ -130,14 +130,21 @@ pub async fn perform_pka_handshake(uri: &str, pka: &str, kid: &str, timeout: Dur
         return Err(AidError::new("ERR_SECURITY", "Missing kid for PKA"));
     }
     let u = reqwest::Url::parse(uri).map_err(|_| AidError::new("ERR_SECURITY", "Invalid URI for handshake"))?;
-    let host = u.host_str().ok_or_else(|| AidError::new("ERR_SECURITY", "Invalid URI for handshake"))?;
-    let client = Client::builder().http2_prior_knowledge(false).timeout(timeout).build().map_err(|e| AidError::new("ERR_SECURITY", e.to_string()))?;
+    let host_str = u.host_str().ok_or_else(|| AidError::new("ERR_SECURITY", "Invalid URI for handshake"))?;
+    let host = if let Some(port) = u.port() { format!("{}:{}", host_str, port) } else { host_str.to_string() };
+    // Disallow redirects for handshake per security policy
+    let client = Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .timeout(timeout)
+        .build()
+        .map_err(|e| AidError::new("ERR_SECURITY", e.to_string()))?;
 
-    // 32-byte random challenge; here we use system time jitter for simplicity; production should use rng
-    // but reqwest + std provides no RNG-free API; however challenge is not secret
-    let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos().to_le_bytes();
-    let challenge = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&nonce);
-    let date = httpdate::fmt_http_date(SystemTime::now());
+    // Deterministic overrides for tests
+    let challenge = std::env::var("AID_TEST_PKA_CHALLENGE").unwrap_or_else(|_| {
+        let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos().to_le_bytes();
+        base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(&nonce)
+    });
+    let date = std::env::var("AID_TEST_PKA_DATE").unwrap_or_else(|_| httpdate::fmt_http_date(SystemTime::now()));
 
     let res = client
         .get(u.clone())
@@ -155,7 +162,7 @@ pub async fn perform_pka_handshake(uri: &str, pka: &str, kid: &str, timeout: Dur
     if (now - created).abs() > 300 {
         return Err(AidError::new("ERR_SECURITY", "Signature created timestamp outside acceptance window"));
     }
-    if let Some(date_hdr) = response_date {
+    if let Some(ref date_hdr) = response_date {
         if let Ok(dt) = parse_http_date(&date_hdr) {
             let epoch = dt.duration_since(UNIX_EPOCH).unwrap().as_secs() as i64;
             if (now - epoch).abs() > 300 {
@@ -165,6 +172,8 @@ pub async fn perform_pka_handshake(uri: &str, pka: &str, kid: &str, timeout: Dur
             return Err(AidError::new("ERR_SECURITY", "Invalid Date header"));
         }
     }
+    // Preserve raw keyid for signature base, compare using normalized (without quotes)
+    let keyid_raw_for_base = keyid.clone();
     if keyid.len() >= 2 && keyid.starts_with('"') && keyid.ends_with('"') {
         keyid = keyid.trim_matches('"').to_string();
     }
@@ -178,11 +187,11 @@ pub async fn perform_pka_handshake(uri: &str, pka: &str, kid: &str, timeout: Dur
     let base = build_signature_base(
         &covered,
         created,
-        &keyid,
+        &keyid_raw_for_base,
         &alg,
         "GET",
         uri,
-        host,
+        &host,
         response_date.as_deref().unwrap_or(&date),
         &challenge,
     );
@@ -198,4 +207,3 @@ pub async fn perform_pka_handshake(uri: &str, pka: &str, kid: &str, timeout: Dur
         .map_err(|_| AidError::new("ERR_SECURITY", "PKA signature verification failed"))?;
     Ok(())
 }
-
