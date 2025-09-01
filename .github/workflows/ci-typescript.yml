@@ -75,8 +75,7 @@ jobs:
             --filter="@agentcommunity/aid-conformance" \
             --filter="@agentcommunity/aid-doctor" \
             --filter="@agentcommunity/aid-web" \
-            --filter="@agentcommunity/e2e-tests" \
-            --if-present
+            --filter="@agentcommunity/e2e-tests"
 
       # ---- Cross-Language Checks ----------------------------------------
       - name: E2E Tests
