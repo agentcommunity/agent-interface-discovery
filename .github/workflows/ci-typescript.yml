@@ -102,7 +102,7 @@ jobs:
       # Build all packages FIRST. This creates the necessary .js and .d.ts
       # files in the 'dist' directories that linting and testing depend on.
       - name: Build All Packages
-        run: pnpm -w build
+        run: pnpm turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-conformance" --filter="@agentcommunity/aid-doctor" --filter="@agentcommunity/aid-web" --filter="@agentcommunity/e2e-tests"
 
       # ---- Static Checks (Phase 2: Linting) -----------------------------
       # Now that all packages are built, the linter can find the type
@@ -112,7 +112,7 @@ jobs:
 
       # ---- Testing Phase ------------------------------------------------
       - name: Test (JS/TS)
-        run: pnpm -w test --if-present
+        run: pnpm turbo run test --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-conformance" --filter="@agentcommunity/aid-doctor" --filter="@agentcommunity/aid-web" --filter="@agentcommunity/e2e-tests" --if-present
 
       # ---- Cross-Language Checks ----------------------------------------
       - name: E2E Tests
@@ -156,7 +156,7 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Build aid and aid-doctor
-        run: pnpm -w build
+        run: pnpm turbo run build --filter="@agentcommunity/aid..." --filter="@agentcommunity/aid-doctor"
 
       - name: Doctor E2E PKA (matrix)
         env:

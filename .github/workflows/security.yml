@@ -100,10 +100,10 @@ jobs:
       - name: Generate SBOM (CycloneDX)
         uses: CycloneDX/gh-node-module-generatebom@v1
         with:
-          output: ./sbom.xml
+          output: ./sbom-${{ matrix.language }}.xml
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
         with:
-          name: sbom
-          path: sbom.xml
+          name: sbom-${{ matrix.language }}
+          path: ./sbom-${{ matrix.language }}.xml

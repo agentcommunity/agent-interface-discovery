@@ -24,7 +24,7 @@
     "dev:all": "turbo run dev --parallel",
     "build": "turbo run build",
     "test": "turbo run test",
-    "test:parity": "pnpm -C packages/aid run test && pnpm -C packages/aid-go run test && python3 -m pip install -e './packages/aid-py[dev,pka]' && python3 -m pytest packages/aid-py",
+    "test:parity": "pnpm -C packages/aid test && cd packages/aid-go && go test ./... && python3 -m pip install -e './packages/aid-py[dev,pka]' && python3 -m pytest packages/aid-py",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "one-shot": "eslint --cache --max-warnings 0 .",
