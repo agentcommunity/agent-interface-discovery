@@ -59,6 +59,26 @@ console.log('Agent:', record.proto, record.uri);
 - Time window: both `created` and HTTP `Date` must be within ±300 seconds of now.
 - Fallback: when DNS has `ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`, discovery may fetch `https://<domain>/.well-known/agent` (TLS‑anchored) and validate the same data model; if the JSON contains `pka`, the handshake runs.
 
+### PKA handshake expectations (summary)
+
+- Covered fields set (exact): `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- `alg="ed25519"`
+- `keyid` equals record `kid` (normalize quotes for compare, preserve raw in base)
+- `created` ± 300 seconds of current time
+- HTTP `Date` ± 300 seconds of current time
+- `pka` is multibase base58btc (`z...`) of a 32‑byte Ed25519 public key
+
+### Dev‑only loopback relax (well‑known)
+
+For local testing against a mock HTTP server, the CLI and Node variant support a narrow, opt‑in relaxation:
+
+- Set `AID_ALLOW_INSECURE_WELL_KNOWN=1`
+- Host must be loopback (`localhost`, `127.0.0.1`, or `::1`)
+- Only affects `.well-known` fallback; TXT path remains strict
+- Validation is performed with a temporary `https://` substitute, and the discovered `http://` URI is restored afterward
+
+This is intended for local development only. Production remote agents MUST use `https://`.
+
 ### Example: guarded `.well-known` fallback
 
 ```ts
@@ -88,6 +108,14 @@ PKA handshake runs automatically when `record.pka` is present.
 - Remote agent URIs MUST use `https://`.
 - Handshake verifies endpoint control when `pka` is present (Ed25519 HTTP Message Signatures).
 - `.well-known` is optional and TLS‑anchored; use DNS first.
+
+### Redirect Security
+
+Clients do not automatically follow cross‑origin redirects from the discovered URI. If an initial request returns a 301/302/307/308 to a different origin (hostname or port), the client treats it as a potential security risk. Implementations either surface `ERR_SECURITY` or require explicit confirmation. See the spec for details.
+
+### More on PKA
+
+See the documentation “Quick Start → PKA handshake expectations” for the exact header coverage, algorithm, timestamps, and key format.
 
 ## License
 

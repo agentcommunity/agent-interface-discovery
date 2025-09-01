@@ -85,13 +85,22 @@ async function fetchWellKnown(
 }> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const host = normalizeDomain(domain);
+  // Preserve port (and IPv6 brackets) when building the well-known URL
+  const parsedForHost = new URL(`http://${domain}`);
+  const host = parsedForHost.host; // includes :port when present
   const insecure =
     typeof process !== 'undefined' &&
     process.env &&
     process.env.AID_ALLOW_INSECURE_WELL_KNOWN === '1';
   const scheme = insecure ? 'http' : 'https';
-  const url = `${scheme}://${host}/.well-known/agent`;
+  // Work around IPv6 localhost resolution quirks in some Node fetch stacks by preferring IPv4
+  const correctedHost =
+    insecure && parsedForHost.hostname === 'localhost'
+      ? parsedForHost.port
+        ? `127.0.0.1:${parsedForHost.port}`
+        : '127.0.0.1'
+      : host;
+  const url = `${scheme}://${correctedHost}/.well-known/agent`;
   try {
     const fetchImpl = (globalThis as unknown as { fetch?: FetchLike }).fetch;
     if (typeof fetchImpl !== 'function') {
@@ -125,14 +134,34 @@ async function fetchWellKnown(
       throw new AidError('ERR_FALLBACK_FAILED', 'Well-known JSON must be an object');
     }
     const raw = canonicalizeRaw(json as Record<string, unknown>);
-    const record = AidRecordValidator.validate(raw);
+    // Strict validation first
+    let record: AidRecord;
+    try {
+      record = AidRecordValidator.validate(raw);
+    } catch (err) {
+      // Narrow relaxation: allow loopback HTTP only for well-known when explicitly enabled
+      const isLoopback = ['localhost', '127.0.0.1', '::1'].includes(parsedForHost.hostname);
+      const isHttpRemote = typeof raw.uri === 'string' && raw.uri.startsWith('http://');
+      const isRemoteProto =
+        typeof raw.proto === 'string' && !['local', 'zeroconf', 'websocket'].includes(raw.proto);
+      const allowInsecure = insecure && isLoopback && isHttpRemote && isRemoteProto;
+      if (!allowInsecure) throw err;
+      // Validate all other fields by temporarily upgrading the URI scheme for validation
+      const rawHttps = {
+        ...raw,
+        uri: (raw.uri as string).replace(/^http:\/\//, 'https://'),
+      } as Record<string, unknown>;
+      const validated = AidRecordValidator.validate(rawHttps);
+      // Construct the final record but restore the original http URI
+      record = { ...validated, uri: raw.uri! } as AidRecord;
+    }
     if (record.pka) {
       await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
     }
     return { record, raw: text.trim(), queryName: url };
   } catch (e) {
     if (e instanceof AidError) throw e;
-    throw new AidError('ERR_FALLBACK_FAILED', (e as Error).message);
+    throw new AidError('ERR_FALLBACK_FAILED', e instanceof Error ? e.message : String(e));
   } finally {
     clearTimeout(timer);
   }
