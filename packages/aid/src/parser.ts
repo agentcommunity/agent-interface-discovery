@@ -26,6 +26,36 @@ export class AidError extends Error {
 }
 
 /**
+ * Build a canonical RawAidRecord from JSON that may include alias keys
+ * This is used for `.well-known` discovery where the source is JSON, not a TXT record.
+ */
+export function canonicalizeRaw(json: Record<string, unknown>): RawAidRecord {
+  const out: RawAidRecord = {};
+  const getStr = (k: string) =>
+    typeof json[k] === 'string' ? (json[k] as string).trim() : undefined;
+  // Only set fields when defined to comply with exactOptionalPropertyTypes
+  const v = getStr('v');
+  if (v !== undefined) out.v = v;
+  const uri = getStr('uri') ?? getStr('u');
+  if (uri !== undefined) out.uri = uri;
+  const proto = getStr('proto') ?? getStr('p');
+  if (proto !== undefined) out.proto = proto;
+  const auth = getStr('auth') ?? getStr('a');
+  if (auth !== undefined) out.auth = auth;
+  const desc = getStr('desc') ?? getStr('s');
+  if (desc !== undefined) out.desc = desc;
+  const docs = getStr('docs') ?? getStr('d');
+  if (docs !== undefined) out.docs = docs;
+  const dep = getStr('dep') ?? getStr('e');
+  if (dep !== undefined) out.dep = dep;
+  const pka = getStr('pka') ?? getStr('k');
+  if (pka !== undefined) out.pka = pka;
+  const kid = getStr('kid') ?? getStr('i');
+  if (kid !== undefined) out.kid = kid;
+  return out;
+}
+
+/**
  * Parse a TXT record string into key-value pairs
  *
  * @param txtRecord - The TXT record string (semicolon-delimited key=value pairs)

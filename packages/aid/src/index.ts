@@ -28,6 +28,7 @@ export {
   validateRecord,
   isValidProto,
   AidRecordValidator,
+  canonicalizeRaw,
 } from './parser.js';
 
 // Security helpers

@@ -1,11 +1,5 @@
-import {
-  type AidRecord,
-  type RawAidRecord,
-  DNS_TTL_MIN,
-  SPEC_VERSION,
-  DNS_SUBDOMAIN,
-} from './constants';
-import { AidError, parse, AidRecordValidator } from './parser';
+import { type AidRecord, DNS_TTL_MIN, SPEC_VERSION, DNS_SUBDOMAIN } from './constants';
+import { AidError, parse, AidRecordValidator, canonicalizeRaw } from './parser';
 import { performPKAHandshake } from './pka.js';
 import { query } from 'dns-query';
 
@@ -43,6 +37,7 @@ function constructQueryName(domain: string, protocol?: string, useUnderscore = f
 /**
  * Build a canonical RawAidRecord from JSON that may include alias keys
  */
+/*
 function canonicalizeRaw(json: Record<string, unknown>): RawAidRecord {
   const out: RawAidRecord = {};
   const getStr = (k: string) =>
@@ -68,6 +63,7 @@ function canonicalizeRaw(json: Record<string, unknown>): RawAidRecord {
   if (kid !== undefined) out.kid = kid;
   return out;
 }
+*/
 
 // Minimal fetch/response types to avoid DOM lib dependency
 type HeadersLike = { get(name: string): string | null };
@@ -155,6 +151,21 @@ async function fetchWellKnown(
       // Construct the final record but restore the original http URI
       record = { ...validated, uri: raw.uri! } as AidRecord;
     }
+    if (record.dep) {
+      const depDate = new Date(record.dep);
+      if (!Number.isNaN(depDate.getTime())) {
+        if (depDate.getTime() < Date.now()) {
+          throw new AidError(
+            'ERR_INVALID_TXT',
+            `Record for ${domain} was deprecated on ${record.dep}`,
+          );
+        }
+         
+        console.warn(
+          `[AID] WARNING: Record for ${domain} is scheduled for deprecation on ${record.dep}`,
+        );
+      }
+    }
     if (record.pka) {
       await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
     }
@@ -220,6 +231,21 @@ export async function discover(
         if (rawTrimmed.toLowerCase().startsWith(`v=${SPEC_VERSION}`)) {
           try {
             const record = parse(rawTrimmed);
+            if (record.dep) {
+              const depDate = new Date(record.dep);
+              if (!Number.isNaN(depDate.getTime())) {
+                if (depDate.getTime() < Date.now()) {
+                  throw new AidError(
+                    'ERR_INVALID_TXT',
+                    `Record for ${queryName} was deprecated on ${record.dep}`,
+                  );
+                }
+                 
+                console.warn(
+                  `[AID] WARNING: Record for ${queryName} is scheduled for deprecation on ${record.dep}`,
+                );
+              }
+            }
             if (record.pka) {
               await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
             }
@@ -284,9 +310,8 @@ export async function discover(
       ]);
     }
 
-    // Protocol explicitly requested: try underscore form first, then non-underscore; finally base
+    // Protocol explicitly requested: try underscore form first, then fall back to base
     const protoNameUnderscore = constructQueryName(domain, protocol, true);
-    const protoName = constructQueryName(domain, protocol, false);
 
     // 1) underscore form
     try {
@@ -311,25 +336,7 @@ export async function discover(
       }
     }
 
-    // 2) non-underscore form
-    try {
-      return await Promise.race([
-        queryOnce(protoName),
-        new Promise<never>((_, reject) =>
-          setTimeout(
-            () =>
-              reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${protoName}`)),
-            timeout,
-          ),
-        ),
-      ]);
-    } catch (error) {
-      if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
-        throw error;
-      }
-    }
-
-    // 3) fallback to base
+    // 2) fallback to base
     return await Promise.race([
       queryOnce(baseName),
       new Promise<never>((_, reject) =>
