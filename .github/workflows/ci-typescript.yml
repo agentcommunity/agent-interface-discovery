@@ -1,0 +1,164 @@
+name: CI (TypeScript)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/e2e-tests/**'
+      - 'packages/web/**'
+      - 'scripts/**'
+      - 'protocol/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ci-typescript.yml'
+      - 'eslint.config.mjs'
+      - '!**/*.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/e2e-tests/**'
+      - 'packages/web/**'
+      - 'scripts/**'
+      - 'protocol/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ci-typescript.yml'
+      - 'eslint.config.mjs'
+      - '!**/*.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ secrets.VERCEL_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      # ---- Static Checks (Phase 1: Code Generation) ---------------------
+      - name: Verify generated code committed (strict drift gate)
+        run: |
+          # Check for any uncommitted changes first
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            echo "::error::Working directory is not clean. Please commit or stash all changes before running CI."
+            git status --porcelain
+            exit 1
+          fi
+
+          # Run code generation
+          pnpm gen
+
+          # Check for drift in generated files
+          if git diff --name-only | grep -E "(packages/aid/src/constants\.ts|protocol/spec\.ts|packages/web/src/generated/spec\.ts|packages/aid-py/aid_py/constants\.py|packages/aid-go/constants_gen\.go|packages/aid-rs/src/constants_gen\.rs|packages/aid-dotnet/src/Constants\.g\.cs|packages/aid-java/src/main/java/org/agentcommunity/aid/Constants\.java)"; then
+            echo "::error::🚫 Generated files have drift! This indicates protocol/constants.yml was changed but generated files weren't updated."
+            echo "::error::"
+            echo "::error::Fix this by running:"
+            echo "::error::  pnpm gen"
+            echo "::error::  git add ."
+            echo "::error::  git commit -m 'chore: regenerate constants from protocol'"
+            echo "::error::"
+            echo "::error::Drifted files:"
+            git diff --name-only | grep -E "(packages/aid/src/constants\.ts|protocol/spec\.ts|packages/web/src/generated/spec\.ts|packages/aid-py/aid_py/constants\.py|packages/aid-go/constants_gen\.go|packages/aid-rs/src/constants_gen\.rs|packages/aid-dotnet/src/Constants\.g\.cs|packages/aid-java/src/main/java/org/agentcommunity/aid/Constants\.java)"
+            echo "::error::"
+            echo "::error::Full diff:"
+            git diff | cat
+            exit 1
+          fi
+
+          echo "✅ Drift gate passed - all generated files are up to date"
+
+      # ---- Build Phase (Critical) ---------------------------------------
+      # Build all packages FIRST. This creates the necessary .js and .d.ts
+      # files in the 'dist' directories that linting and testing depend on.
+      - name: Build All Packages
+        run: pnpm -w build
+
+      # ---- Static Checks (Phase 2: Linting) -----------------------------
+      # Now that all packages are built, the linter can find the type
+      # declarations and will work correctly.
+      - name: Lint (ESLint flat config)
+        run: pnpm lint
+
+      # ---- Testing Phase ------------------------------------------------
+      - name: Test (JS/TS)
+        run: pnpm -w test --if-present
+
+      # ---- Cross-Language Checks ----------------------------------------
+      - name: E2E Tests
+        run: pnpm e2e
+      - name: E2E PKA (aid-doctor mock)
+        run: pnpm -C packages/aid-doctor build && pnpm -C packages/e2e-tests run e2e:pka
+
+  doctor-e2e-matrix:
+    name: Doctor E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node (${{ matrix.os }})
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: 'pnpm-lock.yaml'
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Build aid and aid-doctor
+        run: pnpm -w build
+
+      - name: Doctor E2E PKA (matrix)
+        env:
+          AID_ALLOW_INSECURE_WELL_KNOWN: '1'
+        run: pnpm -C packages/e2e-tests run e2e:pka

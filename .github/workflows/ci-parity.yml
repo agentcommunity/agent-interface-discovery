@@ -1,0 +1,38 @@
+name: CI • Parity
+on:
+  push:
+    paths:
+      - 'protocol/**'
+      - 'packages/aid/**'
+      - 'packages/aid-go/**'
+      - 'packages/aid-py/**'
+      - 'packages/aid-conformance/**'
+      - 'test-fixtures/golden.json'
+      - '.github/workflows/ci-parity.yml'
+      - '!**/*.md'
+  pull_request:
+    paths:
+      - 'protocol/**'
+      - 'packages/aid/**'
+      - 'packages/aid-go/**'
+      - 'packages/aid-py/**'
+      - 'packages/aid-conformance/**'
+      - 'test-fixtures/golden.json'
+      - '.github/workflows/ci-parity.yml'
+      - '!**/*.md'
+
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - run: chmod +x scripts/parity-check.sh
+      - run: ./scripts/parity-check.sh

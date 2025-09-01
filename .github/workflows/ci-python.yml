@@ -1,0 +1,39 @@
+name: CI (Python)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/aid-py/**'
+      - '.github/workflows/ci-python.yml'
+      - '!**/*.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/aid-py/**'
+      - '.github/workflows/ci-python.yml'
+      - '!**/*.md'
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('packages/aid-py/pyproject.toml', 'packages/aid-py/setup.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Test (Python)
+        run: |
+          python -m pip install -e './packages/aid-py[dev,pka]' pytest
+          python -m pytest packages/aid-py

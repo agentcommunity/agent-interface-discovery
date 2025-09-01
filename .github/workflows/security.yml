@@ -1,0 +1,109 @@
+name: Security Scan
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/security.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/security.yml'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript', 'go', 'python', 'java', 'csharp', 'rust']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Secret scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: License compliance check
+        run: |
+          find packages -name "*.ts" -o -name "*.js" -o -name "*.rs" -o -name "*.go" -o -name "*.cs" -o -name "*.java" | head -10 | xargs -I {} sh -c 'head -5 "{}" | grep -q "MIT\|License\|Copyright" || echo "Missing license header: {}"'
+
+      - name: Dependency vulnerability scan
+        run: |
+          pnpm audit --prod --audit-level high
+
+      - name: Build JS for CodeQL
+        if: ${{ matrix.language == 'javascript-typescript' }}
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm -w build
+
+      - name: CodeQL Analysis (SAST)
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          config-file: ./.github/codeql-config.yml
+
+      - name: Build Java for CodeQL
+        if: matrix.language == 'java'
+        run: ./gradlew :aid-java:build
+
+      - name: CodeQL Analysis (Autobuild)
+        uses: github/codeql-action/autobuild@v3
+
+      - name: CodeQL Analysis (Results)
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'
+          upload: true
+
+      - name: Generate SBOM (CycloneDX)
+        uses: CycloneDX/gh-node-module-generatebom@v1
+        with:
+          output: ./sbom.xml
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.xml

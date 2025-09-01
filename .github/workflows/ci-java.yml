@@ -1,0 +1,59 @@
+name: CI (Java)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/aid-java/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'settings.gradle'
+      - '.github/workflows/ci-java.yml'
+      - '!**/*.md'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/aid-java/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - 'gradlew.bat'
+      - 'settings.gradle'
+      - '.github/workflows/ci-java.yml'
+      - '!**/*.md'
+
+jobs:
+  java:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Validate Gradle Wrapper
+        id: wrap
+        uses: gradle/actions/wrapper-validation@v3
+        continue-on-error: true
+
+      - name: Net diag
+        if: ${{ steps.wrap.outcome == 'failure' }}
+        run: |
+          nslookup services.gradle.org || true
+          curl -I --max-time 10 https://services.gradle.org/distributions/ || true
+
+      - name: Build & Test (Gradle Wrapper)
+        env:
+          AID_RUN_INTEGRATION: '1'
+        run: ./gradlew --no-daemon :aid-java:test --tests '*HandshakeTest*' --info --stacktrace
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aid-java-test-report
+          path: packages/aid-java/build/reports/tests/test
