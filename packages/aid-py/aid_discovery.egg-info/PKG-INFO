@@ -165,6 +165,14 @@ except AidError as e:
 
 - `.well-known` fallback: On DNS issues (`ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`), the client may fetch `https://<domain>/.well-known/agent` (TLS-anchored). Disable with `well_known_fallback=False`.
 
+## Redirect Security
+
+Client implementations do not automatically follow cross‑origin redirects from the discovered URI. If an initial request returns a redirect to a different origin (hostname or port), treat it as a potential security risk and either raise an error or require explicit confirmation.
+
+## More on PKA
+
+See the documentation “Quick Start → PKA handshake expectations” for header coverage, algorithm requirements, timestamps, and key format.
+
 ## Development
 
 This package is part of the [AID monorepo](https://github.com/agentcommunity/agent-interface-discovery). To run tests:

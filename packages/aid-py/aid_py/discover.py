@@ -55,6 +55,7 @@ def discover(
     timeout: float = 5.0,
     well_known_fallback: bool = True,
     well_known_timeout: float = 2.0,
+    **kwargs,
 ) -> Tuple[dict, int]:
     """Discover and validate the AID record for *domain*.
 
@@ -63,6 +64,32 @@ def discover(
     Returns a tuple `(record_dict, ttl_seconds)`.
     Raises `AidError` on any failure as per the specification.
     """
+
+    # Optional camelCase kwargs aliases for non-breaking compatibility
+    # wellKnownFallback / wellKnownTimeoutMs
+    if "wellKnownFallback" in kwargs:
+        import warnings
+
+        warnings.warn(
+            "wellKnownFallback is deprecated; use well_known_fallback",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        well_known_fallback = bool(kwargs["wellKnownFallback"])  # type: ignore[assignment]
+    if "wellKnownTimeoutMs" in kwargs:
+        import warnings
+
+        warnings.warn(
+            "wellKnownTimeoutMs is deprecated; use well_known_timeout (seconds)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        try:
+            ms = float(kwargs["wellKnownTimeoutMs"])  # type: ignore[arg-type]
+        except Exception:
+            ms = 0.0
+        if ms > 0:
+            well_known_timeout = ms / 1000.0  # type: ignore[assignment]
 
     # IDN → A-label conversion per RFC5890
     try:
@@ -94,10 +121,17 @@ def discover(
     def _fetch_well_known_json(host: str, timeout_s: float) -> dict:
         import json, urllib.request, urllib.error
 
+        # Disallow redirects explicitly per guard (no redirects)
+        class _NoRedirect(urllib.request.HTTPRedirectHandler):  # type: ignore[attr-defined]
+            def redirect_request(self, req, fp, code, msg, headers, newurl):  # pragma: no cover
+                return None
+
         url = f"https://{host}/.well-known/agent"
         req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        opener = urllib.request.build_opener(_NoRedirect())
         try:
-            with urllib.request.urlopen(req, timeout=timeout_s) as resp:  # nosec B310
+            # Use custom opener to avoid following redirects
+            with opener.open(req, timeout=timeout_s) as resp:  # nosec B310
                 if resp.status != 200:
                     raise AidError("ERR_FALLBACK_FAILED", f"Well-known HTTP {resp.status}")
                 ctype = (resp.headers.get("Content-Type") or "").lower()
@@ -145,11 +179,26 @@ def discover(
             raw["kid"] = i
         return _parser.validate_record(raw)
 
-    # Try protocol-specific subdomain first if specified
+    # Try protocol-specific subdomains, then base, mirroring TS client behavior
     try:
         if protocol:
-            protocol_fqdn = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
-            return _query_and_parse(protocol_fqdn)
+            # 1) underscore form: _agent._<proto>.<domain>
+            proto_underscore = f"{DNS_SUBDOMAIN}._{protocol}.{domain_alabel}".rstrip(".")
+            try:
+                return _query_and_parse(proto_underscore)
+            except AidError as e:
+                if getattr(e, "error_code", None) != "ERR_NO_RECORD":
+                    raise
+            # 2) non-underscore form: _agent.<proto>.<domain>
+            proto_plain = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
+            try:
+                return _query_and_parse(proto_plain)
+            except AidError as e:
+                if getattr(e, "error_code", None) != "ERR_NO_RECORD":
+                    raise
+            # 3) base: _agent.<domain>
+            base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
+            return _query_and_parse(base_fqdn)
         # Default: base _agent subdomain
         base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
         return _query_and_parse(base_fqdn)

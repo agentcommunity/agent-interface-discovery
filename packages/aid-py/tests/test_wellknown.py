@@ -40,10 +40,10 @@ def test_well_known_fallback_json(monkeypatch):
 
     monkeypatch.setattr(dns.resolver, "resolve", _no_record)
 
-    # Patch urllib to return a small JSON document
+    # Patch urllib opener to return a small JSON document without following redirects
     import urllib.request
 
-    def _fake_urlopen(req, timeout=2.0):
+    def _fake_open(req, timeout=2.0):
         assert "/.well-known/agent" in req.full_url
         headers = {"Content-Type": "application/json"}
         payload = json.dumps({
@@ -54,11 +54,14 @@ def test_well_known_fallback_json(monkeypatch):
         })
         return _FakeHTTPResponse(200, headers, payload)
 
-    monkeypatch.setattr(urllib.request, "urlopen", _fake_urlopen)
+    class _FakeOpener:
+        def open(self, req, timeout=2.0):  # noqa: D401
+            return _fake_open(req, timeout)
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *args, **kwargs: _FakeOpener())
 
     record, ttl = discover("example.com", well_known_fallback=True)
     assert record["proto"] == "mcp"
     assert record["uri"].startswith("https://")
     # TTL uses DNS_TTL_MIN for well-known path
     assert ttl >= 300
-

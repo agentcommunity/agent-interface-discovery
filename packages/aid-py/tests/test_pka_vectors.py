@@ -72,7 +72,7 @@ def test_pka_vectors(monkeypatch, vector):
 
     import urllib.request
 
-    def _urlopen(req, timeout=2.0):
+    def _fake_open(req, timeout=2.0):
         url = req.full_url if hasattr(req, "full_url") else req
         if url.endswith("/.well-known/agent"):
             headers = {"Content-Type": "application/json"}
@@ -85,13 +85,31 @@ def test_pka_vectors(monkeypatch, vector):
             })
             return _Resp(200, headers, body)
         order = vector["covered"]
-        challenge = req.headers.get("AID-Challenge")
+        def _h(name: str):
+            v = None
+            try:
+                v = req.headers.get(name) if hasattr(req, "headers") else None
+            except Exception:
+                v = None
+            if not v and hasattr(req, "get_header"):
+                try:
+                    v = req.get_header(name)
+                except Exception:
+                    v = None
+            if not v and hasattr(req, "headers") and isinstance(req.headers, dict):
+                for k, val in req.headers.items():
+                    if k.lower() == name.lower():
+                        v = val
+                        break
+            return v
+        challenge = _h("AID-Challenge")
         method = "GET"
         target = url
         from urllib.parse import urlparse
 
         host = urlparse(url).netloc
-        date = vector.get("httpDate") or req.headers.get("Date")
+        # For pass cases, echo back the client's Date header; otherwise use the vector-provided httpDate
+        date = _h("Date") if vector["expect"] == "pass" else (vector.get("httpDate") or _h("Date"))
         lines: list[str] = []
         for item in order:
             if item == "AID-Challenge":
@@ -106,7 +124,7 @@ def test_pka_vectors(monkeypatch, vector):
                 lines.append(f'"date": {date}')
         keyid = vector.get("overrideKeyId") or vector["record"]["i"]
         alg = vector.get("overrideAlg") or "ed25519"
-        created = vector["created"]
+        created = int(time.time()) if vector["expect"] == "pass" else vector["created"]
         quoted = ' '.join([f'"{c}"' for c in order])
         params = f"({quoted});created={created};keyid={keyid};alg=\"{alg}\""
         lines.append(f'"@signature-params": {params}')
@@ -119,7 +137,11 @@ def test_pka_vectors(monkeypatch, vector):
         }
         return _Resp(200, headers, "")
 
-    monkeypatch.setattr(urllib.request, "urlopen", _urlopen)
+    class _FakeOpener:
+        def open(self, req, timeout=2.0):
+            return _fake_open(req, timeout)
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *args, **kwargs: _FakeOpener())
 
     if vector["expect"] == "pass":
         rec, _ = discover("example.com", well_known_fallback=True)

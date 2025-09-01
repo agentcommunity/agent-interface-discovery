@@ -98,20 +98,44 @@ def test_pka_accepts_quoted_keyid(monkeypatch):
 
     import urllib.request
 
-    def _urlopen(req, timeout=2.0):
+    def _fake_open(req, timeout=2.0):
         url = req.full_url if hasattr(req, "full_url") else req
         if url.endswith("/.well-known/agent"):
             headers = {"Content-Type": "application/json"}
             body = json.dumps({"v": "aid1", "u": "https://api.example.com/mcp", "p": "mcp", "k": pka, "i": kid})
             return _FakeHTTPResponse(200, headers, body)
         # handshake
-        challenge = req.headers.get("AID-Challenge")
-        date = req.headers.get("Date")
+        def _h(name: str):
+            # Try common access patterns across urllib implementations
+            v = None
+            try:
+                v = req.headers.get(name) if hasattr(req, "headers") else None
+            except Exception:
+                v = None
+            if not v and hasattr(req, "get_header"):
+                try:
+                    v = req.get_header(name)
+                except Exception:
+                    v = None
+            if not v and hasattr(req, "headers") and isinstance(req.headers, dict):
+                # case-insensitive fallback
+                for k, val in req.headers.items():
+                    if k.lower() == name.lower():
+                        v = val
+                        break
+            return v
+        challenge = _h("AID-Challenge")
+        date = _h("Date")
         method = "GET"
         target = url
         host = pathlib.PurePosixPath(url).name if "://" not in url else __import__("urllib.parse").parse.urlparse(url).netloc
         base, params_str = _build_base(order, challenge=challenge, method=method, target=target, host=host, date=date, created=now, kid=kid)
         sig = private_key.sign(base)
+        if __import__("os").environ.get("AID_DEBUG_PKA") == "1":
+            from pathlib import Path
+            p = Path(__file__).resolve().parents[1] / "aid_py" / "_debug"
+            p.mkdir(parents=True, exist_ok=True)
+            (p / "base_test.txt").write_text(base.decode())
         quoted = ' '.join([f'"{c}"' for c in order])
         headers = {
             "Signature-Input": f"sig=({quoted});created={now};keyid=\"{kid}\";alg=\"ed25519\"",
@@ -120,7 +144,11 @@ def test_pka_accepts_quoted_keyid(monkeypatch):
         }
         return _FakeHTTPResponse(200, headers, "")
 
-    monkeypatch.setattr(urllib.request, "urlopen", _urlopen)
+    class _FakeOpener:
+        def open(self, req, timeout=2.0):
+            return _fake_open(req, timeout)
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *args, **kwargs: _FakeOpener())
 
     record, _ = discover("example.com", well_known_fallback=True)
     assert record["pka"] == pka
@@ -163,7 +191,7 @@ def test_pka_rejects_missing_required_fields(monkeypatch):
 
     import urllib.request
 
-    def _urlopen(req, timeout=2.0):
+    def _fake_open(req, timeout=2.0):
         url = req.full_url if hasattr(req, "full_url") else req
         if url.endswith("/.well-known/agent"):
             headers = {"Content-Type": "application/json"}
@@ -192,7 +220,11 @@ def test_pka_rejects_missing_required_fields(monkeypatch):
         }
         return _FakeHTTPResponse(200, headers, "")
 
-    monkeypatch.setattr(urllib.request, "urlopen", _urlopen)
+    class _FakeOpener:
+        def open(self, req, timeout=2.0):
+            return _fake_open(req, timeout)
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *args, **kwargs: _FakeOpener())
 
     with pytest.raises(AidError) as ei:
         discover("example.com", well_known_fallback=True)
@@ -209,7 +241,10 @@ def test_pka_rejects_date_skew(monkeypatch):
 
     private_key = ed25519.Ed25519PrivateKey.generate()
     public_key = private_key.public_key()
-    raw_pub = public_key.public_bytes()
+    raw_pub = public_key.public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw,
+    )
     ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
     def b58encode(data: bytes) -> str:
@@ -234,7 +269,7 @@ def test_pka_rejects_date_skew(monkeypatch):
 
     import urllib.request
 
-    def _urlopen(req, timeout=2.0):
+    def _fake_open(req, timeout=2.0):
         url = req.full_url if hasattr(req, "full_url") else req
         if url.endswith("/.well-known/agent"):
             headers = {"Content-Type": "application/json"}
@@ -260,18 +295,23 @@ def test_pka_rejects_date_skew(monkeypatch):
                 lines.append(f'"host": {host}')
             elif item == "date":
                 lines.append(f'"date": {date}')
-        params = f"({ ' '.join(f'\"{c}\"' for c in order) });created={created};keyid={kid};alg=\"ed25519\""
+        quoted = ' '.join('"' + c + '"' for c in order)
+        params = f"({quoted});created={created};keyid={kid};alg=\"ed25519\""
         lines.append(f'"@signature-params": {params}')
         base = "\n".join(lines).encode("utf-8")
         sig = private_key.sign(base)
         headers = {
-            "Signature-Input": f"sig=({ ' '.join(f'\"{c}\"' for c in order) });created={created};keyid={kid};alg=\"ed25519\"",
+            "Signature-Input": f"sig=({quoted});created={created};keyid={kid};alg=\"ed25519\"",
             "Signature": f"sig=:{__import__('base64').b64encode(sig).decode()}:",
             "Date": date,
         }
         return _FakeHTTPResponse(200, headers, "")
 
-    monkeypatch.setattr(urllib.request, "urlopen", _urlopen)
+    class _FakeOpener:
+        def open(self, req, timeout=2.0):
+            return _fake_open(req, timeout)
+
+    monkeypatch.setattr(urllib.request, "build_opener", lambda *args, **kwargs: _FakeOpener())
 
     with pytest.raises(AidError) as ei:
         discover("example.com", well_known_fallback=True)

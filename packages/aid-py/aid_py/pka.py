@@ -14,6 +14,15 @@ import urllib.request
 import urllib.error
 
 from .parser import AidError
+import pathlib
+
+def _debug_write(name: str, data: str) -> None:
+    try:
+        d = pathlib.Path(__file__).resolve().parent / "_debug"
+        d.mkdir(exist_ok=True)
+        (d / name).write_text(data)
+    except Exception:
+        pass
 
 
 def _b58_decode(s: str) -> bytes:
@@ -135,7 +144,8 @@ def perform_pka_handshake(uri: str, pka: str, kid: str, *, timeout: float = 2.0)
     req = urllib.request.Request(uri, headers={"AID-Challenge": challenge, "Date": date_hdr})
 
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # nosec B310
+        opener = urllib.request.build_opener()
+        with opener.open(req, timeout=timeout) as resp:  # nosec B310
             if resp.status != 200:
                 raise AidError("ERR_SECURITY", f"Handshake HTTP {resp.status}")
             headers = {k: v for k, v in resp.headers.items()}
@@ -175,6 +185,8 @@ def perform_pka_handshake(uri: str, pka: str, kid: str, *, timeout: float = 2.0)
         date=date_header or date_hdr,
         challenge=challenge,
     )
+    if os.environ.get("AID_DEBUG_PKA") == "1":
+        _debug_write("base_runtime.txt", base.decode("utf-8", errors="ignore"))
 
     pub = _multibase_decode(pka)
     if len(pub) != 32:
