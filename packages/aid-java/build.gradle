@@ -23,3 +23,9 @@ dependencies {
 test {
   useJUnitPlatform()
 }
+
+tasks.withType(Test).configureEach {
+    jvmArgs '-Dfile.encoding=UTF-8'
+    environment 'LC_ALL', 'C'
+    environment 'LANG', 'C'
+}

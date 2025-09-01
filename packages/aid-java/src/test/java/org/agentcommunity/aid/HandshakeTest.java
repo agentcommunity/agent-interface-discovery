@@ -22,6 +22,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class HandshakeTest {
 
@@ -67,27 +68,43 @@ public class HandshakeTest {
       return;
     }
     // Load vectors
-    java.nio.file.Path root = java.nio.file.Paths.get(".").toAbsolutePath();
-    while (root != null && !root.getFileName().toString().equals("agent-interface-discovery")) root = root.getParent();
-    var json = java.nio.file.Files.readString(root.resolve("protocol/pka_vectors.json"));
+    java.nio.file.Path vectorsPath = java.nio.file.Paths.get("protocol/pka_vectors.json");
+    if (!java.nio.file.Files.exists(vectorsPath)) {
+      vectorsPath = java.nio.file.Paths.get("../../protocol/pka_vectors.json");
+    }
+    if (!java.nio.file.Files.exists(vectorsPath)) {
+        throw new java.io.FileNotFoundException("Could not find protocol/pka_vectors.json");
+    }
+    var json = java.nio.file.Files.readString(vectorsPath);
     var doc = new com.fasterxml.jackson.databind.ObjectMapper().readValue(json, java.util.Map.class);
     @SuppressWarnings("unchecked")
     var vectors = (java.util.List<java.util.Map<String, Object>>) doc.get("vectors");
+    vectors.sort(java.util.Comparator.comparing(v -> String.valueOf(v.getOrDefault("id", ""))));
 
     for (var v : vectors) {
       @SuppressWarnings("unchecked") Map<String,String> keyMap = (Map<String,String>) v.get("key");
-      String expect = (String) v.get("expect");
-      byte[] privBytes = Base64.getDecoder().decode(keyMap.get("priv_b64"));
-      String pka = keyMap.get("pub_b58");
+      String expect = String.valueOf(v.getOrDefault("expect", "pass"));
+      boolean shouldPass = "pass".equalsIgnoreCase(expect);
 
-      // Reconstruct private key from raw bytes using PKCS#8 encoding. This avoids
-      // depending on the JVM's KeyPairGenerator which may not be deterministic
-      // across platforms from the same seed.
-      byte[] pkcs8Prefix = new byte[] { 0x30, 0x2E, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20 };
-      byte[] pkcs8Key = new byte[pkcs8Prefix.length + privBytes.length];
-      System.arraycopy(pkcs8Prefix, 0, pkcs8Key, 0, pkcs8Prefix.length);
-      System.arraycopy(privBytes, 0, pkcs8Key, pkcs8Prefix.length, privBytes.length);
-      PrivateKey priv = KeyFactory.getInstance("Ed25519").generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(pkcs8Key));
+      String pka = keyMap.get("pub_b58");
+      PrivateKey priv = null;
+
+      String privKeyBase64 = keyMap.get("priv_b64");
+
+      if (shouldPass) {
+        if (privKeyBase64 == null || privKeyBase64.isEmpty()) {
+            fail("Vector " + v.get("id") + " is expected to pass but is missing key.priv_b64");
+        }
+      }
+
+      if (privKeyBase64 != null && !privKeyBase64.isEmpty()) {
+          byte[] privBytes = Base64.getDecoder().decode(privKeyBase64);
+          byte[] pkcs8Prefix = new byte[] { 0x30, 0x2E, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2B, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20 };
+          byte[] pkcs8Key = new byte[pkcs8Prefix.length + privBytes.length];
+          System.arraycopy(pkcs8Prefix, 0, pkcs8Key, 0, pkcs8Prefix.length);
+          System.arraycopy(privBytes, 0, pkcs8Key, pkcs8Prefix.length, privBytes.length);
+          priv = KeyFactory.getInstance("Ed25519").generatePrivate(new java.security.spec.PKCS8EncodedKeySpec(pkcs8Key));
+      }
 
       HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
       int port = server.getAddress().getPort();
@@ -103,6 +120,8 @@ public class HandshakeTest {
           try (OutputStream os = ex.getResponseBody()) { os.write(bytes); }
         }
       });
+      final PrivateKey finalPriv = priv;
+      final var finalVector = v;
       server.createContext("/mcp", new HttpHandler() {
         @Override public void handle(HttpExchange ex) throws IOException {
           List<String> dateList = ex.getRequestHeaders().get("Date");
@@ -126,7 +145,11 @@ public class HandshakeTest {
           byte[] base = sb.toString().getBytes(StandardCharsets.UTF_8);
           byte[] sig;
           try {
-            Signature s = Signature.getInstance("Ed25519"); s.initSign(priv); s.update(base); sig = s.sign();
+            if (finalPriv == null) {
+              sig = new byte[64]; // Send a garbage signature for fail cases
+            } else {
+              Signature s = Signature.getInstance("Ed25519"); s.initSign(finalPriv); s.update(base); sig = s.sign();
+            }
           } catch (Exception e) { throw new IOException(e); }
           ex.getResponseHeaders().add("Signature-Input", params.replace("(", "sig=("));
           ex.getResponseHeaders().add("Signature", "sig=:" + Base64.getEncoder().encodeToString(sig) + ":");
@@ -137,10 +160,10 @@ public class HandshakeTest {
       });
       server.start();
       try {
-        if ("pass".equals(expect)) {
-          assertDoesNotThrow(() -> WellKnown.fetch(domain, Duration.ofSeconds(3), true));
-        } else if ("fail".equals(expect)) {
-          assertThrows(AidError.class, () -> WellKnown.fetch(domain, Duration.ofSeconds(3), true));
+        if (shouldPass) {
+          assertDoesNotThrow(() -> WellKnown.fetch(domain, Duration.ofSeconds(3), true), "Pass vector must succeed: " + finalVector.get("id"));
+        } else {
+          assertThrows(AidError.class, () -> WellKnown.fetch(domain, Duration.ofSeconds(3), true), "Fail vector must be rejected: " + finalVector.get("id"));
         }
       } finally {
         server.stop(0);
