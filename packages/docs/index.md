@@ -66,9 +66,9 @@ AID has official libraries and tools across multiple languages, with additional 
 - TypeScript/Node & Browser: `@agentcommunity/aid`
 - Python: `aid-discovery` (transfer to community planned)
 - Go: `aid-go`
-- Rust: `aid-rs` (WIP)
-- .NET: `aid-dotnet` (WIP)
-- Java: `aid-java` (WIP)
+- Rust: `aid-rs`
+- .NET: `aid-dotnet`
+- Java: `aid-java`
 - Web Workbench: Interactive generator/resolver
 
-See the full package overview in the [Quick Start](quickstart/index.md#package-overview).
+See the full package overview in the [Quick Start](quickstart/index.md#package-overview) and the cross-language [Discovery API](Reference/discovery_api.md).

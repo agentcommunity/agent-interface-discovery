@@ -1,3 +1,9 @@
+---
+title: 'What Should Happen When You Type a Domain Name?'
+description: 'For agents, typing a domain should discover the agent automatically. AID makes it happen via DNS.'
+icon: material/file-document-outline
+---
+
 # What Should Happen When You Type a Domain Name?
 
 For thirty years, the answer has been simple: you get a website. You type `google.com` into a browser, and a search page appears. It’s an instantaneous, magical translation of a name into a service. We take it for granted, but this seamlessness is the foundation of the entire web.

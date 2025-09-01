@@ -24,6 +24,29 @@ except AidError as e:
     print(e.code, e)
 ```
 
+## Options
+
+```python
+from aid_py import discover
+
+# Protocol-specific DNS flow
+rec, ttl = discover("example.com", protocol="mcp", timeout=5.0)
+
+# Guarded .well-known fallback (default True) and timeout (seconds)
+rec, ttl = discover(
+    "example.com",
+    well_known_fallback=True,
+    well_known_timeout=2.0,
+)
+
+# Optional camelCase kwargs (non-breaking, emits deprecation warnings):
+rec, ttl = discover(
+    "example.com",
+    wellKnownFallback=True,
+    wellKnownTimeoutMs=2000,
+)
+```
+
 ## Parse Raw TXT
 
 ```python
@@ -32,7 +55,10 @@ rec = parse("v=aid1;uri=https://api.example.com/mcp;proto=mcp;desc=Example")
 print(rec.uri)
 ```
 
-Note: Package is published on PyPI as `aid-discovery`.
+Notes
+
+- PKA handshake runs automatically when `pka`/`kid` are present.
+- Package is published on PyPI as `aid-discovery`.
 
 ## See also
 
@@ -42,6 +68,6 @@ Note: Package is published on PyPI as `aid-discovery`.
 - [Go](./quickstart_go.md)
 - [Java](./quickstart_java.md)
 - [.NET](./quickstart_dotnet.md)
-- [Protocols & Auth Tokens](../protocols.md)
-- [Troubleshooting](../troubleshooting.md)
-- [Conformance](../conformance.md)
+- [Protocols & Auth Tokens](../Reference/protocols.md)
+- [Troubleshooting](../Reference/troubleshooting.md)
+- [Conformance](../Reference/conformance.md)

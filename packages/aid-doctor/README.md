@@ -65,6 +65,18 @@ aid-doctor check example.com --show-details
 # Local testing with a mock HTTP server (insecure well-known)
 # (Use only for local dev)
 AID_ALLOW_INSECURE_WELL_KNOWN=1 aid-doctor check localhost:19081 --show-details --fallback-timeout 2000
+
+### PKA handshake expectations
+
+- Required covered fields: `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- `alg` must be `ed25519`
+- `created` and HTTP `Date` must both be within ±300s of the current time
+- `keyid` must match the record `kid` (quotes allowed in header, compare normalized)
+- Public key is multibase base58btc (`z...`) for the raw 32‑byte Ed25519 key
+
+### Loopback HTTP (dev‑only)
+
+When `AID_ALLOW_INSECURE_WELL_KNOWN=1` is set and the domain is loopback (`localhost`/`127.0.0.1`/`::1`), the doctor permits `http://` in the `.well-known` path for local testing. All other validations, including PKA, still run. TXT discovery always enforces `https://` for remote agents.
 ```
 
 ## License

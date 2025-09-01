@@ -10,10 +10,13 @@
 packages/
 ├── aid/                    # Core TypeScript library (published to npm)
 ├── aid-doctor/            # CLI validation and generation tool (published to npm)
-├── aid-py/               # Python implementation + test runner (private)
-├── aid-go/               # Go implementation + test runner (private)
+├── aid-py/               # Python SDK (published to PyPI as aid-discovery)
+├── aid-go/               # Go SDK (module)
+├── aid-rs/               # Rust SDK (parser + discovery, feature-gated handshake)
+├── aid-dotnet/           # .NET SDK (parser + discovery + PKA)
+├── aid-java/             # Java SDK (parser + discovery + PKA)
 ├── web/                  # Next.js web interface (private)
-└── e2e-tests/           # End-to-end tests against live records (private)
+└── e2e-tests/            # End-to-end tests against live records (private)
 
 # NOTE: The official Python package is currently published at https://pypi.org/project/aid-discovery/ and is not yet community-owned. Community transfer is planned.
 
@@ -90,6 +93,22 @@ export const baseConfig = defineConfig({
 - Java: `packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java`
 
 The web module is consumed by the UI via a thin adapter layer that normalizes spec-shaped data into canonical types, insulating the UI from spec churn.
+
+### v1.1 Discovery Parity (Core Architecture)
+
+- DNS-first discovery across all SDKs with IDNA normalization to A-label (Punycode) prior to queries.
+- Protocol-specific flow (when requested): `_agent._<proto>.<domain>` → `_agent.<proto>.<domain>` → base `_agent.<domain>`.
+- Strict TXT parsing per spec: aliases, scheme enforcement, metadata validation.
+- PKA handshake (when `pka`/`kid` present): Ed25519 HTTP Message Signatures; exact covered fields set; time window ±300s; `alg=ed25519`; normalized `keyid==kid`.
+- Well-known fallback guards: only on `ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`; HTTPS only; content-type `application/json` prefix; ≤64KB; ~2s timeout; no redirects; TTL=300 on success.
+- Redirect policy: no auto-follow in security-sensitive paths (handshake, well-known fetch).
+- Loopback relax: permitted only for well-known path, loopback-only, and feature-gated (env/flag) per language; never for TXT.
+
+Language specifics
+
+- Node.js: native DNS; Browser: DNS-over-HTTPS; both export the same API.
+- Go/Rust: added options forms while keeping legacy wrappers for back-compat.
+- .NET/Java: high-level discovery wrappers added; DoH used for DNS; compose with well-known + PKA.
 
 ### Cross-Platform Compatibility
 
@@ -255,7 +274,7 @@ To prevent ecosystem drift across languages, CI includes a dedicated parity job:
   - Go `go test ./...`
   - Python `pytest` for `packages/aid-py`
 
-The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go.
+The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go. Additional jobs cover Rust/.NET/Java including PKA vectors and well-known fallback checks.
 
 ### Language-specific CI jobs (Rust / .NET / Java)
 

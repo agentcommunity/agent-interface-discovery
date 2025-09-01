@@ -31,6 +31,12 @@ AID is a minimal, open standard that answers one question: **"Given a domain nam
 
 It uses a single DNS `TXT` record to make any agent service—whether it speaks MCP, A2A, or another protocol—instantly discoverable. No more digging through API docs, no more manual configuration.
 
+### v1.1 Highlights
+
+- DNS-first discovery with optional protocol-specific subdomains when requested.
+- Optional `.well-known` JSON fallback (HTTPS-only, JSON content-type, ≤64KB, ~2s timeout, no redirects). On success, TTL=300.
+- Optional PKA endpoint proof: Ed25519 HTTP Message Signatures with strict covered fields and ±300s time window.
+
 [AID website](aid.agentcommunity.org)
 
 ## How It Works
@@ -50,7 +56,11 @@ graph TD
     I --> J[Use MCP/A2A/OpenAPI protocol]
 ```
 
-> Note: The canonical location is `_agent.<domain>`. Providers may optionally expose protocol-specific records on `_agent._<proto>.<domain>` (e.g., `_agent._mcp.example.com`). Clients discover via the base record by default, and may query protocol-specific subdomains when a specific protocol is explicitly requested. Refer to the specification for details.
+> Notes:
+>
+> - Canonical location is `_agent.<domain>`. When a specific protocol is requested, clients may query `_agent._<proto>.<domain>` then `_agent.<proto>.<domain>` before the base record.
+> - `.well-known` JSON fallback is allowed only on DNS failure (HTTPS-only, JSON content-type, ≤64KB, ~2s timeout, no redirects). On success, TTL=300.
+> - If `pka`/`kid` are present, clients perform an Ed25519 HTTP Message Signatures handshake with exact covered fields and ±300s windows.
 
 ## Guiding Principles
 
@@ -162,9 +172,9 @@ This repository uses a PNPM/Turborepo monorepo structure. It contains the full s
 | [**@agentcommunity/aid-conformance**](https://www.npmjs.com/package/@agentcommunity/aid-conformance) | Public  | Conformance suite exporting fixtures and a CLI runner             |
 | [**aid-discovery (Python)**](https://pypi.org/project/aid-discovery/)                                | Public  | Official Python library                                           |
 | [**aid-go**](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)          | Public  | Official Go library                                               |
-| [**aid-rs (Rust)**](./packages/aid-rs)                                                               | WIP     | Parser + constants; discovery later                               |
-| [**aid-dotnet (.NET)**](./packages/aid-dotnet)                                                       | WIP     | Parser + constants; discovery later                               |
-| [**aid-java (Java)**](./packages/aid-java)                                                           | WIP     | Parser + constants; discovery later                               |
+| [**aid-rs (Rust)**](./packages/aid-rs)                                                               | Public  | Parser + discovery (handshake behind feature flag)                |
+| [**aid-dotnet (.NET)**](./packages/aid-dotnet)                                                       | Public  | Parser + discovery + PKA + well-known                             |
+| [**aid-java (Java)**](./packages/aid-java)                                                           | Public  | Parser + discovery + PKA + well-known                             |
 | [**@agentcommunity/aid-web**](./packages/web)                                                        | Private | The Next.js app for the website and workbench                     |
 | **@agentcommunity/e2e-tests**                                                                        | Private | E2E tests validating our live showcase domains                    |
 | **(test runners)**                                                                                   | Private | Internal packages for orchestrating Python and Go tests via Turbo |
@@ -180,9 +190,9 @@ agent-interface-discovery/
 │   ├── aid-doctor/            # CLI tool
 │   ├── aid-py/                # Python library
 │   ├── aid-go/                # Go library
-│   ├── aid-rs/                # Rust library (WIP)
-│   ├── aid-dotnet/            # .NET library (WIP)
-│   ├── aid-java/              # Java library (WIP)
+│   ├── aid-rs/                # Rust library (parser + discovery; handshake feature)
+│   ├── aid-dotnet/            # .NET library (parser + discovery + PKA)
+│   ├── aid-java/              # Java library (parser + discovery + PKA)
 │   ├── web/                   # Next.js web workbench
 │   ├── e2e-tests/             # End-to-end tests
 │   └── (test-runners)/        # Internal test runners for Go/Python
@@ -252,6 +262,23 @@ The single source of truth for all protocol constants is `protocol/constants.yml
     pnpm clean && pnpm build && pnpm test
     ```
     Commit the changes to `protocol/constants.yml` along with all the newly generated files. The CI pipeline will fail if they are not in sync.
+
+### Release v1.1 Checklist
+
+- Changesets
+  - Create/update a changeset bumping `@agentcommunity/aid`, `@agentcommunity/aid-doctor`, and `@agentcommunity/aid-conformance` to `1.1.0` (minor).
+  - Merge to main and let CI version/publish to npm.
+- Python
+  - Ensure `packages/aid-py/pyproject.toml` version is `1.1.0` (done here).
+  - `pip build` and `twine upload` to PyPI (aid-discovery).
+- Go
+  - Tag repository `aid-go` path with `v1.1.0` (semantic import version tag).
+- Rust (optional)
+  - If publishing, set `packages/aid-rs/Cargo.toml` to `1.1.0` and `cargo publish` (handshake feature gated).
+- .NET / Java (optional)
+  - If packaging, set `<Version>1.1.0</Version>` in `AidDiscovery.csproj`, and set `version = '1.1.0'` in Gradle `build.gradle`, then publish to NuGet/Maven as desired.
+- Docs
+  - Deploy docs site with updated Quickstarts and Discovery API reference.
 
 ### Development Environment
 

@@ -32,6 +32,27 @@ func main() {
 }
 ```
 
+## Options
+
+Protocol-specific DNS flow and guarded `.well-known` fallback:
+
+```go
+rec, ttl, err := aid.DiscoverWithOptions(
+    "example.com",
+    5*time.Second,
+    aid.DiscoveryOptions{
+        Protocol:          "mcp",       // tries _agent._mcp., then _agent.mcp., then base
+        WellKnownFallback: true,         // only on ERR_NO_RECORD / ERR_DNS_LOOKUP_FAILED
+        WellKnownTimeout:  2 * time.Second,
+    },
+)
+```
+
+Notes
+
+- TTL uses DNS value when available; for `.well-known` fallback, TTL is treated as 300.
+- PKA handshake runs automatically when `pka`/`kid` are present.
+
 ## Parse Raw TXT
 
 ```go
@@ -40,7 +61,7 @@ if err != nil { /* handle */ }
 fmt.Println(rec.URI)
 ```
 
-Errors map to symbolic codes (e.g., `ERR_NO_RECORD`) and numeric codes (1000..1004).
+Errors map to symbolic codes (e.g., `ERR_NO_RECORD`) and numeric codes (1000..1005).
 
 ## See also
 
@@ -50,6 +71,6 @@ Errors map to symbolic codes (e.g., `ERR_NO_RECORD`) and numeric codes (1000..10
 - [Python](./quickstart_python.md)
 - [Java](./quickstart_java.md)
 - [.NET](./quickstart_dotnet.md)
-- [Protocols & Auth Tokens](../protocols.md)
-- [Troubleshooting](../troubleshooting.md)
-- [Conformance](../conformance.md)
+- [Protocols & Auth Tokens](../Reference/protocols.md)
+- [Troubleshooting](../Reference/troubleshooting.md)
+- [Conformance](../Reference/conformance.md)

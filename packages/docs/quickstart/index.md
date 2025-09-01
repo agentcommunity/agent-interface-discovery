@@ -21,9 +21,9 @@ AID provides libraries and tools for multiple languages and use cases:
 | **[aid-discovery (Python)](https://pypi.org/project/aid-discovery/)**                                              | Python discovery library         | Python     | 🔜 Published (not yet community-owned; transfer planned)   |
 | **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)**                | Go discovery library             | Go         | ✅ Published                                               |
 | **AID Web Workbench**                                                                                              | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
-| **[aid-rs (Rust)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs)**         | Parser + generated constants     | Rust       | 🚧 WIP                                                     |
-| **[aid-dotnet (.NET)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet)** | Parser + generated constants     | .NET       | 🚧 WIP                                                     |
-| **[aid-java (Java)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java)**     | Parser + generated constants     | Java       | 🚧 WIP                                                     |
+| **[aid-rs (Rust)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs)**         | Parser + discovery (opt. PKA)    | Rust       | ✅ In repo                                                 |
+| **[aid-dotnet (.NET)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet)** | Parser + discovery + PKA + WK    | .NET       | ✅ In repo                                                 |
+| **[aid-java (Java)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java)**     | Parser + discovery + PKA + WK    | Java       | ✅ In repo                                                 |
 
 ---
 
@@ -125,6 +125,7 @@ Now let's write code to find an agent. We provide libraries in several languages
 - [Browser](./quickstart_browser.md)
 - [Go](./quickstart_go.md)
 - [Python](./quickstart_python.md)
+- [Rust](./quickstart_rust.md)
 - [Java](./quickstart_java.md)
 - [.NET](./quickstart_dotnet.md)
 
@@ -162,6 +163,16 @@ import { discover } from '@agentcommunity/aid/browser';
 const { record } = await discover('supabase.agentcommunity.org');
 console.log(`Found ${record.proto} agent at ${record.uri}`);
 ```
+
+#### PKA handshake expectations (v1.1)
+
+Clients perform an Ed25519 HTTP Message Signatures handshake when a record includes `pka`/`kid`. Implementations enforce:
+
+- Covered fields set: `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- `alg="ed25519"`
+- `keyid` equals record `kid` (quotes allowed in header; compare normalized)
+- `created` ± 300s and HTTP `Date` ± 300s of current time
+- `pka` is base58btc (`z...`) for a 32‑byte Ed25519 public key
 
 ### Python
 
@@ -231,6 +242,26 @@ func main() {
 
 > **📖 More Details:** See the [Go package README](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go) for advanced usage, error handling, and API reference.
 
+## Doctor CLI in CI
+
+Use the doctor CLI to validate domains in CI and capture structured errors. For local loopback tests against a mock HTTP server, allow insecure well‑known via an environment flag, but only in development.
+
+```bash
+# Human-readable
+aid-doctor check example.com --show-details
+
+# JSON for CI
+aid-doctor json example.com > result.json
+
+# Exit code scripting (check)
+aid-doctor check example.com --code || echo "failed with code $?"
+
+# Dev-only loopback test against a mock on 127.0.0.1:19081
+AID_ALLOW_INSECURE_WELL_KNOWN=1 aid-doctor check 127.0.0.1:19081 --show-details --fallback-timeout 5000
+```
+
+In production, `.well-known` must use HTTPS; the loopback relax is for local development only.
+
 **That's it!** You now have the agent's URI and can proceed to connect to it using its specified protocol.
 
 ---
@@ -240,9 +271,9 @@ func main() {
 - [MCP Guide](./quickstart_mcp.md)
 - [A2A Guide](./quickstart_a2a.md)
 - [OpenAPI Guide](./quickstart_openapi.md)
-- [Protocols & Auth Tokens](../protocols.md)
-- [Troubleshooting](../troubleshooting.md)
-- [Conformance](../conformance.md)
+- [Protocols & Auth Tokens](../Reference/protocols.md)
+- [Troubleshooting](../Reference/troubleshooting.md)
+- [Conformance](../Reference/conformance.md)
 - [Specification](../specification.md)
 - [Security Best Practices](../security.md)
 - [Rationale](../rationale.md)

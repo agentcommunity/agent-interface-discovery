@@ -1,3 +1,9 @@
+---
+title: 'The Missing Grep'
+description: 'AID completes MCP by providing a universal discovery primitive via DNS. Given a domain, find its MCP endpoint.'
+icon: material/file-document-outline
+---
+
 ## The Missing Grep
 
 The most powerful ideas in computing are often the simplest. They're the ones that, in retrospect, seem obvious. `grep` is obvious. Hash tables are obvious. DNS is so obvious that the modern internet is unimaginable without it. You type a name, you get an address. The whole system is built on that simple abstraction.

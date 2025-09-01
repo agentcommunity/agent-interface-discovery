@@ -1,3 +1,9 @@
+---
+title: 'The Missing MX Record for the Internet of Agents'
+description: 'Why AID is the DNS MX-equivalent for the agentic web — a simple TXT record that points clients to the right endpoint.'
+icon: material/file-document-outline
+---
+
 ### The Missing `MX` Record for the Internet of Agents
 
 Think about the last time you set up a new developer tool that needed to connect to an API. You went to their website, navigated to the developer docs, maybe signed up for an account, generated an API key, and found the base URL for the API endpoint. Then you copied those values into your code or a settings panel.

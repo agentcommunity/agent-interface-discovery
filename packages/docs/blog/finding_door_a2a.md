@@ -1,3 +1,9 @@
+---
+title: 'Finding the Front Door'
+description: 'AID is the network-layer signpost for A2A — DNS points to your AgentCard, HTTP serves it, A2A speaks it.'
+icon: material/file-document-outline
+---
+
 ### Finding the Front Door
 
 Look at the A2A specification. It’s a serious piece of work. It defines everything you need for robust, asynchronous agent communication: tasks, artifacts, state transitions, security schemes modeled on OpenAPI. The `AgentCard` is particularly well-thought-out. It’s a rich manifest describing what an agent is, what skills it has, and precisely how to interact with it across multiple transports.
