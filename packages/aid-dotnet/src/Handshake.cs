@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
+using NSec.Cryptography;
 
 namespace AidDiscovery;
 
@@ -21,7 +22,7 @@ public static class Pka
         sig ??= res.Headers.TryGetValues("signature", out var s2) ? s2.FirstOrDefault() : null;
         if (sigInput is null || sig is null) throw new AidError(nameof(Constants.ERR_SECURITY), "Missing signature headers");
 
-        var mInside = Regex.Match(sigInput, "sig=\\(\\s*([^)]*?)\\s*\\)", RegexOptions.IgnoreCase);
+        var mInside = Regex.Match(sigInput, "sig=\\(\\s*([^)]+?)\\s*\\)", RegexOptions.IgnoreCase);
         if (!mInside.Success) throw new AidError(nameof(Constants.ERR_SECURITY), "Invalid Signature-Input");
         var items = new List<string>();
         var m = Regex.Matches(mInside.Groups[1].Value, "\"([^\"]+)\"");
@@ -32,10 +33,11 @@ public static class Pka
         if (lower.Count != required.Count || required.Any(r => !lower.Contains(r)))
             throw new AidError(nameof(Constants.ERR_SECURITY), "Signature-Input must cover required fields");
 
-        var mCreated = Regex.Match(sigInput, @"(?:^|;)\s*created=(\d+)", RegexOptions.IgnoreCase);
-        var mKeyid = Regex.Match(sigInput, @"(?:^|;)\s*keyid=([^;\s]+)", RegexOptions.IgnoreCase);
-        var mAlg = Regex.Match(sigInput, @"(?:^|;)\s*alg=\"([^\"]+)\"", RegexOptions.IgnoreCase);
-        if (!mCreated.Success || !mKeyid.Success || !mAlg.Success) throw new AidError(nameof(Constants.ERR_SECURITY), "Invalid Signature-Input");
+        var mCreated = Regex.Match(sigInput, @"(?:^|;)\s*created=(\d+)");
+        var mKeyid = Regex.Match(sigInput, @"(?:^|;)\s*keyid=([^;\s]+)");
+        var mAlg = Regex.Match(sigInput, @"(?:^|;)\s*alg=""([^\""]+)""");
+        if (!mCreated.Success || !mKeyid.Success || !mAlg.Success)
+            throw new AidError(nameof(Constants.ERR_SECURITY), "Invalid Signature-Input");
         long created = long.Parse(mCreated.Groups[1].Value);
         string keyidRaw = mKeyid.Groups[1].Value;
         string keyid = keyidRaw.Trim('"');
@@ -101,20 +103,13 @@ public static class Pka
         var pub = MultibaseDecode(pka);
         if (pub.Length != 32) throw new AidError(nameof(Constants.ERR_SECURITY), "Invalid PKA length");
 
-        // Try Chaos.NaCl if available
-        var chaos = Type.GetType("Chaos.NaCl.Ed25519, Chaos.NaCl");
-        if (chaos != null)
+        // Use NSec for Ed25519 verification
+        var algorithm = SignatureAlgorithm.Ed25519;
+        var publicKey = PublicKey.Import(algorithm, pub, KeyBlobFormat.RawPublicKey);
+        if (!algorithm.Verify(publicKey, baseBytes, signature))
         {
-            var verify = chaos.GetMethod("Verify", new[] { typeof(byte[]), typeof(byte[]), typeof(byte[]) });
-            if (verify != null)
-            {
-                bool ok = (bool)verify.Invoke(null, new object[] { signature, baseBytes, pub })!;
-                if (!ok) throw new AidError(nameof(Constants.ERR_SECURITY), "PKA signature verification failed");
-                return;
-            }
+            throw new AidError(nameof(Constants.ERR_SECURITY), "PKA signature verification failed");
         }
-
-        throw new AidError(nameof(Constants.ERR_SECURITY), "PKA verification unavailable: add Chaos.NaCl or NSec");
     }
 }
 

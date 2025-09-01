@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using Chaos.NaCl;
+using NSec.Cryptography;
 
 namespace AidDiscovery.Tests;
 
@@ -68,23 +68,24 @@ public class PkaTests
             }
         }
 
-        private static byte[] BuildBase(string[] order, string challenge, string method, string target, string host, string date, long created, string kid, string alg)
+        private static byte[] BuildBase(string[] covered, long created, string keyidRaw, string alg, string method, string targetUri, string host, string date, string challenge)
         {
             var lines = new List<string>();
-            foreach (var item in order)
+            foreach (var item in covered)
             {
                 switch (item)
                 {
                     case "AID-Challenge": lines.Add($"\"AID-Challenge\": {challenge}"); break;
                     case "@method": lines.Add($"\"@method\": {method}"); break;
-                    case "@target-uri": lines.Add($"\"@target-uri\": {target}"); break;
+                    case "@target-uri": lines.Add($"\"@target-uri\": {targetUri}"); break;
                     case "host": lines.Add($"\"host\": {host}"); break;
                     case "date": lines.Add($"\"date\": {date}"); break;
+                    default: throw new Exception($"Unsupported covered field: {item}");
                 }
             }
-            var quoted = string.Join(' ', order.Select(c => $"\"{c}\""));
-            var @params = $"({quoted});created={created};keyid={kid};alg=\"{alg}\"";
-            lines.Add($"\"@signature-params\": {@params}");
+            var quoted = string.Join(' ', covered.Select(c => $"\"{c}\""));
+            var paramsStr = $"({quoted});created={created};keyid={keyidRaw};alg=\"{alg}\"";
+            lines.Add($"\"@signature-params\": {paramsStr}");
             return Encoding.UTF8.GetBytes(string.Join('\n', lines));
         }
 
@@ -93,7 +94,9 @@ public class PkaTests
             var path = ctx.Request.Url!.AbsolutePath;
             var recordUri = $"http://127.0.0.1:{Port}/mcp";
             var seed = _seed;
-            Ed25519.KeyPairFromSeed(out var pub, out var expanded, seed);
+            var algorithm = SignatureAlgorithm.Ed25519;
+            var key = Key.Import(algorithm, seed, KeyBlobFormat.RawPrivateKey);
+            var pub = key.Export(KeyBlobFormat.RawPublicKey);
             var pka = PkaFromPub(pub);
             if (path == "/.well-known/agent")
             {
@@ -110,14 +113,15 @@ public class PkaTests
                 var order = _vector.GetProperty("covered").EnumerateArray().Select(e => e.GetString()!).ToArray();
                 var kid = _vector.TryGetProperty("overrideKeyId", out var kidOv) ? kidOv.GetString()! : "g1";
                 var alg = _vector.TryGetProperty("overrideAlg", out var algOv) ? algOv.GetString()! : "ed25519";
-                var created = _vector.GetProperty("expect").GetString() == "pass" ? DateTimeOffset.UtcNow.ToUnixTimeSeconds() : _vector.GetProperty("created").GetInt64();
+                var created = _vector.GetProperty("expect").GetString() == "pass" ?
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds() :
+                    _vector.GetProperty("created").GetInt64();
                 var date = ctx.Request.Headers["Date"] ?? DateTimeOffset.UtcNow.ToString("r");
                 var challenge = ctx.Request.Headers["AID-Challenge"] ?? "";
-                var host = ctx.Request.UserHostName + ":" + Port;
                 var target = ctx.Request.Url!.ToString();
-                var baseBytes = BuildBase(order, challenge, "GET", target, host, date, created, kid, alg);
-                var sig = new byte[64];
-                Ed25519.Sign(sig, baseBytes, 0, baseBytes.Length, expanded);
+                var host = new Uri(target).Authority;
+                var baseBytes = BuildBase(order, created, kid, alg, "GET", target, host, date, challenge);
+                var sig = algorithm.Sign(key, baseBytes);
                 var sigB64 = Convert.ToBase64String(sig);
                 ctx.Response.StatusCode = 200;
                 ctx.Response.Headers["Signature-Input"] = $"sig=(\"{string.Join("\" \"", order)}\");created={created};keyid={kid};alg=\"{alg}\"";
@@ -153,15 +157,24 @@ public class PkaTests
         {
             using var server = new MiniServer(v);
             var domain = $"127.0.0.1:{server.Port}";
-            // .well-known fetch triggers handshake
-            var rec = await WellKnown.FetchAsync(domain, TimeSpan.FromSeconds(3), allowInsecure: true);
             var expect = v.GetProperty("expect").GetString();
-            if (expect == "fail")
+            try
             {
-                // For a failing vector, ensure handshake fails by calling again with bad kid (if not already failing)
-                await Assert.ThrowsAsync<AidError>(async () =>
-                    await Pka.PerformHandshakeAsync(rec.Uri, rec.Pka!, "wrong", TimeSpan.FromSeconds(2))
-                );
+                // .well-known fetch triggers handshake
+                var rec = await WellKnown.FetchAsync(domain, TimeSpan.FromSeconds(3), allowInsecure: true);
+                if (expect == "fail")
+                {
+                    // For a failing vector, ensure handshake fails by calling again with bad kid
+                    await Assert.ThrowsAsync<AidError>(async () =>
+                        await Pka.PerformHandshakeAsync(rec.Uri, rec.Pka!, "wrong", TimeSpan.FromSeconds(2))
+                    );
+                }
+                // For pass vectors, the handshake should succeed (no exception thrown)
+            }
+            catch (AidError) when (expect == "fail")
+            {
+                // For fail vectors, it's acceptable if the initial handshake fails
+                // This covers cases like timestamp outside window
             }
         }
     }

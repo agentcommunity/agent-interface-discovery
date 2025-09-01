@@ -48,7 +48,27 @@ public static class WellKnown
         catch { throw new AidError(nameof(Constants.ERR_FALLBACK_FAILED), "Invalid JSON in well-known response"); }
         if (doc.RootElement.ValueKind != JsonValueKind.Object) throw new AidError(nameof(Constants.ERR_FALLBACK_FAILED), "Well-known JSON must be an object");
         string txt = CanonicalizeToTxt(doc.RootElement);
-        var record = Aid.Parse(txt);
+        AidRecord record;
+        try
+        {
+            record = Aid.Parse(txt);
+        }
+        catch (AidError) when (allowInsecure)
+        {
+            // Narrow relaxation: http only for loopback + remote protocols
+            var host = domain;
+            bool isLoopback = host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host.StartsWith("127.0.0.1") || host.Equals("::1", StringComparison.Ordinal);
+            string? uri = doc.RootElement.TryGetProperty("uri", out var uEl) && uEl.ValueKind == JsonValueKind.String ? uEl.GetString() : (doc.RootElement.TryGetProperty("u", out var u2El) && u2El.ValueKind == JsonValueKind.String ? u2El.GetString() : null);
+            string? proto = doc.RootElement.TryGetProperty("proto", out var pEl) && pEl.ValueKind == JsonValueKind.String ? pEl.GetString() : (doc.RootElement.TryGetProperty("p", out var p2El) && p2El.ValueKind == JsonValueKind.String ? p2El.GetString() : null);
+            bool isHttpRemote = uri is not null && uri.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+            bool isRemoteProto = proto is not null && !(proto == "local" || proto == "zeroconf" || proto == "websocket");
+            if (!(isLoopback && isHttpRemote && isRemoteProto)) throw;
+            // Validate other fields by upgrading scheme just for validation
+            string txtHttps = txt.Replace("uri=http://", "uri=https://").Replace("u=http://", "u=https://");
+            var validated = Aid.Parse(txtHttps);
+            // Restore http URI in the resulting record
+            record = new AidRecord(validated.V, uri!, validated.Proto, validated.Auth, validated.Desc, validated.Docs, validated.Dep, validated.Pka, validated.Kid);
+        }
         if (record.Pka is not null)
         {
             await Pka.PerformHandshakeAsync(record.Uri, record.Pka, record.Kid ?? string.Empty, timeout).ConfigureAwait(false);
@@ -56,4 +76,3 @@ public static class WellKnown
         return record;
     }
 }
-

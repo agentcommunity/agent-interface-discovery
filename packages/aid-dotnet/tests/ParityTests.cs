@@ -26,6 +26,10 @@ public class ParityTests
             };
             if (parsed.Auth is not null) got["auth"] = parsed.Auth;
             if (parsed.Desc is not null) got["desc"] = parsed.Desc;
+            if (parsed.Docs is not null) got["docs"] = parsed.Docs;
+            if (parsed.Dep is not null) got["dep"] = parsed.Dep;
+            if (parsed.Pka is not null) got["pka"] = parsed.Pka;
+            if (parsed.Kid is not null) got["kid"] = parsed.Kid;
 
             Assert.Equivalent(rec.expected, got);
         }
