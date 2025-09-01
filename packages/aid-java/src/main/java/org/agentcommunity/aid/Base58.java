@@ -13,15 +13,20 @@ final class Base58 {
       if (idx < 0) throw new AidError("ERR_SECURITY", "Invalid base58 character");
       n = n.multiply(BigInteger.valueOf(58)).add(BigInteger.valueOf(idx));
     }
-    byte[] bytes = n.equals(BigInteger.ZERO) ? new byte[] {0} : n.toByteArray();
-    // BigInteger may include sign byte; normalize to unsigned big-endian
-    if (bytes[0] == 0) {
-      byte[] tmp = new byte[bytes.length - 1];
-      System.arraycopy(bytes, 1, tmp, 0, tmp.length);
-      bytes = tmp;
-    }
     int leading = 0;
     while (leading < s.length() && s.charAt(leading) == '1') leading++;
+    byte[] bytes;
+    if (n.equals(BigInteger.ZERO)) {
+      bytes = new byte[0];
+    } else {
+      bytes = n.toByteArray();
+      // BigInteger may include sign byte; normalize to unsigned big-endian
+      if (bytes[0] == 0) {
+        byte[] tmp = new byte[bytes.length - 1];
+        System.arraycopy(bytes, 1, tmp, 0, tmp.length);
+        bytes = tmp;
+      }
+    }
     byte[] out = new byte[leading + bytes.length];
     System.arraycopy(bytes, 0, out, leading, bytes.length);
     return out;

@@ -9,10 +9,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.security.Signature;
-import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.NamedParameterSpec;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
@@ -23,12 +24,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class HandshakeTest {
 
-  private static byte[] pkcs8FromSeed(byte[] seed32) {
-    byte[] prefix = new byte[] { 0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20 };
-    byte[] out = new byte[prefix.length + seed32.length];
-    System.arraycopy(prefix, 0, out, 0, prefix.length);
-    System.arraycopy(seed32, 0, out, prefix.length, seed32.length);
-    return out;
+  private static final class FixedRandom extends java.security.SecureRandom {
+    private final byte[] seed;
+    private int offset = 0;
+    FixedRandom(byte[] seed) { this.seed = seed.clone(); }
+    @Override public void nextBytes(byte[] bytes) {
+      for (int i = 0; i < bytes.length; i++) {
+        bytes[i] = seed[offset % seed.length];
+        offset++;
+      }
+    }
   }
 
   private static String b58encode(byte[] bytes) {
@@ -69,19 +74,24 @@ public class HandshakeTest {
     var vectors = (java.util.List<java.util.Map<String, Object>>) doc.get("vectors");
 
     for (var v : vectors) {
-      byte[] seed = Base64.getDecoder().decode(((Map<String,String>)v.get("key")).get("seed_b64"));
-      byte[] pkcs8 = pkcs8FromSeed(seed);
-      PrivateKey priv = KeyFactory.getInstance("Ed25519").generatePrivate(new PKCS8EncodedKeySpec(pkcs8));
-      // derive public raw from private key using Handshake helper
-      // we’ll build pka via signing public export – omitted; simply start server and rely on WellKnown JSON
+      @SuppressWarnings("unchecked") Map<String,String> keyMap = (Map<String,String>) v.get("key");
+      byte[] seed = Base64.getDecoder().decode(keyMap.get("seed_b64"));
+
+      // Generate a deterministic Ed25519 keypair from the provided seed so pub/priv match
+      KeyPairGenerator kpg = KeyPairGenerator.getInstance("Ed25519");
+      kpg.initialize(new NamedParameterSpec("Ed25519"), new FixedRandom(seed));
+      KeyPair kp = kpg.generateKeyPair();
+      PrivateKey priv = kp.getPrivate();
+      byte[] spki = kp.getPublic().getEncoded();
+      // Extract raw 32-byte public key from SPKI encoding
+      byte[] rawPub = java.util.Arrays.copyOfRange(spki, spki.length - 32, spki.length);
 
       HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
       int port = server.getAddress().getPort();
       String domain = "127.0.0.1:" + port;
       String uri = "http://" + domain + "/mcp";
 
-      // Generate PKA from test vector (all zeros is a valid Ed25519 public key)
-      byte[] rawPub = new byte[32]; // All zeros - valid for Ed25519 testing
+      // Generate PKA from the derived public key
       String pka = "z" + b58encode(rawPub);
 
       server.createContext("/.well-known/agent", new HttpHandler() {
