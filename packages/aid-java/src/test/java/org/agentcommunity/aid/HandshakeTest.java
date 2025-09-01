@@ -80,12 +80,13 @@ public class HandshakeTest {
       String domain = "127.0.0.1:" + port;
       String uri = "http://" + domain + "/mcp";
 
-      // pka from private key's public: export via signature API isn't direct; use workaround by verifying to recover not available.
-      // For test JSON we can compute raw pub by signing empty and extracting from provider if supported; to keep test focused, we skip ensuring correct pka and instead skip vector when Ed25519 unavailable.
+      // Generate PKA from test vector (all zeros is a valid Ed25519 public key)
+      byte[] rawPub = new byte[32]; // All zeros - valid for Ed25519 testing
+      String pka = "z" + b58encode(rawPub);
 
       server.createContext("/.well-known/agent", new HttpHandler() {
         @Override public void handle(HttpExchange ex) throws IOException {
-          String body = "{\"v\":\"aid1\",\"u\":\"" + uri + "\",\"p\":\"mcp\",\"k\":\"z111\",\"i\":\"g1\"}";
+          String body = "{\"v\":\"aid1\",\"u\":\"" + uri + "\",\"p\":\"mcp\",\"k\":\"" + pka + "\",\"i\":\"g1\"}";
           ex.getResponseHeaders().add("content-type", "application/json");
           byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
           ex.sendResponseHeaders(200, bytes.length);

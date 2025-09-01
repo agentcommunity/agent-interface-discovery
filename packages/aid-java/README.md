@@ -1,6 +1,6 @@
 # AID Java
 
-Minimal Java library for parsing Agent Interface Discovery (AID) TXT records and using generated spec constants.
+Minimal Java library for parsing and discovering Agent Interface Discovery (AID) records and using generated spec constants.
 
 ## v1.1 Notes (PKA + .well-known)
 
@@ -31,6 +31,22 @@ import java.time.Duration;
 
 var rec = Parser.parse("v=aid1;uri=https://api.example.com/mcp;p=mcp;k=zBase58Key;i=g1");
 Handshake.performHandshake(rec.uri, rec.pka, rec.kid, Duration.ofSeconds(2));
+```
+
+### Example: DNS-first discovery with options
+
+```java
+import org.agentcommunity.aid.Discovery;
+import org.agentcommunity.aid.Discovery.DiscoveryOptions;
+
+var opts = new DiscoveryOptions();
+opts.protocol = "mcp";               // Try _agent._mcp., then _agent.mcp., then base
+opts.timeout = java.time.Duration.ofSeconds(5);
+opts.wellKnownFallback = true;        // Only on ERR_NO_RECORD / ERR_DNS_LOOKUP_FAILED
+opts.wellKnownTimeout = java.time.Duration.ofSeconds(2);
+
+var result = Discovery.discover("example.com", opts);
+System.out.println(result.record.proto + " at " + result.record.uri + ", ttl=" + result.ttl + ", name=" + result.queryName);
 ```
 
 ## Usage
@@ -66,3 +82,11 @@ try {
   - `./gradlew :aid-java:build :aid-java:test`
 
 No external runtime dependencies; tests use JUnit 5 via Gradle.
+
+## Redirect Security
+
+Clients should not automatically follow cross‑origin redirects from the discovered URI. If a 301/302/307/308 points to a different hostname or port, treat as a potential security risk: fail or require explicit confirmation.
+
+## More on PKA
+
+See the documentation “Quick Start → PKA handshake expectations” for the exact coverage fields, algorithm, timestamp windows, and key format.

@@ -97,18 +97,27 @@ public final class Parser {
     }
 
     // Auth token
+    if (raw.containsKey("auth") && raw.containsKey("a")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"auth\" and \"a\" fields");
+    }
     String authVal = raw.containsKey("auth") ? raw.get("auth") : (raw.containsKey("a") ? raw.get("a") : null);
     if (authVal != null && !isValidAuth(authVal)) {
       throw new AidError("ERR_INVALID_TXT", "Invalid auth token: " + authVal);
     }
 
     // Desc length check (≤ 60 UTF-8 bytes)
+    if (raw.containsKey("desc") && raw.containsKey("s")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"desc\" and \"s\" fields");
+    }
     String descVal = raw.containsKey("desc") ? raw.get("desc") : (raw.containsKey("s") ? raw.get("s") : null);
     if (descVal != null) {
       int bytes = descVal.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
       if (bytes > 60) {
         throw new AidError("ERR_INVALID_TXT", "Description field must be ≤ 60 UTF-8 bytes");
       }
+    }
+    if (raw.containsKey("docs") && raw.containsKey("d")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"docs\" and \"d\" fields");
     }
     String docsVal = raw.containsKey("docs") ? raw.get("docs") : (raw.containsKey("d") ? raw.get("d") : null);
     if (docsVal != null) {
@@ -123,6 +132,9 @@ public final class Parser {
       } catch (Exception e) {
         throw new AidError("ERR_INVALID_TXT", "Invalid docs URL: " + docsVal);
       }
+    }
+    if (raw.containsKey("dep") && raw.containsKey("e")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"dep\" and \"e\" fields");
     }
     String depVal = raw.containsKey("dep") ? raw.get("dep") : (raw.containsKey("e") ? raw.get("e") : null);
     if (depVal != null) {
@@ -183,6 +195,12 @@ public final class Parser {
 
     String auth = authVal;
     String desc = descVal;
+    if (raw.containsKey("pka") && raw.containsKey("k")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"pka\" and \"k\" fields");
+    }
+    if (raw.containsKey("kid") && raw.containsKey("i")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"kid\" and \"i\" fields");
+    }
     String pkaVal = raw.containsKey("pka") ? raw.get("pka") : (raw.containsKey("k") ? raw.get("k") : null);
     String kidVal = raw.containsKey("kid") ? raw.get("kid") : (raw.containsKey("i") ? raw.get("i") : null);
     if (pkaVal != null && kidVal == null) {

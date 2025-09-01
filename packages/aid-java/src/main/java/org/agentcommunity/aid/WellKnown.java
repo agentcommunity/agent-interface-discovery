@@ -66,7 +66,24 @@ public final class WellKnown {
     Map<String, String> map = parseSimpleJsonObject(text);
     if (map.isEmpty()) throw new AidError("ERR_FALLBACK_FAILED", "Well-known JSON must be an object");
     String txt = canonicalizeToTxt(map);
-    AidRecord rec = Parser.parse(txt);
+    AidRecord rec;
+    try {
+      rec = Parser.parse(txt);
+    } catch (AidError err) {
+      // Narrow relaxation: allow loopback HTTP only when explicitly enabled via allowInsecure
+      String host = domain;
+      boolean isLoopback = host.equalsIgnoreCase("localhost") || host.startsWith("127.0.0.1") || host.equals("::1");
+      String uri = map.containsKey("uri") ? map.get("uri") : map.get("u");
+      String proto = map.containsKey("proto") ? map.get("proto") : map.get("p");
+      boolean isHttpRemote = uri != null && uri.startsWith("http://");
+      boolean isRemoteProto = proto != null && !(proto.equals("local") || proto.equals("zeroconf") || proto.equals("websocket"));
+      if (!(allowInsecure && isLoopback && isHttpRemote && isRemoteProto)) throw err;
+      // Validate other fields by upgrading scheme just for validation
+      String txtHttps = txt.replaceFirst("uri=http://", "uri=https://").replaceFirst("u=http://", "u=https://");
+      AidRecord validated = Parser.parse(txtHttps);
+      // Restore http URI in the resulting record
+      rec = new AidRecord(validated.v, uri, validated.proto, validated.auth, validated.desc, validated.docs, validated.dep, validated.pka, validated.kid);
+    }
     if (rec.pka != null) {
       Handshake.performHandshake(rec.uri, rec.pka, rec.kid == null ? "" : rec.kid, timeout);
     }
