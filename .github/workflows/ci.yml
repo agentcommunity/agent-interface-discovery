@@ -200,6 +200,13 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -226,6 +233,9 @@ jobs:
         with:
           languages: javascript, go, rust, csharp, java, python
           config-file: ./.github/codeql-config.yml
+
+      - name: Build Java for CodeQL
+        run: ./gradlew :aid-java:build
 
       - name: CodeQL Analysis (Autobuild)
         uses: github/codeql-action/autobuild@v3
