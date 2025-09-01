@@ -93,6 +93,8 @@ For libraries in other languages (including Rust/.NET/Java WIP), see the [Packag
 
 ---
 
+!!! info "Implementation Files" - [Generated spec types](../protocol/spec.ts) - [TypeScript constants](../packages/aid/src/constants.ts)
+
 **See also:**
 
 - [General Quick Start](./index.md)

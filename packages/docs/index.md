@@ -72,3 +72,7 @@ AID has official libraries and tools across multiple languages, with additional 
 - Web Workbench: Interactive generator/resolver
 
 See the full package overview in the [Quick Start](quickstart/index.md#package-overview) and the cross-language [Discovery API](Reference/discovery_api.md).
+
+!!! tip "Implementation Files"
+All SDKs share constants generated from a single source: [`protocol/constants.yml`](../protocol/constants.yml).
+View generated files: [TypeScript](../packages/aid/src/constants.ts), [Python](../packages/aid-py/aid_py/constants.py), [Go](../packages/aid-go/constants_gen.go), [Rust](../packages/aid-rs/src/constants_gen.rs), [.NET](../packages/aid-dotnet/src/Constants.g.cs), [Java](../packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java)

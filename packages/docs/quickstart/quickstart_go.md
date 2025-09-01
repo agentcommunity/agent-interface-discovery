@@ -74,3 +74,5 @@ Errors map to symbolic codes (e.g., `ERR_NO_RECORD`) and numeric codes (1000..10
 - [Protocols & Auth Tokens](../Reference/protocols.md)
 - [Troubleshooting](../Reference/troubleshooting.md)
 - [Conformance](../Reference/conformance.md)
+
+!!! info "Implementation Files" - [Generated constants](../packages/aid-go/constants_gen.go)

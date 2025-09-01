@@ -79,3 +79,5 @@ Notes
 - [Protocols & Auth Tokens](../Reference/protocols.md)
 - [Troubleshooting](../Reference/troubleshooting.md)
 - [Conformance](../Reference/conformance.md)
+
+!!! info "Implementation Files" - [Generated constants](../packages/aid/src/constants.ts) - [Generated spec types](../protocol/spec.ts)

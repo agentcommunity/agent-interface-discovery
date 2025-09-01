@@ -99,7 +99,7 @@ def discover(
     except Exception:
         domain_alabel = domain  # Fallback – let DNS resolver handle errors
 
-    def _query_and_parse(query_name: str) -> Tuple[dict, int]:
+    def _query_and_parse(query_name: str, filter_by_protocol: bool = True) -> Tuple[dict, int]:
         """Query a specific FQDN and parse the result."""
         txt_records, ttl = _query_txt_record(query_name, timeout)
 
@@ -107,8 +107,8 @@ def discover(
         for txt in txt_records:
             try:
                 record = parse(txt)
-                # If a protocol is specified, ensure the record matches
-                if protocol and record.get("proto") != protocol:
+                # If protocol filtering is enabled and a protocol is specified, ensure the record matches
+                if filter_by_protocol and protocol and record.get("proto") != protocol:
                     last_error = AidError("ERR_UNSUPPORTED_PROTO", f"Record found, but protocol does not match requested '{protocol}'")
                     continue
                 return record, ttl
@@ -187,7 +187,7 @@ def discover(
     # 1. Start with the base domain query
     base_fqdn = f"{DNS_SUBDOMAIN}.{domain_alabel}".rstrip(".")
     try:
-        record, ttl = _query_and_parse(base_fqdn)
+        record, ttl = _query_and_parse(base_fqdn, filter_by_protocol=True)
         # If no specific protocol is requested, or if the found record matches, we're done.
         if not protocol or record.get("proto") == protocol:
             return record, ttl
@@ -205,7 +205,7 @@ def discover(
         # a) underscore form: _agent._<proto>.<domain>
         proto_underscore = f"{DNS_SUBDOMAIN}._{protocol}.{domain_alabel}".rstrip(".")
         try:
-            return _query_and_parse(proto_underscore)
+            return _query_and_parse(proto_underscore, filter_by_protocol=True)
         except AidError as e:
             if getattr(e, "error_code", None) != "ERR_NO_RECORD":
                  raise
@@ -213,7 +213,7 @@ def discover(
         # b) non-underscore form (as a fallback for older specs or misconfigurations)
         proto_plain = f"{DNS_SUBDOMAIN}.{protocol}.{domain_alabel}".rstrip(".")
         try:
-            return _query_and_parse(proto_plain)
+            return _query_and_parse(proto_plain, filter_by_protocol=True)
         except AidError as e:
             if getattr(e, "error_code", None) != "ERR_NO_RECORD":
                  raise
@@ -222,7 +222,8 @@ def discover(
     try:
         # This will re-query the base and fail with a clear error if nothing is found.
         # Or, it will trigger the .well-known fallback if applicable.
-        return _query_and_parse(base_fqdn)
+        # Per spec: when falling back to base record, do NOT filter by protocol to maintain compatibility
+        return _query_and_parse(base_fqdn, filter_by_protocol=False)
     except AidError as exc:
         if well_known_fallback and exc.error_code in ("ERR_NO_RECORD", "ERR_DNS_LOOKUP_FAILED"):
             # Attempt .well-known fallback

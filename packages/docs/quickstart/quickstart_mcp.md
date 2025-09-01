@@ -89,6 +89,8 @@ connectToMcpServer('supabase.agentcommunity.org');
 
 ---
 
+!!! info "Implementation Files" - [Generated spec types](../protocol/spec.ts) - [TypeScript constants](../packages/aid/src/constants.ts)
+
 **See also:**
 
 - [General Quick Start](./index.md)
