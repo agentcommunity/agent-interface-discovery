@@ -1,33 +1,41 @@
 plugins {
   id 'java-library'
+  id 'jacoco'
 }
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
-}
-
-group = 'org.agentcommunity'
-version = '0.1.0-SNAPSHOT'
 
 repositories {
   mavenCentral()
 }
 
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
 dependencies {
-  testImplementation(platform('org.junit:junit-bom:5.10.2'))
-  testImplementation('org.junit.jupiter:junit-jupiter')
-  implementation('com.fasterxml.jackson.core:jackson-databind:2.17.2')
+  // main deps go here using modern configurations
+  // implementation 'com.nimbusds:nimbus-jose-jwt:9.40.2'
+
+  testImplementation(platform("org.junit:junit-bom:5.10.2"))
+  testImplementation("org.junit.jupiter:junit-jupiter")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
 }
 
-test {
+tasks.test {
   useJUnitPlatform()
+  testLogging {
+    events "failed", "skipped", "passed"
+  }
 }
 
-tasks.withType(Test).configureEach {
-    jvmArgs '-Dfile.encoding=UTF-8'
-    systemProperty 'user.language', 'en'
-    systemProperty 'user.region', 'US'
-    environment 'LC_ALL', 'C'
-    environment 'LANG', 'C'
+jacoco {
+  toolVersion = "0.8.12"
+}
+
+tasks.named("compileJava").configure {
+  options.encoding = "UTF-8"
+}
+tasks.named("compileTestJava").configure {
+  options.encoding = "UTF-8"
 }

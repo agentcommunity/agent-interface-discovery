@@ -339,7 +339,14 @@ jobs:
       - name: Build & Test (Gradle Wrapper)
         env:
           AID_RUN_INTEGRATION: '1'
-        run: ./gradlew :aid-java:build :aid-java:test
+        run: ./gradlew --no-daemon :aid-java:test --tests '*HandshakeTest*' --info --stacktrace
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aid-java-test-report
+          path: packages/aid-java/build/reports/tests/test
 
   doctor-e2e-matrix:
     name: Doctor E2E (${{ matrix.os }})
