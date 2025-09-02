@@ -273,7 +273,7 @@ In production, `.well-known` must use HTTPS; the loopback relax is for local dev
 - [OpenAPI Guide](./quickstart_openapi.md)
 - [Protocols & Auth Tokens](../Reference/protocols.md)
 - [Troubleshooting](../Reference/troubleshooting.md)
-- [Conformance](../Reference/conformance.md)
+- [Conformance](../Tooling/conformance.md)
 - [Specification](../specification.md)
 - [Security Best Practices](../security.md)
 - [Rationale](../rationale.md)

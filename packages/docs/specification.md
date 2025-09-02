@@ -285,4 +285,4 @@ Providers MUST include `kid`/`i` with `pka`/`k`. Clients SHOULD warn on downgrad
 **Next Steps:**
 
 - [Quick Start Guide](quickstart/index.md)
-- [Blog: The Missing MX Record](blog/missing_record.md)
+- [aid-doctor CLI Reference](Tooling/aid_doctor.md) – Official implementation and validation tool

@@ -86,6 +86,6 @@ Notes
 - [.NET](./quickstart_dotnet.md)
 - [Protocols & Auth Tokens](../Reference/protocols.md)
 - [Troubleshooting](../Reference/troubleshooting.md)
-- [Conformance](../Reference/conformance.md)
+- [Conformance](../Tooling/conformance.md)
 
 !!! info "Implementation Files" - [Generated constants](../packages/aid-rs/src/constants_gen.rs)

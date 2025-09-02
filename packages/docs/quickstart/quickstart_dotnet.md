@@ -60,6 +60,6 @@ Notes
 - [Java](./quickstart_java.md)
 - [Protocols & Auth Tokens](../Reference/protocols.md)
 - [Troubleshooting](../Reference/troubleshooting.md)
-- [Conformance](../Reference/conformance.md)
+- [Conformance](../Tooling/conformance.md)
 
 !!! info "Implementation Files" - [Generated constants](../packages/aid-dotnet/src/Constants.g.cs)

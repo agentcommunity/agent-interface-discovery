@@ -108,6 +108,8 @@ pnpm -C packages/aid-doctor dev
 pnpm i -g @agentcommunity/aid-doctor && aid-doctor check <domain>
 ```
 
+For complete CLI documentation, see the [aid-doctor CLI Reference](packages/docs/Reference/aid_doctor.md).
+
 ## Code style
 
 * TypeScript strict, target ES2022, 2 space indent, lowercase or kebab file names, prefer named exports

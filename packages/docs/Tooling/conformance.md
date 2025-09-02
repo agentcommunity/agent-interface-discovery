@@ -37,6 +37,9 @@ npx aid-conformance ./some-fixture.json
 
 Exit code is non-zero if any case fails; output includes a concise summary.
 
+!!! tip "Production Validation"
+For real-world testing, use the [aid-doctor CLI](../aid_doctor.md) to validate your AID records against live DNS and perform security checks.
+
 ## See also
 
 - [Quick Start index](./quickstart/index.md)

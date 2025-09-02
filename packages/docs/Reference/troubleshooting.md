@@ -47,6 +47,7 @@ icon: material/tools
 
 - CLI: `aid-doctor check <domain>` or `aid-doctor json <domain>`.
 - Web: aid.agentcommunity.org/workbench.
+- For comprehensive diagnostics, use the [aid-doctor CLI](../aid_doctor.md) which provides detailed validation, security checks, and PKA verification.
 
 ## See also
 

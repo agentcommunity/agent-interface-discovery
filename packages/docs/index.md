@@ -65,6 +65,7 @@ flowchart LR
 - [**Identity & PKA**](Reference/identity_pka.md) – _How AID provides cryptographic proof of an agent's identity._
 - [**Rationale**](rationale.md) – _The design philosophy behind AID._
 - [**Security Best Practices**](security.md) – _DNSSEC, redirect handling, local execution, IDN safety, TTL & caching._
+- [**aid-doctor CLI**](Tooling/aid_doctor.md) – _Validate, secure, and generate AID records._
 - [**What’s New**](Reference/whats_new.md) – _Recent documentation updates._
 
 ---
@@ -79,6 +80,7 @@ AID has official libraries and tools across multiple languages, with additional 
 - Rust: `aid-rs`
 - .NET: `aid-dotnet`
 - Java: `aid-java`
+- CLI Tool: `@agentcommunity/aid-doctor` – Validate, secure, and generate AID records
 - Web Workbench: Interactive generator/resolver
 
 See the full package overview in the [Quick Start](quickstart/index.md#package-overview) and the cross-language [Discovery API](Reference/discovery_api.md).
