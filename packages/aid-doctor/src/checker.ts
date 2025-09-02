@@ -140,21 +140,28 @@ export async function runCheck(domain: string, opts: CheckOptions): Promise<Doct
     if (!skipSecurity && record.proto !== 'local' && record.proto !== 'zeroconf') {
       try {
         await enforceRedirectPolicy(record.uri, opts.timeoutMs);
-        const tlsInfo = await inspectTls(record.uri, opts.timeoutMs);
-        report.tls.checked = true;
-        report.tls.valid = true;
-        report.tls.host = tlsInfo.host;
-        report.tls.sni = tlsInfo.sni;
-        report.tls.issuer = tlsInfo.issuer;
-        report.tls.san = tlsInfo.san;
-        report.tls.validFrom = tlsInfo.validFrom;
-        report.tls.validTo = tlsInfo.validTo;
-        report.tls.daysRemaining = tlsInfo.daysRemaining;
-        if (tlsInfo.daysRemaining !== null && tlsInfo.daysRemaining < 21) {
-          report.record.warnings.push({
-            code: 'TLS_EXPIRING',
-            message: ERROR_MESSAGES.TLS_EXPIRING_SOON,
-          });
+        // Only perform TLS inspection for HTTPS URLs
+        if (record.uri.startsWith('https://')) {
+          const tlsInfo = await inspectTls(record.uri, opts.timeoutMs);
+          report.tls.checked = true;
+          report.tls.valid = true;
+          report.tls.host = tlsInfo.host;
+          report.tls.sni = tlsInfo.sni;
+          report.tls.issuer = tlsInfo.issuer;
+          report.tls.san = tlsInfo.san;
+          report.tls.validFrom = tlsInfo.validFrom;
+          report.tls.validTo = tlsInfo.validTo;
+          report.tls.daysRemaining = tlsInfo.daysRemaining;
+          if (tlsInfo.daysRemaining !== null && tlsInfo.daysRemaining < 21) {
+            report.record.warnings.push({
+              code: 'TLS_EXPIRING',
+              message: ERROR_MESSAGES.TLS_EXPIRING_SOON,
+            });
+          }
+        } else {
+          // Skip TLS for HTTP URLs
+          report.tls.checked = false;
+          report.tls.valid = null;
         }
       } catch (e) {
         const err = e as AidError;
