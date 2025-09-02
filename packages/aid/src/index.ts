@@ -1,5 +1,5 @@
 /**
- * @agentcommunity/aid - Agent Interface Discovery
+ * @agentcommunity/aid - Agent Identity & Discovery
  *
  * A minimal, DNS-based discovery protocol for AI agents.
  *

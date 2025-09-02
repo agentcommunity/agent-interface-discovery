@@ -8,7 +8,7 @@ extra_css_class: aid-page
 
 # Quick Start Guide
 
-Fast track for using Agent Interface Discovery.
+Fast track for using Agent Identity & Discovery.
 
 ## Package Overview
 

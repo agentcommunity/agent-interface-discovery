@@ -1,5 +1,5 @@
 ---
-title: 'Agent Interface Discovery - aid'
+title: 'Agent Identity & Discovery - aid'
 description: 'Design Rationale'
 icon: material/head-question-outline
 
@@ -8,14 +8,14 @@ extra_css_class: aid-page
 
 [View raw markdown](https://github.com/agentcommunity/agent-interface-discovery/raw/main/packages/docs/rationale.md)
 
-## **Agent Interface Discovery (AID) v1.1: Rationale and Trade-offs**
+## **Agent Identity & Discovery (AID) v1.1: Rationale and Trade-offs**
 
 **Date:** 31 August 2025
 **Document Status:** Companion to the AID v1.1 Specification
 
 ### **1. Introduction**
 
-This document provides the rationale behind the design decisions in the Agent Interface Discovery (AID) v1.1 specification. A technical specification defines _what_ a standard is; this document explains _why_ it is that way. It outlines the core philosophy, highlights the protocol's strengths, defines its intentional limitations, and discusses the alternatives that were considered and rejected. Understanding these trade-offs is crucial for implementers, critics, and future contributors to the standard.
+This document provides the rationale behind the design decisions in the Agent Identity & Discovery (AID) v1.1 specification. A technical specification defines _what_ a standard is; this document explains _why_ it is that way. It outlines the core philosophy, highlights the protocol's strengths, defines its intentional limitations, and discusses the alternatives that were considered and rejected. Understanding these trade-offs is crucial for implementers, critics, and future contributors to the standard.
 
 ### **2. Core Philosophy: Pragmatism, Simplicity, and Decentralization**
 

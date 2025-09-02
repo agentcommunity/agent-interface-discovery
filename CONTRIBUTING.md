@@ -1,4 +1,4 @@
-# Contributing to Agent Interface Discovery
+# Contributing to Agent Identity & Discovery
 
 👋 Thank you for your interest in contributing to this repository!
 

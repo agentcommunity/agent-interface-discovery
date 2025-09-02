@@ -20,7 +20,7 @@ The MCP specification rightly focuses on the intricate dance of an active sessio
 
 But there's a Layer 1 problem that needs to be solved first: discovery. Given a name, how do you get an address?
 
-This is the problem Agent Interface Discovery (AID) solves. And it solves it in the most obvious way imaginable: it uses DNS.
+This is the problem Agent Identity & Discovery (AID) solves. And it solves it in the most obvious way imaginable: it uses DNS.
 
 If you want to find the email server for a domain, you don't look in a centralized "email store." You ask the domain's own DNS for its `MX` record. AID proposes we do the same for agents. If you want to find the agent for `supabase.com`, you ask its DNS for the `_agent.supabase.com` record.
 

@@ -22,7 +22,7 @@ This is the obvious thing we’ve been missing.
 
 ### The Signpost, Not the Blueprint
 
-Agent Interface Discovery (AID) is a simple, open standard that applies this proven idea to the world of agents. It answers one question and one question only: **“Given a domain, where is its AI agent?”**
+Agent Identity & Discovery (AID) is a simple, open standard that applies this proven idea to the world of agents. It answers one question and one question only: **"Given a domain, where is its AI agent?"**
 
 It does this with a single DNS `TXT` record. If you want to find the agent for a service, you just look for a record at `_agent.<domain>`.
 

@@ -1,4 +1,4 @@
-# Agent Interface Discovery (AID)
+# Agent Identity & Discovery (AID)
 
 <div align="center">
   <p><strong>DNS for Agents: Type a domain. Connect to its agent. Instantly.</strong></p>

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aid-discovery"
 version = "1.1.0"
-description = "Python library for Agent Interface Discovery (AID) - v1.1.0 release"
+description = "Python library for Agent Identity & Discovery (AID) - v1.1.0 release"
 authors = [{ name = "Agent Community", email = "maintainers@agentcommunity.org" }]
 readme = "README.md"
 license = { text = "MIT" }

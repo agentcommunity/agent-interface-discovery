@@ -21,7 +21,7 @@ const program = new Command();
 // Package info
 program
   .name('aid-doctor')
-  .description('CLI tool for Agent Interface Discovery (AID)')
+  .description('CLI tool for Agent Identity & Discovery (AID)')
   .version('0.1.0');
 
 /**
@@ -360,7 +360,7 @@ program
     }
     console.log(
       [
-        chalk.bold('aid-doctor') + ' - Agent Interface Discovery CLI',
+        chalk.bold('aid-doctor') + ' - Agent Identity & Discovery CLI',
         `Version: ${chalk.green(version)}`,
         `Node: ${chalk.gray(process.version)}`,
         `Platform: ${chalk.gray(process.platform)}`,

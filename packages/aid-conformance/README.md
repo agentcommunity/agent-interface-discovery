@@ -1,6 +1,6 @@
 # @agentcommunity/aid-conformance
 
-Conformance fixtures and a tiny runner for Agent Interface Discovery (AID).
+Conformance fixtures and a tiny runner for Agent Identity & Discovery (AID).
 
 - Exposes the shared `test-fixtures/golden.json` via a typed export (includes v1.1 fields like `docs`/`dep` and `pka`/`kid`)
 - Provides a simple Node runner to execute the fixtures against a parser

@@ -18,7 +18,7 @@ We are now building the internet of agents, and we are creating powerful, comple
 
 But we've been making everyone look up the address in the manual.
 
-Agent Interface Discovery (AID) is the `MX` record for this new internet. It’s a dead-simple, open standard that answers one question using the same global address book the internet has always used: **"Given a domain, where is its agent?"**
+Agent Identity & Discovery (AID) is the `MX` record for this new internet. It’s a dead-simple, open standard that answers one question using the same global address book the internet has always used: **"Given a domain, where is its agent?"**
 
 The entire mechanism is a single DNS `TXT` record. If you want to find the agent for `notion.so`, you just look up the record at `_agent.notion.so`. It looks like this:
 

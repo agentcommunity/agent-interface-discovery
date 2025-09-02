@@ -1,5 +1,5 @@
 /**
- * @agentcommunity/aid/browser - Browser-compatible Agent Interface Discovery
+ * @agentcommunity/aid/browser - Browser-compatible Agent Identity & Discovery
  *
  * This module provides AID functionality for browser environments using DNS-over-HTTPS.
  *

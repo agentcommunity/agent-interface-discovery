@@ -1,6 +1,6 @@
 # aid-go
 
-> Official Go implementation of the [Agent Interface Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
+> Official Go implementation of the [Agent Identity & Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/agentcommunity/agent-interface-discovery/aid-go.svg)](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)
 [![Go 1.23+](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org/dl/)

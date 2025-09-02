@@ -1,6 +1,6 @@
 # AidDiscovery (.NET)
 
-Minimal .NET library for Agent Interface Discovery (AID) parsing, discovery, and constants.
+Minimal .NET library for Agent Identity & Discovery (AID) parsing, discovery, and constants.
 
 - Target framework: `net9.0`
 - No external runtime dependencies

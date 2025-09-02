@@ -18,7 +18,7 @@ This is the bootstrapping problem. How does an agent, or a user, get the very fi
 
 The most robust and elegant solutions in network architecture are often the simplest ones, built on the lowest reliable layer. For service location, that layer is DNS.
 
-This is what Agent Interface Discovery (AID) proposes. It’s a simple, open standard that uses a single DNS `TXT` record to answer one question: "Given a domain, where can I find its agent interface?"
+This is what Agent Identity & Discovery (AID) proposes. It's a simple, open standard that uses a single DNS `TXT` record to answer one question: "Given a domain, where can I find its agent interface?"
 
 It looks like this:
 

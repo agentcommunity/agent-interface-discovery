@@ -1,5 +1,5 @@
 /**
- * @agentcommunity/aid-doctor - CLI tool for Agent Interface Discovery
+ * @agentcommunity/aid-doctor - CLI tool for Agent Identity & Discovery
  *
  * This file contains the logic for the interactive record generator.
  */

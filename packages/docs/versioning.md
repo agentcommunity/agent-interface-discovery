@@ -10,7 +10,7 @@ extra_css_class: aid-page
 
 # Versioning and Changelog
 
-The Agent Interface Discovery (AID) standard is designed to be a stable, living protocol. To ensure predictability for implementers while allowing for future improvements, we follow a clear and simple versioning strategy based on **Semantic Versioning (SemVer)** principles.
+The Agent Identity & Discovery (AID) standard is designed to be a stable, living protocol. To ensure predictability for implementers while allowing for future improvements, we follow a clear and simple versioning strategy based on **Semantic Versioning (SemVer)** principles.
 
 ## The `v` Key in the TXT Record
 

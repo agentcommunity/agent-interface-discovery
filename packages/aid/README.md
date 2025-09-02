@@ -1,6 +1,6 @@
 # @agentcommunity/aid
 
-Agent Interface Discovery (AID) – Core TypeScript library for Node.js and Browsers.
+Agent Identity & Discovery (AID) – Core TypeScript library for Node.js and Browsers.
 
 - Canonical spec: see the monorepo docs and `protocol/constants.yml`
 - Website: https://aid.agentcommunity.org

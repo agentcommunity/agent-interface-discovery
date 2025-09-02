@@ -1,6 +1,6 @@
 # AID Java
 
-Minimal Java library for parsing and discovering Agent Interface Discovery (AID) records and using generated spec constants.
+Minimal Java library for parsing and discovering Agent Identity & Discovery (AID) records and using generated spec constants.
 
 ## v1.1 Notes (PKA + .well-known)
 

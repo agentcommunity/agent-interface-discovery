@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: aid-discovery
 Version: 1.1.0
-Summary: Python library for Agent Interface Discovery (AID) - v1.1.0 release
+Summary: Python library for Agent Identity & Discovery (AID) - v1.1.0 release
 Author-email: Agent Community <maintainers@agentcommunity.org>
 License: MIT
 Project-URL: Homepage, https://github.com/agent-community/agent-interface-discovery
@@ -17,7 +17,7 @@ Requires-Dist: cryptography>=42; extra == "pka"
 
 # aid-discovery (Python)
 
-> Official Python implementation of the [Agent Interface Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
+> Official Python implementation of the [Agent Identity & Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
 
 [![PyPI version](https://img.shields.io/pypi/v/aid-discovery.svg?color=blue)](https://pypi.org/project/aid-discovery/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)

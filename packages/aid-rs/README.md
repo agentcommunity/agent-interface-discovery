@@ -1,6 +1,6 @@
 # aid-rs
 
-Rust crate for Agent Interface Discovery (AID) parsing and generated constants.
+Rust crate for Agent Identity & Discovery (AID) parsing and generated constants.
 
 - Parser by default; optional PKA handshake behind a feature flag.
 - No runtime dependencies for the parser; handshake uses `reqwest`, `ed25519-dalek`, `bs58`, `httpdate`.

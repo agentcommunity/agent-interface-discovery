@@ -14,7 +14,7 @@ This document has been updated to incorporate the specific requirements for **AI
 
 ---
 
-## Agent Interface Discovery (AID) — v1.1 Changes (Draft)
+## Agent Identity & Discovery (AID) — v1.1 Changes (Draft)
 
 Date: August 31, 2025  
 Editor: Agent Community  

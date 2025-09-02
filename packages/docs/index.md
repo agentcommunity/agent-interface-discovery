@@ -1,12 +1,12 @@
 ---
-title: 'Agent Interface Discovery (AID)'
+title: 'Agent Identity & Discovery (AID)'
 description: 'The DNS-based discovery protocol for the agentic web.'
 icon: material/dns
 ---
 
 [View raw markdown](https://github.com/agentcommunity/agent-interface-discovery/raw/main/packages/docs/specification.md)
 
-# Agent Interface Discovery (AID)
+# Agent Identity & Discovery (AID)
 
 > ## DNS for Agents. **Identity for the Agentic Web.**
 

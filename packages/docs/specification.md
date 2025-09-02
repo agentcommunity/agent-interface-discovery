@@ -1,5 +1,5 @@
 ---
-title: "Agent Interface Discovery 'aid'"
+title: "Agent Identity & Discovery 'aid'"
 description: 'Specification'
 icon: material/file-document-outline
 
@@ -12,7 +12,7 @@ tags:
 
 [View raw markdown](https://github.com/agentcommunity/agent-interface-discovery/raw/main/packages/docs/specification.md)
 
-# **Agent Interface Discovery (AID) — v1.1.0**
+# **Agent Identity & Discovery (AID) — v1.1.0**
 
 _Minimal, DNS-first agent bootstrap standard_
 
@@ -24,7 +24,7 @@ _Minimal, DNS-first agent bootstrap standard_
 
 ## **Abstract**
 
-Agent Interface Discovery (AID) answers one question: **"Given a domain, where is the agent and which protocol should I speak?"** It does so with a single DNS TXT record at a well-known subdomain: `_agent.<domain>`.
+Agent Identity & Discovery (AID) answers one question: **"Given a domain, where is the agent and which protocol should I speak?"** It does so with a single DNS TXT record at a well-known subdomain: `_agent.<domain>`.
 
 This protocol is an intentionally minimal discovery layer. After a client uses AID to find the correct endpoint or package, richer protocols such as the Model Context Protocol (MCP) or the Agent-to-Agent Protocol (A2A) take over for communication and capability negotiation.
 

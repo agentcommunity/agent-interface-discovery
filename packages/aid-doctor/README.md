@@ -1,6 +1,6 @@
 # @agentcommunity/aid-doctor
 
-Official CLI for Agent Interface Discovery (AID).
+Official CLI for Agent Identity & Discovery (AID).
 
 - Website: https://aid.agentcommunity.org
 - Docs: https://docs.agentcommunity.org/aid
