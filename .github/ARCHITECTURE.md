@@ -1,4 +1,4 @@
-# Agent Interface Discovery - Architecture Documentation
+# Agent Identity & Discovery - Architecture Documentation
 
 > **Why this matters:** Understanding the architectural decisions behind this monorepo ensures consistent development practices and enables future contributors to extend the project effectively.
 

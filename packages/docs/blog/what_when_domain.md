@@ -52,7 +52,7 @@ You can now build experiences that feel like magic. Imagine your user wants to c
 
 ### It’s Time to Build
 
-Agent Interface Discovery is not a future-facing proposal. It’s a finished standard with libraries in TypeScript, Python, and Go. It is deliberately simple so that it can be adopted today, by everyone, without waiting for a central authority.
+Agent Identity & Discovery is not a future-facing proposal. It’s a finished standard with libraries in TypeScript, Python, and Go. It is deliberately simple so that it can be adopted today, by everyone, without waiting for a central authority.
 
 This is the missing piece of the puzzle. It’s the zero-friction layer that will allow the agentic web to grow from a collection of siloed services into a truly interconnected ecosystem.
 
