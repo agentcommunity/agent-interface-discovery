@@ -8,14 +8,14 @@ extra_css_class: aid-page
 
 [View raw markdown](https://github.com/agentcommunity/agent-interface-discovery/raw/main/packages/docs/rationale.md)
 
-## **Agent Interface Discovery (AID) v1.0.0: Rationale and Trade-offs**
+## **Agent Interface Discovery (AID) v1.1: Rationale and Trade-offs**
 
-**Date:** 5 July 2025
-**Document Status:** Companion to the AID v1.0.0 Specification
+**Date:** 31 August 2025
+**Document Status:** Companion to the AID v1.1 Specification
 
 ### **1. Introduction**
 
-This document provides the rationale behind the design decisions in the Agent Interface Discovery (AID) v1.0.0 specification. A technical specification defines _what_ a standard is; this document explains _why_ it is that way. It outlines the core philosophy, highlights the protocol's strengths, defines its intentional limitations, and discusses the alternatives that were considered and rejected. Understanding these trade-offs is crucial for implementers, critics, and future contributors to the standard.
+This document provides the rationale behind the design decisions in the Agent Interface Discovery (AID) v1.1 specification. A technical specification defines _what_ a standard is; this document explains _why_ it is that way. It outlines the core philosophy, highlights the protocol's strengths, defines its intentional limitations, and discusses the alternatives that were considered and rejected. Understanding these trade-offs is crucial for implementers, critics, and future contributors to the standard.
 
 ### **2. Core Philosophy: Pragmatism, Simplicity, and Decentralization**
 
@@ -50,10 +50,10 @@ A successful standard is defined as much by the problems it _doesn't_ solve as b
   - **What it does NOT do:** It does not guarantee that the service at the URI is online, healthy, or responsive.
   - **Rationale:** Service health is a real-time, stateful concern. DNS is a slow-moving, cached system. Conflating the two is an architectural anti-pattern. The client is responsible for attempting a connection and handling failures.
 
-- **It is NOT an Identity or Authentication Protocol.**
-  - **What it does:** AID provides an `auth` _hint_ (e.g., `auth=pat`) to guide the client's authentication flow.
-  - **What it does NOT do:** It does not provide tokens, keys, or cryptographic proof of the agent's identity.
-  - **Rationale:** Authentication is a transport- and application-layer concern. The `auth` hint simply tells the client which mechanism to use (e.g., "prepare for an OAuth flow" or "prompt the user for a PAT"). The actual security and identity verification happens during the connection over TLS and within the subsequent protocol handshake.
+- **It is NOT an Ongoing Authentication Protocol, but it IS an Identity _Bootstrap_ Protocol.**
+  - **What it does:** With the optional `pka` key, AID provides cryptographic proof that the client is connected to the authentic server endpoint for a domain. This is a critical **identity verification** step that happens once, at the beginning of a session.
+  - **What it does NOT do:** It does not handle session management, API tokens, or user-level authorization. That is the job of the application-layer protocol. AID's `auth` hint (`a=pat`) exists to guide this next step.
+  - **Rationale:** This separation is key. AID solves the foundational trust problem: "Am I talking to the right server?" Once that trust is established via the PKA handshake, higher-level protocols can proceed with their own authentication mechanisms over a secure and verified channel.
 
 !!! note
 **Interoperability note:**  
@@ -71,9 +71,35 @@ A successful standard is defined as much by the problems it _doesn't_ solve as b
 - **Full `aid.json` Manifest:** While powerful for describing complex local and remote implementations, the manifest-based approach was deemed too burdensome for a v1 standard. It required providers to host and maintain a JSON file, and clients to implement a significantly more complex resolution and validation logic. The new `proto=local` feature captures 80% of the manifest's value with 20% of the complexity.
 - **DNS `SRV` or `HTTPS/SVCB` Records:** These are technically more "correct" for service discovery. However, they lack the universal, simple configuration support of `TXT` records in many DNS providers' dashboards. Furthermore, client-side resolver support is not yet ubiquitous. For v1, `TXT` offers the path of least resistance to adoption, with a clear migration path to `SRV`/`HTTPS` in the future.
 - **Centralized Registry:** A central "Agent Store" or registry was rejected as it violates the principle of decentralization, creates a single point of failure, and introduces a gatekeeper to the ecosystem. DNS is the world's most successful decentralized registry, and AID leverages it directly.
-- **Well-Known URI (`/.well-known/agent`):** This requires a client to make an HTTP request to discover the service, which is slower and less efficient than a single, lightweight DNS query. DNS is the right tool for finding the location of a service; HTTP is for interacting with it once found.
+- **Full Pkarr-style DHT Resolution:** We deeply admire the [Pkarr](https://pkarr.org/) project for its commitment to decentralized, censorship-resistant identity via a DHT. However, for AID's v1.1 goal of creating a minimal, immediately deployable bootstrap layer, requiring clients to implement DHT lookups and interact with relays was deemed too high a barrier to entry. Our `pka` key adopts Pkarr's core philosophy of key-as-identity but uses the existing DNS infrastructure to deliver it, staying true to our tenet of embracing existing, universal infrastructure.
+- **DNS-First, with a Pragmatic `.well-known` Fallback**
+  - **Why DNS is Primary:** DNS remains the superior tool for service discovery. It is faster, more efficient (a single UDP packet vs. a full TCP/TLS handshake), and allows for cryptographic verification of the record itself via DNSSEC.
+  - **Why `.well-known` was Added:** We recognize that developers often do not control their domain's DNS records. Forcing them to file a ticket with an IT department creates friction. The `.well-known` fallback provides a crucial on-ramp, allowing a developer to implement AID by simply adding a file to their application's webroot, which is entirely within their control. This pragmatic choice drastically lowers the barrier to adoption.
 
-### **6. Conclusion**
+### **6. Discovery vs Identity (and PKA in v1.1)**
+
+Discovery answers “where and how do I connect?” Identity answers “am I really talking to who DNS pointed me to?” AID v1 keeps these responsibilities separate by design, then offers PKA as an optional, cryptographic proof to harden discovery without changing DNS.
+
+- **Discovery (AID):** DNS TXT at `_agent.<domain>`, with protocol token and `uri`.
+- **Transport security (TLS):** Mandatory for remote endpoints (`https://`/`wss://`).
+- **Endpoint proof (PKA):** Optional `pka` (Ed25519 public key) plus `kid` lets clients verify the server controls the private key via HTTP Message Signatures (RFC 9421). This thwarts spoofed TXT records and MitM that cannot sign the challenge.
+- **DNSSEC (recommended):** When present, clients should validate `RRSIG`. Together with PKA and TLS, this creates defense in depth.
+- **Downgrade detection:** If a domain previously advertised `pka` and later removes it, clients should warn.
+
+Practical outcomes:
+
+- **Enterprise policy:** Require `pka` for sensitive connections; alert on downgrade.
+- **Rotation:** Use `kid` for explicit key rotation without breaking clients.
+- **Operational clarity:** `docs` and `dep` metadata provide human context and safe deprecations.
+
+### **7. Practical Use Cases**
+
+- **SaaS integration with trust:** `proto=mcp` + `pka`, user authenticates via the hinted scheme (e.g., `auth=pat` or OAuth), client verifies endpoint proof before sending tokens.
+- **Vendor migration:** Publish new endpoint with `dep` on the old one; rotate PKA via `kid`; clients follow safely.
+- **Hybrid local/remote:** Local dev via `proto=local`/`zeroconf:` with explicit consent, production via remote `https://` + PKA.
+- **Multi-protocol exposure:** Same domain can expose `mcp`, `a2a`, or `openapi`; clients select supported protocol.
+
+### **8. Conclusion**
 
 AID v1 is a deliberately focused and pragmatic standard. It provides a simple, robust, and immediately deployable solution to the critical problem of agent discovery. By understanding what it does well and, just as importantly, what it _intentionally_ does not do, the community can build a powerful and interoperable ecosystem on a solid and stable foundation.
 

@@ -1,6 +1,6 @@
 ---
 title: 'Agent Interface Discovery (AID)'
-description: 'The DNS-based discovery protocol for the agent web.'
+description: 'The DNS-based discovery protocol for the agentic web.'
 icon: material/dns
 ---
 
@@ -8,13 +8,13 @@ icon: material/dns
 
 # Agent Interface Discovery (AID)
 
-> ## DNS for Agents.
->
+> ## DNS for Agents. **Identity for the Agentic Web.**
+
 > Type a domain. Connect to its agent. Instantly.
 
 Think of AID as the public address book for the agentic web.
 
-It's a simple, open standard that uses the internet's own directory—DNS—to answer one question: **“Given a domain, where is its AI agent?”**
+It's a simple, open standard that uses the internet's own directory—DNS—to answer one question: **"Given a domain, where is its AI agent, and how do I know it's the real one?"**
 
 No more hunting through API docs. No more manual configuration. It's the zero-friction layer for a world of interconnected agents.
 
@@ -43,19 +43,29 @@ The entire mechanism is a single DNS lookup. It's simple, decentralized, and bui
 1.  **Publish:** A provider (e.g., `supabase.com`) adds one `TXT` record to their DNS at a standard location: `_agent.supabase.com`.
 2.  **Discover:** A client, given `supabase.com`, makes a single DNS query for the `TXT` record at that address.
 3.  **Connect:** The record contains the agent's `uri`. The client uses it to connect directly.
+4.  **Verify (Optional):** If a public key (`pka`) is present, the client performs a quick cryptographic handshake to prove the server's identity, ensuring a secure connection.
 
-[Try this flow now](aid.agentcommunity.org/workbench)
+[Try this flow now](https://aid.agentcommunity.org/workbench)
 
 ```mermaid
 flowchart LR
-    A[Agent/User] --> B[supabase.com] --> C[_agent.supabase.com] --> D[Connect via MCP]
+    A[Agent/User] --> B[Discover supabase.com]
+    B --> C{DNS TXT at<br>_agent.supabase.com}
+    C --> D[Connect via URI]
+    D --> E{PKA Key Present?}
+    E -->|Yes| F[Verify Identity] --> G[Use Agent]
+    E -->|No| G
 ```
+
+## Learn more
 
 ### Want the deep dive?
 
-- [**Rationale**](rationale.md) – _Why we chose DNS, why the manifest was removed, and why simplicity wins._
-- [**Specification**](specification.md) – _The exact `TXT` record format, client algorithm, and security rules._
+- [**Specification**](specification.md) – _The exact format, algorithms, and security rules._
+- [**Identity & PKA**](Reference/identity_pka.md) – _How AID provides cryptographic proof of an agent's identity._
+- [**Rationale**](rationale.md) – _The design philosophy behind AID._
 - [**Security Best Practices**](security.md) – _DNSSEC, redirect handling, local execution, IDN safety, TTL & caching._
+- [**What’s New**](Reference/whats_new.md) – _Recent documentation updates._
 
 ---
 
@@ -76,3 +86,13 @@ See the full package overview in the [Quick Start](quickstart/index.md#package-o
 !!! tip "Implementation Files"
 All SDKs share constants generated from a single source: [`protocol/constants.yml`](../protocol/constants.yml).
 View generated files: [TypeScript](../packages/aid/src/constants.ts), [Python](../packages/aid-py/aid_py/constants.py), [Go](../packages/aid-go/constants_gen.go), [Rust](../packages/aid-rs/src/constants_gen.rs), [.NET](../packages/aid-dotnet/src/Constants.g.cs), [Java](../packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java)
+
+---
+
+## Use Cases
+
+- Simple connections: Type a domain, connect automatically. No manual setup.
+- Stronger trust (optional): Add identity proof to ensure you’re talking to the right service. See [Identity & PKA](Reference/identity_pka.md).
+- Local and dev workflows: Safely run local agents with explicit consent; discover dev agents on your network.
+- Multi-protocol ecosystems: Connect across MCP, A2A, OpenAPI, gRPC, GraphQL, or WebSocket.
+- Smooth migrations: Deprecate old endpoints gracefully with clear timelines.
