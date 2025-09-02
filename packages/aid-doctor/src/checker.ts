@@ -161,7 +161,7 @@ export async function runCheck(domain: string, opts: CheckOptions): Promise<Doct
         report.tls.checked = true;
         report.tls.valid = false;
         report.record.errors.push({ code: err.errorCode ?? 'ERR_SECURITY', message: err.message });
-        report.exitCode = err.code ?? 1003;
+        report.exitCode = err instanceof AidError ? err.code : 1003;
         return report;
       }
     }
@@ -191,7 +191,7 @@ export async function runCheck(domain: string, opts: CheckOptions): Promise<Doct
           code: err.errorCode ?? 'ERR_SECURITY',
           message: ERROR_MESSAGES.PKA_HANDSHAKE_FAILED,
         });
-        report.exitCode = err.code ?? 1003;
+        report.exitCode = err instanceof AidError ? err.code : 1003;
         return report;
       }
     }
@@ -246,8 +246,8 @@ export async function runCheck(domain: string, opts: CheckOptions): Promise<Doct
     return report;
   } catch (e) {
     const err = e as AidError;
-    report.exitCode = err.code;
-    report.record.errors.push({ code: err.errorCode, message: err.message });
+    report.exitCode = err instanceof AidError ? err.code : 1000;
+    report.record.errors.push({ code: err.errorCode ?? 'ERR_NO_RECORD', message: err.message });
 
     // Populate well-known details on fallback failure
     if (err.errorCode === 'ERR_FALLBACK_FAILED' && err.details) {
