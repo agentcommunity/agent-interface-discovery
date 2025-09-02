@@ -1,6 +1,6 @@
 import chalk from 'chalk';
-import type { DoctorReport } from './types';
-import { ERROR_MESSAGES } from './error_messages';
+import type { DoctorReport } from '@agentcommunity/aid-engine';
+import { ERROR_MESSAGES } from '@agentcommunity/aid-engine';
 
 function generateActionableSuggestions(report: DoctorReport): string[] {
   const suggestions: string[] = [];

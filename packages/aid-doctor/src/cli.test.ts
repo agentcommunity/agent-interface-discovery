@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { formatCheckResult } from './output';
-import type { DoctorReport } from './types';
+import type { DoctorReport } from '@agentcommunity/aid-engine';
 
 // Get current directory in ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -104,6 +104,7 @@ describe('AID Doctor CLI', () => {
         },
         downgrade: { checked: true, previous: null, status: 'first_seen' },
         exitCode: 0,
+        cacheEntry: null,
       };
       const output = formatCheckResult(report);
       expect(output).toContain('✅ Found (DNS)');
@@ -163,6 +164,7 @@ describe('AID Doctor CLI', () => {
         },
         downgrade: { checked: false, previous: null, status: null },
         exitCode: 0,
+        cacheEntry: null,
       };
       const output = formatCheckResult(report);
       expect(output).toContain('💡 Enable DNSSEC');

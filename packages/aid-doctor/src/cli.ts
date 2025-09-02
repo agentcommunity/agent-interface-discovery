@@ -2,16 +2,48 @@
 
 import { Command } from 'commander';
 import { readFile, writeFile } from 'fs/promises';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
 import { AidError, PROTOCOL_TOKENS, AUTH_TOKENS } from '@agentcommunity/aid';
+import {
+  runCheck,
+  validateTxtRecord,
+  buildTxtRecordVariant,
+  verifyPka,
+  generateEd25519KeyPair,
+  type AidGeneratorData,
+  type CheckOptions,
+} from '@agentcommunity/aid-engine';
 import chalk from 'chalk';
 import ora from 'ora';
 import inquirer from 'inquirer';
 import clipboardy from 'clipboardy';
-import { validateTxtRecord, type AidGeneratorData } from './generator';
-import { runCheck } from './checker';
 import { formatCheckResult } from './output';
-import type { CheckOptions } from './types';
-import { generateEd25519, verifyPka } from './keys';
+import { loadCache, saveCache } from './cache';
+
+/**
+ * CLI-specific function that generates Ed25519 keys and saves them to disk.
+ * Uses the pure generateEd25519KeyPair from aid-engine.
+ */
+async function generateEd25519(
+  label?: string,
+  outDir?: string,
+): Promise<{ publicKey: string; privatePath: string }> {
+  // Generate the key pair using the pure function from aid-engine
+  const { publicKey, privateKeyPem } = await generateEd25519KeyPair();
+
+  // Handle filesystem operations in the CLI layer
+  const dir = outDir || path.join(os.homedir(), '.aid', 'keys');
+  await fs.mkdir(dir, { recursive: true });
+  const name = (label || 'key') + '-ed25519.key';
+  const privatePath = path.join(dir, name);
+
+  // Write the private key to disk
+  await fs.writeFile(privatePath, privateKeyPem, { mode: 0o600 });
+
+  return { publicKey, privatePath };
+}
 
 const program = new Command();
 
@@ -35,11 +67,11 @@ function formatError(error: unknown, domain: string): string {
     ].join('\n');
   }
 
-  return [
-    chalk.red(`❌ Unexpected Error for ${domain}`),
-    '',
-    `  ${error instanceof Error ? error.message : String(error)}`,
-  ].join('\n');
+  if (error instanceof Error) {
+    return [chalk.red(`❌ Unexpected Error for ${domain}`), '', `  ${error.message}`].join('\n');
+  }
+
+  return [chalk.red(`❌ Unexpected Error for ${domain}`), '', `  ${String(error)}`].join('\n');
 }
 
 // Check command - human-readable report
@@ -91,6 +123,9 @@ program
       const spinner = ora(`Checking AID record for ${domain}...`).start();
 
       try {
+        const cache = options.checkDowngrade ? await loadCache() : null;
+        const previousCacheEntry = cache ? cache[domain] : undefined;
+
         const report = await runCheck(domain, {
           protocol: options.protocol,
           timeoutMs: Number.parseInt(options.timeout),
@@ -102,7 +137,13 @@ program
           dumpWellKnownPath:
             typeof options.dumpWellKnown === 'string' ? options.dumpWellKnown : null,
           checkDowngrade: options.checkDowngrade,
+          previousCacheEntry,
         } as CheckOptions);
+
+        if (cache && report.cacheEntry) {
+          cache[domain] = report.cacheEntry;
+          await saveCache(cache);
+        }
 
         spinner.stop();
         console.log(formatCheckResult(report));
@@ -131,6 +172,11 @@ program
   .option('-t, --timeout <ms>', 'DNS query timeout in milliseconds', '5000')
   .option('--no-fallback', 'Disable .well-known fallback on DNS miss', false)
   .option('--fallback-timeout <ms>', 'Timeout for .well-known fetch (ms)', '2000')
+  .option('--show-details', 'Show TLS/DNSSEC/PKA short details', false)
+  .option('--dump-well-known [path]', 'On fallback failure, print or save body snippet', false)
+  .option('--check-downgrade', 'Consult cache and warn when pka has been removed or changed', false)
+  .option('--no-color', 'Disable ANSI color output')
+  .option('--code', 'Exit with the specific error code on failure (for scripting)')
   .action(
     async (
       domain: string,
@@ -139,19 +185,35 @@ program
         timeout: string;
         noFallback?: boolean;
         fallbackTimeout?: string;
+        showDetails?: boolean;
+        dumpWellKnown?: string | boolean;
+        checkDowngrade?: boolean;
+        noColor?: boolean;
+        code?: boolean;
       },
     ) => {
       try {
+        const cache = options.checkDowngrade ? await loadCache() : null;
+        const previousCacheEntry = cache ? cache[domain] : undefined;
+
         const report = await runCheck(domain, {
           protocol: options.protocol,
           timeoutMs: Number.parseInt(options.timeout),
-          allowFallback: options.noFallback ? false : true,
+          allowFallback: !options.noFallback,
           wellKnownTimeoutMs: Number.parseInt(options.fallbackTimeout || '2000'),
-          probeProtoSubdomain: false,
+          showDetails: options.showDetails || false,
+          probeProtoSubdomain: false, // JSON command doesn't support proto probing for now
           probeProtoEvenIfBase: false,
-          showDetails: false,
-          dumpWellKnownPath: null,
+          dumpWellKnownPath:
+            typeof options.dumpWellKnown === 'string' ? options.dumpWellKnown : null,
+          checkDowngrade: options.checkDowngrade || false,
+          previousCacheEntry,
         } as CheckOptions);
+
+        if (cache && report.cacheEntry) {
+          cache[domain] = report.cacheEntry;
+          await saveCache(cache);
+        }
 
         console.log(JSON.stringify(report, null, 2));
         process.exit(report.exitCode);
@@ -175,7 +237,26 @@ program
             ),
           );
 
-          process.exit(error.code);
+          process.exit(options.code ? error.code : 1);
+        } else if (error instanceof Error) {
+          console.log(
+            JSON.stringify(
+              {
+                success: false,
+                domain,
+                error: {
+                  code: 1,
+                  errorCode: 'UNKNOWN_ERROR',
+                  message: error.message,
+                },
+                timestamp: new Date().toISOString(),
+              },
+              null,
+              2,
+            ),
+          );
+
+          process.exit(1);
         } else {
           console.log(
             JSON.stringify(
@@ -185,7 +266,7 @@ program
                 error: {
                   code: 1,
                   errorCode: 'UNKNOWN_ERROR',
-                  message: error instanceof Error ? error.message : String(error),
+                  message: String(error),
                 },
                 timestamp: new Date().toISOString(),
               },
@@ -213,11 +294,7 @@ program
       .option('--out <dir>', 'Output directory for private key')
       .option('--print-private', 'Also print private key PEM to stdout (not recommended)', false)
       .action(async (opts: { label?: string; out?: string; printPrivate?: boolean }) => {
-        const { publicKey, privatePath } = await generateEd25519(
-          opts.label,
-          opts.out,
-          Boolean(opts.printPrivate),
-        );
+        const { publicKey, privatePath } = await generateEd25519(opts.label, opts.out);
         console.log(publicKey);
         console.error(`Saved private key to ${privatePath}`);
         if (opts.printPrivate) {
@@ -346,8 +423,8 @@ program
 
     // We cast here because inquirer provides a partial object based on answers
     const formData = answers as AidGeneratorData;
-    const full = (await import('./generator')).buildTxtRecordVariant(formData, false);
-    const alias = (await import('./generator')).buildTxtRecordVariant(formData, true);
+    const full = buildTxtRecordVariant(formData, false);
+    const alias = buildTxtRecordVariant(formData, true);
     const fullLen = new TextEncoder().encode(full).length;
     const aliasLen = new TextEncoder().encode(alias).length;
     const suggest = aliasLen <= fullLen ? alias : full;
@@ -382,11 +459,11 @@ program
           await writeFile(opts.saveDraft, txtRecord, 'utf8');
           console.log(chalk.green(`💾 Draft saved to ${opts.saveDraft}`));
         } catch (error) {
-          console.log(
-            chalk.red(
-              `Could not save draft: ${error instanceof Error ? error.message : String(error)}`,
-            ),
-          );
+          if (error instanceof Error) {
+            console.log(chalk.red(`Could not save draft: ${error.message}`));
+          } else {
+            console.log(chalk.red(`Could not save draft: ${String(error)}`));
+          }
         }
       }
     } else {
@@ -405,8 +482,10 @@ program
       const fileContents = await readFile(pkgUrl, 'utf8');
       const pkg = JSON.parse(fileContents) as { version?: string };
       version = pkg.version ?? version;
-    } catch {
-      // ignore - fallback stays 0.0.0
+    } catch (error) {
+      if (error instanceof Error) {
+        // ignore - fallback stays 0.0.0
+      }
     }
     console.log(
       [

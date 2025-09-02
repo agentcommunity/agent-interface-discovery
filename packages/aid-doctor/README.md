@@ -1,9 +1,10 @@
 # @agentcommunity/aid-doctor
 
-Official CLI for Agent Identity & Discovery (AID).
+Official CLI for Agent Identity & Discovery (AID) – built by the team at [agentcommunity.org](https://agentcommunity.org).
 
-- Website: https://aid.agentcommunity.org
-- Docs: https://docs.agentcommunity.org/aid
+- **Website**: [aid.agentcommunity.org](https://aid.agentcommunity.org)
+- **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)
+- **GitHub**: [github.com/agent-community/agent-interface-discovery](https://github.com/agent-community/agent-interface-discovery)
 
 ## Install
 
@@ -81,4 +82,4 @@ When `AID_ALLOW_INSECURE_WELL_KNOWN=1` is set and the domain is loopback (`local
 
 ## License
 
-MIT © Agent Community
+MIT © [Agent Community](https://agentcommunity.org)
