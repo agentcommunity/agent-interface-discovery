@@ -187,12 +187,24 @@ async function fetchWellKnown(
       }
     }
     if (record.pka) {
-      await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
+      try {
+        await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
+      } catch (pkaError) {
+        // Preserve ERR_SECURITY errors from PKA verification
+        if (pkaError instanceof AidError && pkaError.errorCode === 'ERR_SECURITY') {
+          throw pkaError;
+        }
+        throw pkaError;
+      }
     }
     return { record, raw: text.trim(), queryName: url };
   } catch (e) {
     if (e instanceof AidError) {
-      // Re-throw with fallback code if it's not already set
+      // Preserve ERR_SECURITY errors from PKA verification, don't convert to ERR_FALLBACK_FAILED
+      if (e.errorCode === 'ERR_SECURITY') {
+        throw e;
+      }
+      // Re-throw with fallback code if it's not already set and not a security error
       if (e.errorCode !== 'ERR_FALLBACK_FAILED') {
         throw new AidError('ERR_FALLBACK_FAILED', e.message, e.details);
       }
