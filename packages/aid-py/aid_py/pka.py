@@ -18,6 +18,16 @@ from .parser import AidError
 import pathlib
 import logging # Added for logging in empty except block
 
+def _ascii_lower_ct(s: str) -> str:
+    """Performs ASCII lowercasing in a way that is less susceptible to timing attacks."""
+    res = []
+    for char in s:
+        o = ord(char)
+        # Check for uppercase ASCII 'A'-'Z' (65-90)
+        is_upper = (65 <= o <= 90)
+        res.append(chr(o + (32 * is_upper)))
+    return "".join(res)
+
 def _debug_write(name: str, data: str) -> None:
     try:
         d = pathlib.Path(__file__).resolve().parent / "_debug"
@@ -80,8 +90,24 @@ def _parse_signature_headers(headers: dict[str, str]) -> tuple[list[str], int, s
     if not covered:
         raise AidError("ERR_SECURITY", "Invalid Signature-Input")
     required = {"aid-challenge", "@method", "@target-uri", "host", "date"}
-    lowers = {c.lower() for c in covered}
-    if lowers != required:
+
+    # Mitigate timing attack on covered headers validation.
+    # The length check is not constant time, but it's a basic structural validation.
+    if len(covered) != len(required):
+        raise AidError("ERR_SECURITY", "Signature-Input must cover required fields")
+
+    # Use constant-time comparison for the set of covered headers.
+    covered_lowered = sorted([_ascii_lower_ct(c) for c in covered])
+    required_sorted = sorted(list(required))
+
+    are_equal = True
+    # Constant-time iteration and comparison
+    for i in range(len(required_sorted)):
+        if not hmac.compare_digest(covered_lowered[i], required_sorted[i]):
+            are_equal = False
+            # Deliberately not breaking early
+
+    if not are_equal:
         raise AidError("ERR_SECURITY", "Signature-Input must cover required fields")
 
     cm = re.search(r"(?:^|;)\s*created=(\d+)", sig_input, flags=re.I)
@@ -116,19 +142,31 @@ def _build_signature_base(
 ) -> bytes:
     lines: list[str] = []
     for item in covered:
-        lower = item.lower()
-        if lower == "aid-challenge":
+        lower = _ascii_lower_ct(item)
+        # Mitigate timing attacks by using a sequence of `if` checks
+        # instead of an `if/elif` cascade to avoid short-circuiting.
+        # This makes the execution time independent of the `item`'s value.
+        appended = False
+        if hmac.compare_digest(lower, "aid-challenge"):
             lines.append(f'"AID-Challenge": {challenge}')
-        elif lower == "@method":
+            appended = True
+        if hmac.compare_digest(lower, "@method"):
             lines.append(f'"@method": {method}')
-        elif lower == "@target-uri":
+            appended = True
+        if hmac.compare_digest(lower, "@target-uri"):
             lines.append(f'"@target-uri": {target_uri}')
-        elif lower == "host":
+            appended = True
+        if hmac.compare_digest(lower, "host"):
             lines.append(f'"host": {host}')
-        elif lower == "date":
+            appended = True
+        if hmac.compare_digest(lower, "date"):
             lines.append(f'"date": {date}')
-        else:
+            appended = True
+
+        if not appended:
+            # This case should not be reached if _parse_signature_headers is correct.
             raise AidError("ERR_SECURITY", f"Unsupported covered field: {item}")
+
     quoted = " ".join(f'"{c}"' for c in covered)
     params = f"({quoted});created={created};keyid={keyid};alg=\"{alg}\""
     lines.append(f'"@signature-params": {params}')
