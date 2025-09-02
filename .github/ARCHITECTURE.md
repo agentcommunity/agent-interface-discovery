@@ -242,6 +242,21 @@ pnpm test
 - **Environment Control**: Language-specific test setups
 - **Parallel Execution**: Turbo runs compatible tests simultaneously
 
+### aid-doctor CLI E2E Harness
+
+- Package: `packages/e2e-tests`
+- Entrypoints:
+  - `src/aid_doctor.e2e.ts` – JSON smoke checks against showcase domains, spawns the built CLI (`packages/aid-doctor/dist/cli.js`)
+  - `src/pka_e2e.ts` – Loopback HTTP server that serves a `.well-known/agent` JSON and signs a valid PKA handshake for local testing
+- Run locally:
+  ```bash
+  pnpm -C packages/aid-doctor build
+  pnpm -C packages/e2e-tests e2e
+  pnpm -C packages/e2e-tests e2e:pka
+  ```
+-
+- CI note: The checker honors `AID_SKIP_SECURITY=1` to skip TLS inspection in smoke runs; PKA loopback uses `AID_ALLOW_INSECURE_WELL_KNOWN=1` (loopback only) for local HTTP testing.
+
 ## 🔄 CI/CD Architecture
 
 ### Build Optimization
