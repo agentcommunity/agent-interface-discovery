@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using NSec.Cryptography;
@@ -7,6 +8,25 @@ namespace AidDiscovery;
 
 public static class Pka
 {
+    private static string AsciiToLower(string s)
+    {
+        return string.Create(s.Length, s, (span, state) =>
+        {
+            for (int i = 0; i < span.Length; i++)
+            {
+                char c = state[i];
+                if (c >= 'A' && c <= 'Z')
+                {
+                    span[i] = (char)(c + ('a' - 'A'));
+                }
+                else
+                {
+                    span[i] = c;
+                }
+            }
+        });
+    }
+
     private static byte[] MultibaseDecode(string s)
     {
         if (string.IsNullOrEmpty(s)) throw new AidError(nameof(Constants.ERR_SECURITY), "Empty PKA");
@@ -28,10 +48,32 @@ public static class Pka
         var m = Regex.Matches(mInside.Groups[1].Value, "\"([^\"]+)\"");
         foreach (Match mm in m) items.Add(mm.Groups[1].Value);
         if (items.Count == 0) throw new AidError(nameof(Constants.ERR_SECURITY), "Invalid Signature-Input");
-        var required = new HashSet<string>(new[] { "aid-challenge", "@method", "@target-uri", "host", "date" });
-        var lower = items.Select(x => x.ToLowerInvariant()).ToHashSet();
-        if (lower.Count != required.Count || required.Any(r => !lower.Contains(r)))
+
+        var required = new List<string> { "aid-challenge", "@method", "@target-uri", "host", "date" };
+        if (items.Count != required.Count)
+        {
             throw new AidError(nameof(Constants.ERR_SECURITY), "Signature-Input must cover required fields");
+        }
+
+        var lower = items.Select(AsciiToLower).ToList();
+        lower.Sort(StringComparer.Ordinal);
+        required.Sort(StringComparer.Ordinal);
+
+        bool areEqual = true;
+        for (int i = 0; i < required.Count; i++)
+        {
+            if (!CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(lower[i]),
+                Encoding.UTF8.GetBytes(required[i])))
+            {
+                areEqual = false;
+                // Do not break early
+            }
+        }
+        if (!areEqual)
+        {
+            throw new AidError(nameof(Constants.ERR_SECURITY), "Signature-Input must cover required fields");
+        }
 
         var mCreated = Regex.Match(sigInput, @"(?:^|;)\s*created=(\d+)");
         var mKeyid = Regex.Match(sigInput, @"(?:^|;)\s*keyid=([^;\s]+)");
@@ -41,7 +83,7 @@ public static class Pka
         long created = long.Parse(mCreated.Groups[1].Value);
         string keyidRaw = mKeyid.Groups[1].Value;
         string keyid = keyidRaw.Trim('"');
-        string alg = mAlg.Groups[1].Value.ToLowerInvariant();
+        string alg = AsciiToLower(mAlg.Groups[1].Value);
 
         var mSig = Regex.Match(sig, @"sig\s*=\s*:\s*([^:]+)\s*:", RegexOptions.IgnoreCase);
         if (!mSig.Success) throw new AidError(nameof(Constants.ERR_SECURITY), "Invalid Signature header");
@@ -55,14 +97,36 @@ public static class Pka
         var lines = new List<string>();
         foreach (var item in covered)
         {
-            switch (item.ToLowerInvariant())
+            var lower = AsciiToLower(item);
+            var appended = false;
+            if (CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(lower), Encoding.UTF8.GetBytes("aid-challenge")))
             {
-                case "aid-challenge": lines.Add($"\"AID-Challenge\": {challenge}"); break;
-                case "@method": lines.Add($"\"@method\": {method}"); break;
-                case "@target-uri": lines.Add($"\"@target-uri\": {targetUri}"); break;
-                case "host": lines.Add($"\"host\": {host}"); break;
-                case "date": lines.Add($"\"date\": {date}"); break;
-                default: throw new AidError(nameof(Constants.ERR_SECURITY), $"Unsupported covered field: {item}");
+                lines.Add($"\"AID-Challenge\": {challenge}");
+                appended = true;
+            }
+            if (CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(lower), Encoding.UTF8.GetBytes("@method")))
+            {
+                lines.Add($"\"@method\": {method}");
+                appended = true;
+            }
+            if (CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(lower), Encoding.UTF8.GetBytes("@target-uri")))
+            {
+                lines.Add($"\"@target-uri\": {targetUri}");
+                appended = true;
+            }
+            if (CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(lower), Encoding.UTF8.GetBytes("host")))
+            {
+                lines.Add($"\"host\": {host}");
+                appended = true;
+            }
+            if (CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(lower), Encoding.UTF8.GetBytes("date")))
+            {
+                lines.Add($"\"date\": {date}");
+                appended = true;
+            }
+            if (!appended)
+            {
+                throw new AidError(nameof(Constants.ERR_SECURITY), $"Unsupported covered field: {item}");
             }
         }
         var quoted = string.Join(' ', covered.Select(c => $"\"{c}\""));
@@ -95,8 +159,14 @@ public static class Pka
             var epoch = dt.ToUnixTimeSeconds();
             if (Math.Abs(now - epoch) > 300) throw new AidError(nameof(Constants.ERR_SECURITY), "HTTP Date header outside acceptance window");
         }
-        if (!string.Equals(keyidNorm, kid, StringComparison.Ordinal)) throw new AidError(nameof(Constants.ERR_SECURITY), "Signature keyid mismatch");
-        if (!string.Equals(alg, "ed25519", StringComparison.Ordinal)) throw new AidError(nameof(Constants.ERR_SECURITY), "Unsupported signature algorithm");
+        if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(keyidNorm), Encoding.UTF8.GetBytes(kid)))
+        {
+            throw new AidError(nameof(Constants.ERR_SECURITY), "Signature keyid mismatch");
+        }
+        if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(alg), Encoding.UTF8.GetBytes("ed25519")))
+        {
+            throw new AidError(nameof(Constants.ERR_SECURITY), "Unsupported signature algorithm");
+        }
 
         var host = u.Authority;
         var baseBytes = BuildSignatureBase(covered, created, keyidRaw, alg, "GET", uri, host, respDate ?? date, challenge);

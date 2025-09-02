@@ -11,6 +11,25 @@ use reqwest::Client;
 use std::collections::HashSet;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+fn ascii_to_lowercase(s: &str) -> String {
+    s.chars()
+        .map(|c| {
+            if c >= 'A' && c <= 'Z' {
+                (c as u8 + ('a' as u8 - 'A' as u8)) as char
+            } else {
+                c
+            }
+        })
+        .collect()
+}
+
+fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    a.iter().zip(b.iter()).fold(0, |acc, (x, y)| acc | (x ^ y)) == 0
+}
+
 fn multibase_decode(input: &str) -> Result<Vec<u8>, AidError> {
     if input.is_empty() {
         return Err(AidError::new("ERR_SECURITY", "Empty PKA"));
@@ -55,9 +74,20 @@ fn parse_signature_headers(headers: &HeaderMap) -> Result<(Vec<String>, i64, Str
     if covered.is_empty() {
         return Err(AidError::new("ERR_SECURITY", "Invalid Signature-Input"));
     }
-    let required: HashSet<&str> = ["aid-challenge", "@method", "@target-uri", "host", "date"].into_iter().collect();
-    let lower: HashSet<String> = covered.iter().map(|c| c.to_lowercase()).collect();
-    if lower.len() != required.len() || required.iter().any(|r| !lower.contains(&r.to_string())) {
+    let mut required: Vec<&str> = vec!["aid-challenge", "@method", "@target-uri", "host", "date"];
+    if covered.len() != required.len() {
+        return Err(AidError::new("ERR_SECURITY", "Signature-Input must cover required fields"));
+    }
+    let mut lower: Vec<String> = covered.iter().map(|c| ascii_to_lowercase(c)).collect();
+    lower.sort();
+    required.sort();
+
+    let are_equal = lower
+        .iter()
+        .zip(required.iter())
+        .all(|(a, b)| constant_time_eq(a.as_bytes(), b.as_bytes()));
+
+    if !are_equal {
         return Err(AidError::new("ERR_SECURITY", "Signature-Input must cover required fields"));
     }
 
@@ -67,7 +97,7 @@ fn parse_signature_headers(headers: &HeaderMap) -> Result<(Vec<String>, i64, Str
     let mut alg = String::new();
     for part in sig_input.split(';') {
         let p = part.trim();
-        let pl = p.to_lowercase();
+        let pl = ascii_to_lowercase(p);
         if pl.starts_with("created=") {
             if let Ok(c) = p[8..].parse::<i64>() {
                 created = c;
@@ -75,14 +105,16 @@ fn parse_signature_headers(headers: &HeaderMap) -> Result<(Vec<String>, i64, Str
         } else if pl.starts_with("keyid=") {
             keyid = p[6..].trim().to_string();
         } else if pl.starts_with("alg=") {
-            alg = p[4..].trim().trim_matches('"').to_lowercase();
+            alg = ascii_to_lowercase(p[4..].trim().trim_matches('"'));
         }
     }
     if created == 0 || keyid.is_empty() || alg.is_empty() {
         return Err(AidError::new("ERR_SECURITY", "Invalid Signature-Input"));
     }
     // Signature header: sig=:base64:
-    let sig_pos = sig.to_lowercase().find("sig=").ok_or_else(|| AidError::new("ERR_SECURITY", "Invalid Signature header"))?;
+    let sig_pos = ascii_to_lowercase(sig)
+        .find("sig=")
+        .ok_or_else(|| AidError::new("ERR_SECURITY", "Invalid Signature header"))?;
     let val = &sig[sig_pos + 4..];
     let val = val.strip_prefix(':').ok_or_else(|| AidError::new("ERR_SECURITY", "Invalid Signature header"))?;
     let end = val.find(':').ok_or_else(|| AidError::new("ERR_SECURITY", "Invalid Signature header"))?;
@@ -110,13 +142,31 @@ fn build_signature_base(
 ) -> Vec<u8> {
     let mut lines: Vec<String> = Vec::new();
     for item in covered {
-        match item.to_lowercase().as_str() {
-            "aid-challenge" => lines.push(format!("\"AID-Challenge\": {}", challenge)),
-            "@method" => lines.push(format!("\"@method\": {}", method)),
-            "@target-uri" => lines.push(format!("\"@target-uri\": {}", target_uri)),
-            "host" => lines.push(format!("\"host\": {}", host)),
-            "date" => lines.push(format!("\"date\": {}", date)),
-            _ => return Vec::new(),
+        let lower = ascii_to_lowercase(item);
+        let mut appended = false;
+        if constant_time_eq(lower.as_bytes(), b"aid-challenge") {
+            lines.push(format!("\"AID-Challenge\": {}", challenge));
+            appended = true;
+        }
+        if constant_time_eq(lower.as_bytes(), b"@method") {
+            lines.push(format!("\"@method\": {}", method));
+            appended = true;
+        }
+        if constant_time_eq(lower.as_bytes(), b"@target-uri") {
+            lines.push(format!("\"@target-uri\": {}", target_uri));
+            appended = true;
+        }
+        if constant_time_eq(lower.as_bytes(), b"host") {
+            lines.push(format!("\"host\": {}", host));
+            appended = true;
+        }
+        if constant_time_eq(lower.as_bytes(), b"date") {
+            lines.push(format!("\"date\": {}", date));
+            appended = true;
+        }
+        if !appended {
+            // This should not happen if parse_signature_headers is correct
+            return Vec::new();
         }
     }
     let quoted = covered.iter().map(|c| format!("\"{}\"", c)).collect::<Vec<_>>().join(" ");
@@ -177,10 +227,10 @@ pub async fn perform_pka_handshake(uri: &str, pka: &str, kid: &str, timeout: Dur
     if keyid.len() >= 2 && keyid.starts_with('"') && keyid.ends_with('"') {
         keyid = keyid.trim_matches('"').to_string();
     }
-    if keyid != kid {
+    if !constant_time_eq(keyid.as_bytes(), kid.as_bytes()) {
         return Err(AidError::new("ERR_SECURITY", "Signature keyid mismatch"));
     }
-    if alg.to_lowercase() != "ed25519" {
+    if !constant_time_eq(alg.as_bytes(), "ed25519".as_bytes()) {
         return Err(AidError::new("ERR_SECURITY", "Unsupported signature algorithm"));
     }
 

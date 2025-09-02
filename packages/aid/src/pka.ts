@@ -1,5 +1,49 @@
 import { AidError } from './parser.js';
 import { webcrypto as nodeWebcrypto } from 'node:crypto';
+import { Buffer } from 'node:buffer';
+import { timingSafeEqual as nodeTimingSafeEqual } from 'node:crypto';
+
+// Type-safe interface for global crypto with timingSafeEqual
+interface CryptoWithTimingSafeEqual {
+  timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean;
+}
+
+function timingSafeEqual(a: string | Uint8Array, b: string | Uint8Array): boolean {
+  const globalCrypto = (globalThis as unknown as { crypto?: CryptoWithTimingSafeEqual }).crypto;
+  if (typeof globalCrypto?.timingSafeEqual === 'function') {
+    const enc = new TextEncoder();
+    const aEncoded = typeof a === 'string' ? enc.encode(a) : a;
+    const bEncoded = typeof b === 'string' ? enc.encode(b) : b;
+    return globalCrypto.timingSafeEqual(aEncoded, bEncoded);
+  }
+  // Fallback for environments without native support, including browsers.
+  const aBuf = Buffer.from(typeof a === 'string' ? a : new Uint8Array(a.buffer));
+  const bBuf = Buffer.from(typeof b === 'string' ? b : new Uint8Array(b.buffer));
+
+  if (aBuf.length !== bBuf.length) {
+    // For string comparisons, we must ensure they are of equal length.
+    // In this PKA context, `keyid` and `alg` have predictable lengths,
+    // so length differences don't leak critical info. We still check
+    // b against itself to keep the timing consistent.
+    nodeTimingSafeEqual(bBuf, bBuf);
+    return false;
+  }
+  return nodeTimingSafeEqual(aBuf, bBuf);
+}
+
+function asciiLowerCase(s: string): string {
+  let res = '';
+  for (let i = 0; i < s.length; i++) {
+    const charCode = s.charCodeAt(i);
+    // ASCII 'A' is 65, 'Z' is 90
+    if (charCode >= 65 && charCode <= 90) {
+      res += String.fromCharCode(charCode + 32);
+    } else {
+      res += s[i];
+    }
+  }
+  return res;
+}
 
 // Minimal types to avoid DOM deps
 interface HeaderLike {
@@ -106,8 +150,22 @@ function parseSignatureHeaders(headers: HeaderLike): {
   while ((m = tokenRe.exec(inside[1])) !== null) covered.push(m[1]);
   if (covered.length === 0) throw new AidError('ERR_SECURITY', 'Invalid Signature-Input');
   const required = ['aid-challenge', '@method', '@target-uri', 'host', 'date'];
-  const lowerSet = new Set(covered.map((c) => c.toLowerCase()));
-  if (lowerSet.size !== required.length || required.some((r) => !lowerSet.has(r))) {
+
+  if (covered.length !== required.length) {
+    throw new AidError('ERR_SECURITY', 'Signature-Input must cover required fields');
+  }
+
+  const coveredLower = covered.map(asciiLowerCase).sort();
+  const requiredSorted = [...required].sort();
+
+  let areEqual = true;
+  for (let i = 0; i < requiredSorted.length; i++) {
+    if (!timingSafeEqual(coveredLower[i], requiredSorted[i])) {
+      areEqual = false;
+      // Do not break early
+    }
+  }
+  if (!areEqual) {
     throw new AidError('ERR_SECURITY', 'Signature-Input must cover required fields');
   }
 
@@ -120,7 +178,7 @@ function parseSignatureHeaders(headers: HeaderLike): {
   const created = Number.parseInt(createdMatch[1], 10);
   const keyidRaw = keyidMatch[1];
   const keyid = keyidRaw.replace(/^"(.+)"$/, '$1');
-  const alg = algMatch[1].toLowerCase();
+  const alg = asciiLowerCase(algMatch[1]);
 
   // Extract signature value from Signature header
   const sigMatch = /sig\s*=\s*:\s*([^:]+)\s*:/i.exec(sig);
@@ -143,25 +201,30 @@ function buildSignatureBase(
 ): Uint8Array {
   const lines: string[] = [];
   for (const item of covered) {
-    const lower = item.toLowerCase();
-    switch (lower) {
-      case 'aid-challenge':
-        lines.push(`"AID-Challenge": ${ctx.challenge}`);
-        break;
-      case '@method':
-        lines.push(`"@method": ${ctx.method}`);
-        break;
-      case '@target-uri':
-        lines.push(`"@target-uri": ${ctx.targetUri}`);
-        break;
-      case 'host':
-        lines.push(`"host": ${ctx.host}`);
-        break;
-      case 'date':
-        lines.push(`"date": ${ctx.date}`);
-        break;
-      default:
-        throw new AidError('ERR_SECURITY', `Unsupported covered field: ${item}`);
+    const lower = asciiLowerCase(item);
+    let appended = false;
+    if (timingSafeEqual(lower, 'aid-challenge')) {
+      lines.push(`"AID-Challenge": ${ctx.challenge}`);
+      appended = true;
+    }
+    if (timingSafeEqual(lower, '@method')) {
+      lines.push(`"@method": ${ctx.method}`);
+      appended = true;
+    }
+    if (timingSafeEqual(lower, '@target-uri')) {
+      lines.push(`"@target-uri": ${ctx.targetUri}`);
+      appended = true;
+    }
+    if (timingSafeEqual(lower, 'host')) {
+      lines.push(`"host": ${ctx.host}`);
+      appended = true;
+    }
+    if (timingSafeEqual(lower, 'date')) {
+      lines.push(`"date": ${ctx.date}`);
+      appended = true;
+    }
+    if (!appended) {
+      throw new AidError('ERR_SECURITY', `Unsupported covered field: ${item}`);
     }
   }
   const quoted = covered.map((c) => `"${c}"`).join(' ');
@@ -205,8 +268,9 @@ export async function performPKAHandshake(uri: string, pka: string, kid: string)
     if (Math.abs(now - parsed) > 300)
       throw new AidError('ERR_SECURITY', 'HTTP Date header outside acceptance window');
   }
-  if (keyid !== kid) throw new AidError('ERR_SECURITY', 'Signature keyid mismatch');
-  if (alg !== 'ed25519') throw new AidError('ERR_SECURITY', 'Unsupported signature algorithm');
+  if (!timingSafeEqual(keyid, kid)) throw new AidError('ERR_SECURITY', 'Signature keyid mismatch');
+  if (!timingSafeEqual(alg, 'ed25519'))
+    throw new AidError('ERR_SECURITY', 'Unsupported signature algorithm');
 
   const host = u.host;
   const base = buildSignatureBase(

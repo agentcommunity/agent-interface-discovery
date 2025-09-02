@@ -5,7 +5,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
+import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
@@ -19,6 +21,17 @@ public final class Handshake {
   private Handshake() {}
 
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+  private static String asciiToLower(String s) {
+    char[] chars = s.toCharArray();
+    for (int i = 0; i < chars.length; i++) {
+        char c = chars[i];
+        if (c >= 'A' && c <= 'Z') {
+            chars[i] = (char) (c + ('a' - 'A'));
+        }
+    }
+    return new String(chars);
+  }
 
   private static byte[] multibaseDecode(String s) {
     if (s == null || s.isEmpty()) throw new AidError("ERR_SECURITY", "Empty PKA");
@@ -46,11 +59,29 @@ public final class Handshake {
     Matcher m = Pattern.compile("\"([^\"]+)\"").matcher(inside.group(1));
     while (m.find()) items.add(m.group(1));
     if (items.isEmpty()) throw new AidError("ERR_SECURITY", "Invalid Signature-Input");
-    Set<String> required = new HashSet<>(Arrays.asList("aid-challenge", "@method", "@target-uri", "host", "date"));
-    Set<String> lower = new HashSet<>();
-    for (String it : items) lower.add(it.toLowerCase(Locale.ROOT));
-    if (lower.size() != required.size() || !lower.containsAll(required))
+
+    String[] required = new String[]{"aid-challenge", "@method", "@target-uri", "host", "date"};
+    if (items.size() != required.length) {
       throw new AidError("ERR_SECURITY", "Signature-Input must cover required fields");
+    }
+
+    List<String> lower = new ArrayList<>();
+    for (String it : items) lower.add(asciiToLower(it));
+    Collections.sort(lower);
+    Arrays.sort(required);
+
+    boolean areEqual = true;
+    for (int i = 0; i < required.length; i++) {
+        if (!MessageDigest.isEqual(
+                lower.get(i).getBytes(StandardCharsets.UTF_8),
+                required[i].getBytes(StandardCharsets.UTF_8))) {
+            areEqual = false;
+            // Deliberately not breaking early
+        }
+    }
+    if (!areEqual) {
+        throw new AidError("ERR_SECURITY", "Signature-Input must cover required fields");
+    }
 
     Matcher mc = Pattern.compile("(?:^|;)\\s*created=(\\d+)", Pattern.CASE_INSENSITIVE).matcher(sigInput);
     Matcher mk = Pattern.compile("(?:^|;)\\s*keyid=([^;\\s]+)", Pattern.CASE_INSENSITIVE).matcher(sigInput);
@@ -64,7 +95,7 @@ public final class Handshake {
     }
     String keyidRaw = mk.group(1);
     String keyid = keyidRaw.replaceAll("^\"(.+)\"$", "$1");
-    String alg = ma.group(1).toLowerCase(Locale.ROOT);
+    String alg = asciiToLower(ma.group(1));
 
     Matcher ms = Pattern.compile("sig\\s*=\\s*:\\s*([^:]+)\\s*:", Pattern.CASE_INSENSITIVE).matcher(sig);
     if (!ms.find()) throw new AidError("ERR_SECURITY", "Invalid Signature header");
@@ -94,13 +125,30 @@ public final class Handshake {
   private static byte[] buildSignatureBase(String[] covered, long created, String keyidRaw, String alg, String method, String targetUri, String host, String date, String challenge) {
     StringBuilder sb = new StringBuilder();
     for (String item : covered) {
-      switch (item.toLowerCase(Locale.ROOT)) {
-        case "aid-challenge": sb.append("\"AID-Challenge\": ").append(challenge).append('\n'); break;
-        case "@method": sb.append("\"@method\": ").append(method).append('\n'); break;
-        case "@target-uri": sb.append("\"@target-uri\": ").append(targetUri).append('\n'); break;
-        case "host": sb.append("\"host\": ").append(host).append('\n'); break;
-        case "date": sb.append("\"date\": ").append(date).append('\n'); break;
-        default: throw new AidError("ERR_SECURITY", "Unsupported covered field: " + item);
+      String lower = asciiToLower(item);
+      boolean appended = false;
+      if (MessageDigest.isEqual(lower.getBytes(StandardCharsets.UTF_8), "aid-challenge".getBytes(StandardCharsets.UTF_8))) {
+        sb.append("\"AID-Challenge\": ").append(challenge).append('\n');
+        appended = true;
+      }
+      if (MessageDigest.isEqual(lower.getBytes(StandardCharsets.UTF_8), "@method".getBytes(StandardCharsets.UTF_8))) {
+        sb.append("\"@method\": ").append(method).append('\n');
+        appended = true;
+      }
+      if (MessageDigest.isEqual(lower.getBytes(StandardCharsets.UTF_8), "@target-uri".getBytes(StandardCharsets.UTF_8))) {
+        sb.append("\"@target-uri\": ").append(targetUri).append('\n');
+        appended = true;
+      }
+      if (MessageDigest.isEqual(lower.getBytes(StandardCharsets.UTF_8), "host".getBytes(StandardCharsets.UTF_8))) {
+        sb.append("\"host\": ").append(host).append('\n');
+        appended = true;
+      }
+      if (MessageDigest.isEqual(lower.getBytes(StandardCharsets.UTF_8), "date".getBytes(StandardCharsets.UTF_8))) {
+        sb.append("\"date\": ").append(date).append('\n');
+        appended = true;
+      }
+      if (!appended) {
+        throw new AidError("ERR_SECURITY", "Unsupported covered field: " + item);
       }
     }
     StringBuilder quoted = new StringBuilder();
@@ -152,8 +200,12 @@ public final class Handshake {
         throw new AidError("ERR_SECURITY", "Invalid Date header");
       }
     }
-    if (!sd.keyid.equals(kid)) throw new AidError("ERR_SECURITY", "Signature keyid mismatch");
-    if (!"ed25519".equals(sd.alg)) throw new AidError("ERR_SECURITY", "Unsupported signature algorithm");
+    if (!MessageDigest.isEqual(sd.keyid.getBytes(StandardCharsets.UTF_8), kid.getBytes(StandardCharsets.UTF_8))) {
+      throw new AidError("ERR_SECURITY", "Signature keyid mismatch");
+    }
+    if (!MessageDigest.isEqual("ed25519".getBytes(StandardCharsets.UTF_8), sd.alg.getBytes(StandardCharsets.UTF_8))) {
+      throw new AidError("ERR_SECURITY", "Unsupported signature algorithm");
+    }
 
     String host = u.getAuthority();
     byte[] base = buildSignatureBase(sd.covered, sd.created, sd.keyidRaw, sd.alg, "GET", uri, host, (respDate != null ? respDate : date), challenge);
