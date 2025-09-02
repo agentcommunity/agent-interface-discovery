@@ -16,12 +16,14 @@ import {
 export class AidError extends Error {
   public readonly code: number;
   public readonly errorCode: ErrorCode;
+  public readonly details?: Record<string, unknown> | undefined;
 
-  constructor(errorCode: ErrorCode, message?: string) {
+  constructor(errorCode: ErrorCode, message?: string, details?: Record<string, unknown>) {
     super(message || ERROR_MESSAGES[errorCode]);
     this.name = 'AidError';
     this.code = ERROR_CODES[errorCode];
     this.errorCode = errorCode;
+    this.details = details;
   }
 }
 

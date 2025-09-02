@@ -106,28 +106,48 @@ async function fetchWellKnown(
       signal: controller.signal as unknown,
       redirect: 'error',
     })) as ResponseLike;
+    const text = await res.text(); // Await text early for snippet
     if (!res.ok) {
-      throw new AidError('ERR_FALLBACK_FAILED', `Well-known HTTP ${res.status}`);
+      throw new AidError('ERR_FALLBACK_FAILED', `Well-known HTTP ${res.status}`, {
+        httpStatus: res.status,
+        snippet: text.slice(0, 1024),
+      });
     }
     const ct = (res.headers.get('content-type') || '').toLowerCase();
     if (!ct.startsWith('application/json')) {
       throw new AidError(
         'ERR_FALLBACK_FAILED',
         'Invalid content-type for well-known (expected application/json)',
+        {
+          httpStatus: res.status,
+          contentType: res.headers.get('content-type'),
+          snippet: text.slice(0, 1024),
+        },
       );
     }
-    const text = await res.text();
     if (text.length > 64 * 1024) {
-      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known response too large (>64KB)');
+      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known response too large (>64KB)', {
+        httpStatus: res.status,
+        contentType: ct,
+        byteLength: text.length,
+      });
     }
     let json: unknown;
     try {
       json = JSON.parse(text);
     } catch {
-      throw new AidError('ERR_FALLBACK_FAILED', 'Invalid JSON in well-known response');
+      throw new AidError('ERR_FALLBACK_FAILED', 'Invalid JSON in well-known response', {
+        httpStatus: res.status,
+        contentType: ct,
+        snippet: text.slice(0, 1024),
+      });
     }
     if (typeof json !== 'object' || json === null) {
-      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known JSON must be an object');
+      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known JSON must be an object', {
+        httpStatus: res.status,
+        contentType: ct,
+        snippet: text.slice(0, 1024),
+      });
     }
     const raw = canonicalizeRaw(json as Record<string, unknown>);
     // Strict validation first
@@ -160,7 +180,7 @@ async function fetchWellKnown(
             `Record for ${domain} was deprecated on ${record.dep}`,
           );
         }
-         
+
         console.warn(
           `[AID] WARNING: Record for ${domain} is scheduled for deprecation on ${record.dep}`,
         );
@@ -171,7 +191,13 @@ async function fetchWellKnown(
     }
     return { record, raw: text.trim(), queryName: url };
   } catch (e) {
-    if (e instanceof AidError) throw e;
+    if (e instanceof AidError) {
+      // Re-throw with fallback code if it's not already set
+      if (e.errorCode !== 'ERR_FALLBACK_FAILED') {
+        throw new AidError('ERR_FALLBACK_FAILED', e.message, e.details);
+      }
+      throw e;
+    }
     throw new AidError('ERR_FALLBACK_FAILED', e instanceof Error ? e.message : String(e));
   } finally {
     clearTimeout(timer);
@@ -240,7 +266,7 @@ export async function discover(
                     `Record for ${queryName} was deprecated on ${record.dep}`,
                   );
                 }
-                 
+
                 console.warn(
                   `[AID] WARNING: Record for ${queryName} is scheduled for deprecation on ${record.dep}`,
                 );
@@ -356,8 +382,16 @@ export async function discover(
       error instanceof AidError &&
       (error.errorCode === 'ERR_NO_RECORD' || error.errorCode === 'ERR_DNS_LOOKUP_FAILED')
     ) {
-      const { record, raw, queryName } = await fetchWellKnown(domain, wellKnownTimeoutMs);
-      return { record, raw, ttl: DNS_TTL_MIN, queryName };
+      try {
+        const { record, raw, queryName } = await fetchWellKnown(domain, wellKnownTimeoutMs);
+        return { record, raw, ttl: DNS_TTL_MIN, queryName };
+      } catch (fallbackError) {
+        if (fallbackError instanceof AidError) {
+          // Propagate rich details from the fallback
+          throw fallbackError;
+        }
+        throw error; // Throw original DNS error if fallback has an unknown error
+      }
     }
     throw error;
   }

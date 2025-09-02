@@ -33,6 +33,7 @@ export {
 
 // Security helpers
 export { enforceRedirectPolicy } from './security.js';
+export { performPKAHandshake } from './pka.js';
 
 // Re-export client functions and types
 export { type DiscoveryResult, type DiscoveryOptions, discover } from './client.js';

@@ -257,6 +257,27 @@ pnpm test
 -
 - CI note: The checker honors `AID_SKIP_SECURITY=1` to skip TLS inspection in smoke runs; PKA loopback uses `AID_ALLOW_INSECURE_WELL_KNOWN=1` (loopback only) for local HTTP testing.
 
+### aid-doctor CLI Architecture
+
+**Enhanced Features (v1.1)**:
+
+- **Standardized Error Messages**: Centralized constants in `error_messages.ts` for consistent UX across all modules
+- **Comprehensive Test Coverage**: Full unit tests for `protoProbe.ts`, `output.ts`, and all core functionality (12/12 tests passing)
+- **Draft Saving**: Interactive wizard supports `--save-draft <path>` for saving generated records to files
+- **PKA Key Management**: Integrated key generation and verification with proper file system handling
+- **Enhanced Diagnostics**: Actionable suggestions, detailed TLS/PKA reporting, and byte size warnings
+
+**Module Structure**:
+
+- `cli.ts` – Commander.js setup with all commands and flags
+- `checker.ts` – Core discovery and validation logic with standardized error handling
+- `output.ts` – Human-readable formatting with actionable suggestions
+- `protoProbe.ts` – Protocol-specific subdomain probing
+- `error_messages.ts` – Centralized error message constants
+- `generator.ts` – Interactive record generation with draft saving
+- `keys.ts` – PKA key generation and verification utilities
+- `types.ts` – TypeScript interfaces for all data structures
+
 ## 🔄 CI/CD Architecture
 
 ### Build Optimization

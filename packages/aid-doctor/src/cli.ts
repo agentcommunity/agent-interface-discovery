@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { readFile } from 'fs/promises';
+import { readFile, writeFile } from 'fs/promises';
 import { AidError, PROTOCOL_TOKENS, AUTH_TOKENS } from '@agentcommunity/aid';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -9,7 +9,8 @@ import inquirer from 'inquirer';
 import clipboardy from 'clipboardy';
 import { validateTxtRecord, type AidGeneratorData } from './generator';
 import { runCheck } from './checker';
-import type { CheckOptions, DoctorReport } from './types';
+import { formatCheckResult } from './output';
+import type { CheckOptions } from './types';
 import { generateEd25519, verifyPka } from './keys';
 
 const program = new Command();
@@ -19,34 +20,6 @@ program
   .name('aid-doctor')
   .description('CLI tool for Agent Identity & Discovery (AID)')
   .version('0.1.0');
-
-/**
- * Format the discovery result for human-readable output
- */
-function formatDiscoveryResult(result: DoctorReport, domain: string): string {
-  const { record, queried } = result;
-
-  const lines = [
-    chalk.green(`✅ AID Record Found for ${domain}`),
-    '',
-    chalk.bold('Record Details:'),
-    `  Domain: ${chalk.cyan(domain)}`,
-    `  Query: ${chalk.gray(queried.attempts[0]?.name ?? '')}`,
-    `  Version: ${chalk.yellow(record.parsed?.v ?? 'aid1')}`,
-    `  Protocol: ${chalk.magenta(record.parsed?.proto ?? '')}`,
-    `  URI: ${chalk.blue(record.parsed?.uri ?? '')}`,
-  ];
-
-  if (record.parsed?.auth) {
-    lines.push(`  Auth: ${chalk.yellow(record.parsed.auth)}`);
-  }
-
-  if (record.parsed?.desc) {
-    lines.push(`  Description: ${chalk.white(record.parsed.desc)}`);
-  }
-
-  return lines.join('\n');
-}
 
 /**
  * Format an error for human-readable output
@@ -89,50 +62,50 @@ program
   .option('--fallback-timeout <ms>', 'Timeout for .well-known fetch (ms)', '2000')
   .option('--show-details', 'Show TLS/DNSSEC/PKA short details', false)
   .option('--dump-well-known [path]', 'On fallback failure, print or save body snippet', false)
+  .option('--check-downgrade', 'Consult cache and warn when pka has been removed or changed', false)
+  .option('--no-color', 'Disable ANSI color output')
   .option('--code', 'Exit with the specific error code on failure (for scripting)')
   .action(
     async (
       domain: string,
       options: {
         protocol?: string;
+        probeProtoSubdomain?: boolean;
+        probeProtoEvenIfBase?: boolean;
         timeout: string;
         noFallback?: boolean;
         fallbackTimeout?: string;
         showDetails?: boolean;
+        dumpWellKnown?: string | boolean;
+        checkDowngrade?: boolean;
+        noColor?: boolean;
         code?: boolean;
       },
     ) => {
+      // Chalk handles --no-color via environment variables or its own detection.
+      // commander's --no-color is a standard way to control it.
+      if (options.noColor) {
+        chalk.level = 0;
+      }
+
       const spinner = ora(`Checking AID record for ${domain}...`).start();
 
       try {
         const report = await runCheck(domain, {
           protocol: options.protocol,
           timeoutMs: Number.parseInt(options.timeout),
-          allowFallback: options.noFallback ? false : true,
+          allowFallback: !options.noFallback,
           wellKnownTimeoutMs: Number.parseInt(options.fallbackTimeout || '2000'),
           showDetails: options.showDetails,
-          probeProtoSubdomain: false,
-          probeProtoEvenIfBase: false,
-          dumpWellKnownPath: null,
+          probeProtoSubdomain: options.probeProtoSubdomain,
+          probeProtoEvenIfBase: options.probeProtoEvenIfBase,
+          dumpWellKnownPath:
+            typeof options.dumpWellKnown === 'string' ? options.dumpWellKnown : null,
+          checkDowngrade: options.checkDowngrade,
         } as CheckOptions);
 
         spinner.stop();
-        // Base output
-        const base = formatDiscoveryResult(report, domain);
-        const extras: string[] = [];
-        if (options.showDetails) {
-          const fallbackUsed = report.queried.wellKnown.used;
-          extras.push(
-            `  Fallback: ${fallbackUsed ? chalk.yellow('used (.well-known)') : chalk.green('not used (DNS)')}`,
-          );
-          if (report.pka.present) {
-            const kid = report.pka.kid ?? '(none)';
-            extras.push(`  PKA: ${chalk.green('present')}, kid=${chalk.cyan(kid)}`);
-          } else {
-            extras.push(`  PKA: ${chalk.gray('absent')}`);
-          }
-        }
-        console.log([base, ...(extras.length ? [''].concat(extras) : [])].join('\n'));
+        console.log(formatCheckResult(report));
 
         // Exit with report exit code
         process.exit(report.exitCode);
@@ -270,7 +243,8 @@ program
 program
   .command('generate')
   .description('Run an interactive prompt to generate a new AID record')
-  .action(async () => {
+  .option('--save-draft <path>', 'Save the generated record to a file')
+  .action(async (opts: { saveDraft?: string }) => {
     console.log(chalk.bold.cyan('AID Record Generator'));
     console.log(chalk.gray('This tool will guide you through creating a valid DNS TXT record.\n'));
 
@@ -400,6 +374,20 @@ program
       } catch {
         // The error object is not needed, so we use an optional catch binding.
         console.log(chalk.red('Could not copy to clipboard. Please copy the value manually.'));
+      }
+
+      // Save draft if requested
+      if (opts.saveDraft) {
+        try {
+          await writeFile(opts.saveDraft, txtRecord, 'utf8');
+          console.log(chalk.green(`💾 Draft saved to ${opts.saveDraft}`));
+        } catch (error) {
+          console.log(
+            chalk.red(
+              `Could not save draft: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+          );
+        }
       }
     } else {
       console.log(chalk.bold.red(`🔥 Validation Failed: ${validation.error}`));

@@ -4,14 +4,14 @@ export interface ProbeAttempt {
   name: string;
   type: 'TXT' | 'RRSIG';
   result: 'NOERROR' | 'NXDOMAIN' | 'NODATA' | 'ERROR';
-  ttl?: number;
+  ttl?: number | undefined;
   byteLength?: number;
   reason?: string;
 }
 
 export interface QueriedBlock {
   strategy: 'base-first';
-  hint: { proto?: string; source: 'cli' | null; present: boolean };
+  hint: { proto?: string | undefined; source: 'cli' | null; present: boolean };
   attempts: ProbeAttempt[];
   wellKnown: {
     attempted: boolean;
@@ -95,4 +95,5 @@ export interface CheckOptions {
   wellKnownTimeoutMs: number;
   showDetails?: boolean;
   dumpWellKnownPath?: string | null;
+  checkDowngrade?: boolean;
 }

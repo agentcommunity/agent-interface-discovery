@@ -40,6 +40,7 @@ It uses a single DNS `TXT` record to make any agent service—whether it speaks 
 - ✅ **Metadata fields** (`docs` for documentation URLs, `dep` for deprecation timestamps)
 - ✅ **New protocols** (gRPC, GraphQL, WebSocket, Zeroconf)
 - ✅ **Multi-language parity** (TypeScript, Python, Go, Rust, .NET, Java)
+- ✅ **Enhanced CLI** with draft saving, standardized error messages, and comprehensive test coverage
 
 [AID website](aid.agentcommunity.org)
 
@@ -77,11 +78,11 @@ graph TD
 
 ### Key Resources
 
-| Resource                   | Link                                                                   | Description                                                                    |
-| :------------------------- | :--------------------------------------------------------------------- | :----------------------------------------------------------------------------- |
-| **Interactive Workbench**  | **[aid.agentcommunity.org](https://aid.agentcommunity.org)**           | The best way to see the protocol in action with a live resolver and generator. |
-| **Official Documentation** | **[docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)** | Read the full specification, guides, and API reference.                        |
-| **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check and generate AID records from your terminal.         |
+| Resource                   | Link                                                                   | Description                                                                                                                                    |
+| :------------------------- | :--------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Interactive Workbench**  | **[aid.agentcommunity.org](https://aid.agentcommunity.org)**           | The best way to see the protocol in action with a live resolver and generator.                                                                 |
+| **Official Documentation** | **[docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)** | Read the full specification, guides, and API reference.                                                                                        |
+| **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check, validate, generate, and save AID records. Supports draft saving, PKA key generation, and comprehensive diagnostics. |
 
 ### Using the Libraries
 
@@ -269,15 +270,16 @@ The single source of truth for all protocol constants is `protocol/constants.yml
 
 ### v1.1 Release Status: ✅ READY
 
-**Implementation Complete** - All v1.1 features implemented across 6+ languages with comprehensive testing.
+**Implementation Complete** - All v1.1 features implemented across 6+ languages with comprehensive testing. CLI enhanced with advanced features.
 
 **Ready for Release:**
 
-- ✅ All tests passing (58 TypeScript + Python/Go parity tests)
-- ✅ All builds successful
+- ✅ All tests passing (70+ TypeScript tests + Python/Go parity tests)
+- ✅ All builds successful (7/7 packages)
 - ✅ Changesets prepared for version bumps
 - ✅ Release workflow configured (npm + PyPI automation)
 - ✅ Multi-language SDKs ready (TS, Python, Go, Rust, .NET, Java)
+- ✅ Enhanced CLI with draft saving, standardized errors, and full test coverage
 
 **Next Step:** Merge to `main` with `chore(release)` commit message to trigger automated release.
 
