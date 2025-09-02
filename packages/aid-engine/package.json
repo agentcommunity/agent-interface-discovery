@@ -1,0 +1,58 @@
+{
+  "name": "@agentcommunity/aid-engine",
+  "version": "0.1.0",
+  "description": "Core engine for Agent Identity & Discovery (AID) validation and discovery",
+  "keywords": [
+    "agent",
+    "discovery",
+    "dns",
+    "aid",
+    "engine"
+  ],
+  "author": "Agent Community",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentcommunity/agent-interface-discovery.git",
+    "directory": "packages/aid-engine"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint src/**/*.ts",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage",
+    "clean": "rimraf dist",
+    "prepack": "turbo run build --filter=."
+  },
+  "dependencies": {
+    "@agentcommunity/aid": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "eslint": "^9.30.1",
+    "tsup": "^8.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
