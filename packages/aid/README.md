@@ -1,10 +1,10 @@
 # @agentcommunity/aid
 
-Agent Identity & Discovery (AID) – Core TypeScript library for Node.js and Browsers.
+Agent Identity & Discovery (AID) – Core TypeScript library for Node.js and Browsers – built by the team at [agentcommunity.org](https://agentcommunity.org).
 
-- Canonical spec: see the monorepo docs and `protocol/constants.yml`
-- Website: https://aid.agentcommunity.org
-- Docs: https://docs.agentcommunity.org/aid
+- **Website**: [aid.agentcommunity.org](https://aid.agentcommunity.org)
+- **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)
+- **GitHub**: [github.com/agent-community/agent-interface-discovery](https://github.com/agent-community/agent-interface-discovery)
 
 ## Install
 
@@ -119,4 +119,4 @@ See the documentation “Quick Start → PKA handshake expectations” for the e
 
 ## License
 
-MIT © Agent Community
+MIT © [Agent Community](https://agentcommunity.org)

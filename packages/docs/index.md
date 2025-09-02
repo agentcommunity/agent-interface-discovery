@@ -75,12 +75,13 @@ flowchart LR
 AID has official libraries and tools across multiple languages, with additional ports in progress.
 
 - TypeScript/Node & Browser: `@agentcommunity/aid`
+- TypeScript Core Library: `@agentcommunity/aid-engine` – Pure business logic for discovery, validation, and PKA
+- CLI Tool: `@agentcommunity/aid-doctor` – Validate, secure, and generate AID records (wraps aid-engine)
 - Python: `aid-discovery` (transfer to community planned)
 - Go: `aid-go`
 - Rust: `aid-rs`
 - .NET: `aid-dotnet`
 - Java: `aid-java`
-- CLI Tool: `@agentcommunity/aid-doctor` – Validate, secure, and generate AID records
 - Web Workbench: Interactive generator/resolver
 
 See the full package overview in the [Quick Start](quickstart/index.md#package-overview) and the cross-language [Discovery API](Reference/discovery_api.md).

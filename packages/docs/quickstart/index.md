@@ -14,16 +14,17 @@ Fast track for using Agent Identity & Discovery.
 
 AID provides libraries and tools for multiple languages and use cases:
 
-| Package                                                                                                            | Purpose                          | Language   | Status                                                     |
-| ------------------------------------------------------------------------------------------------------------------ | -------------------------------- | ---------- | ---------------------------------------------------------- |
-| **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                                       | Core discovery library           | TypeScript | ✅ Published                                               |
-| **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**                         | CLI validation & generation      | Node.js    | ✅ Published                                               |
-| **[aid-discovery (Python)](https://pypi.org/project/aid-discovery/)**                                              | Python discovery library         | Python     | 🔜 Published (not yet community-owned; transfer planned)   |
-| **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)**                | Go discovery library             | Go         | ✅ Published                                               |
-| **AID Web Workbench**                                                                                              | Interactive generator & resolver | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
-| **[aid-rs (Rust)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs)**         | Parser + discovery (opt. PKA)    | Rust       | ✅ In repo                                                 |
-| **[aid-dotnet (.NET)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet)** | Parser + discovery + PKA + WK    | .NET       | ✅ In repo                                                 |
-| **[aid-java (Java)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java)**     | Parser + discovery + PKA + WK    | Java       | ✅ In repo                                                 |
+| Package                                                                                                            | Purpose                                          | Language   | Status                                                     |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ | ---------- | ---------------------------------------------------------- |
+| **[@agentcommunity/aid](https://www.npmjs.com/package/@agentcommunity/aid)**                                       | Core discovery library                           | TypeScript | ✅ Published                                               |
+| **[@agentcommunity/aid-engine](https://www.npmjs.com/package/@agentcommunity/aid-engine)**                         | Pure business logic (discovery, validation, PKA) | TypeScript | ✅ Published                                               |
+| **[@agentcommunity/aid-doctor](https://www.npmjs.com/package/@agentcommunity/aid-doctor)**                         | CLI validation & generation (wraps aid-engine)   | Node.js    | ✅ Published                                               |
+| **[aid-discovery (Python)](https://pypi.org/project/aid-discovery/)**                                              | Python discovery library                         | Python     | 🔜 Published (not yet community-owned; transfer planned)   |
+| **[aid-go](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-go)**                | Go discovery library                             | Go         | ✅ Published                                               |
+| **AID Web Workbench**                                                                                              | Interactive generator & resolver                 | Web        | 🌐 [Try it live](https://aid.agentcommunity.org/workbench) |
+| **[aid-rs (Rust)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs)**         | Parser + discovery (opt. PKA)                    | Rust       | ✅ In repo                                                 |
+| **[aid-dotnet (.NET)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet)** | Parser + discovery + PKA + WK                    | .NET       | ✅ In repo                                                 |
+| **[aid-java (Java)](https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java)**     | Parser + discovery + PKA + WK                    | Java       | ✅ In repo                                                 |
 
 ---
 
@@ -100,6 +101,8 @@ Wait a few minutes for DNS to propagate. You can then check your work:
 ```bash
 aid-doctor check my-cool-saas.com
 ```
+
+> **Note:** The `aid-doctor` CLI uses the `@agentcommunity/aid-engine` library under the hood for all discovery and validation logic.
 
 **Using command line tools:**
 
@@ -259,6 +262,8 @@ aid-doctor check example.com --code || echo "failed with code $?"
 # Dev-only loopback test against a mock on 127.0.0.1:19081
 AID_ALLOW_INSECURE_WELL_KNOWN=1 aid-doctor check 127.0.0.1:19081 --show-details --fallback-timeout 5000
 ```
+
+> **Note:** The `aid-doctor` CLI uses the `@agentcommunity/aid-engine` library under the hood for all discovery and validation logic.
 
 In production, `.well-known` must use HTTPS; the loopback relax is for local development only.
 

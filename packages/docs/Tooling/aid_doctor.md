@@ -10,6 +10,8 @@ icon: material/stethoscope
 
 Think of `aid-doctor` as a helpful mechanic for your domain’s agent record. You give it a domain; it looks up the `_agent.<domain>` TXT record, checks every detail, tries a safe fallback if needed, and tells you exactly what’s right or wrong. It also helps you create a perfect record and manage PKA keys.
 
+> **Architecture Note**: `aid-doctor` is a CLI wrapper around `@agentcommunity/aid-engine`, a pure library containing all the core AID business logic. This separation allows other tools to reuse the same validation and discovery functionality.
+
 ```bash
 # Human-readable check with detailed step-by-step report
 aid-doctor check example.com
@@ -27,17 +29,17 @@ aid-doctor pka verify --key zBase58...
 
 ## What it does
 
-- DNS-first discovery of `_agent.<domain>`
-- Strict validation of record fields (v=aid1, uri, proto, aliases, metadata)
-- Optional `.well-known` fallback (HTTPS JSON ≤64KB) on DNS miss
-- Security checks: TLS (redirect policy, cert info), DNSSEC presence probe, and PKA handshake.
-- Downgrade warnings using a small local cache (`~/.aid/cache.json`)
-- JSON output for CI/CD
-- Interactive record generator with draft saving capability
-- PKA key generation and verification helpers
-- Standardized error messages for consistent UX
-- Comprehensive test coverage (12/12 tests passing)
-- Actionable recommendations to fix common problems.
+`aid-doctor` provides a user-friendly CLI interface that orchestrates the `@agentcommunity/aid-engine` library:
+
+- **Discovery & Validation**: Uses aid-engine for DNS-first discovery of `_agent.<domain>` and strict validation of record fields
+- **Security Checks**: Leverages aid-engine for TLS validation, DNSSEC probing, and PKA handshake verification
+- **Fallback Support**: Delegates `.well-known` fallback handling to aid-engine
+- **CLI Features**: Adds user interaction, filesystem caching (`~/.aid/cache.json`), colored output, and draft saving
+- **JSON Output**: Provides structured results for CI/CD pipelines
+- **PKA Management**: Includes key generation and verification utilities
+- **Standardized UX**: Consistent error messages and actionable recommendations
+- **Test Coverage**: Comprehensive test coverage (12/12 tests passing)
+- **Recommendations**: Actionable suggestions to fix common problems
 
 ## Example Output
 

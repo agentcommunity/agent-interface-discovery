@@ -66,6 +66,8 @@ Notes
 - Remote protocols must use `https://`. Local uses allowed custom schemes.
 - Errors are standardized (`1000..1005`).
 
+> **Advanced Usage**: For building custom tools, use `@agentcommunity/aid-engine` - a pure, stateless library containing all AID business logic without CLI dependencies.
+
 ## See also
 
 - [Quick Start index](./index.md)

@@ -259,24 +259,58 @@ pnpm test
 
 ### aid-doctor CLI Architecture
 
+**Core Architecture Pattern**: Clean separation between pure business logic (`aid-engine`) and side-effectful CLI wrapper (`aid-doctor`).
+
+#### **@agentcommunity/aid-engine** (Pure Core Library)
+
+A stateless, pure library containing all AID business logic:
+
+- **Discovery Logic**: DNS resolution, TXT record parsing, well-known fallback handling
+- **Validation Engine**: Record format validation, protocol verification, security checks
+- **PKA Handshake**: Ed25519 HTTP Message Signatures implementation with time window validation
+- **Protocol Support**: MCP, A2A, OpenAPI, GraphQL, gRPC, WebSocket, Zeroconf
+- **Error Handling**: Standardized error codes and messages across all operations
+- **Type Safety**: Full TypeScript interfaces with exact optional property types
+
+**Why Pure**: No filesystem access, no network I/O beyond DNS/well-known, deterministic behavior.
+
+#### **@agentcommunity/aid-doctor** (CLI Wrapper)
+
+A thin command-line interface that orchestrates the engine:
+
+- **State Management**: Filesystem caching, configuration persistence
+- **User Interaction**: Commander.js CLI, interactive prompts, clipboard integration
+- **Key Management**: PKA key generation and storage in `~/.aid/keys/`
+- **Output Formatting**: Human-readable reports with actionable suggestions
+- **Side Effects**: All I/O operations (file writes, network calls beyond DNS)
+
 **Enhanced Features (v1.1)**:
 
-- **Standardized Error Messages**: Centralized constants in `error_messages.ts` for consistent UX across all modules
-- **Comprehensive Test Coverage**: Full unit tests for `protoProbe.ts`, `output.ts`, and all core functionality (12/12 tests passing)
 - **Draft Saving**: Interactive wizard supports `--save-draft <path>` for saving generated records to files
 - **PKA Key Management**: Integrated key generation and verification with proper file system handling
 - **Enhanced Diagnostics**: Actionable suggestions, detailed TLS/PKA reporting, and byte size warnings
+- **Comprehensive Test Coverage**: Full unit tests for all CLI functionality (6/6 tests passing)
 
-**Module Structure**:
+#### **Module Structure**
+
+**aid-engine (packages/aid-engine/)**:
+
+- `checker.ts` – Core discovery and validation logic (stateless)
+- `generator.ts` – Record generation logic (pure functions)
+- `dns.ts` – DNS resolution utilities
+- `tls_inspect.ts` – TLS certificate validation
+- `pka.ts` – PKA handshake implementation
+- `protoProbe.ts` – Protocol-specific subdomain probing
+- `types.ts` – TypeScript interfaces for all data structures
+- `error_messages.ts` – Centralized error message constants
+
+**aid-doctor (packages/aid-doctor/)**:
 
 - `cli.ts` – Commander.js setup with all commands and flags
-- `checker.ts` – Core discovery and validation logic with standardized error handling
 - `output.ts` – Human-readable formatting with actionable suggestions
-- `protoProbe.ts` – Protocol-specific subdomain probing
-- `error_messages.ts` – Centralized error message constants
-- `generator.ts` – Interactive record generation with draft saving
-- `keys.ts` – PKA key generation and verification utilities
-- `types.ts` – TypeScript interfaces for all data structures
+- `keys.ts` – PKA key generation and filesystem storage (side-effectful)
+- `cache.ts` – Cache persistence to `~/.aid/cache.json` (side-effectful)
+- `index.ts` – Package entry point
 
 ## 🔄 CI/CD Architecture
 

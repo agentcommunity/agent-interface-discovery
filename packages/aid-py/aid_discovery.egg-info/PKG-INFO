@@ -4,8 +4,8 @@ Version: 1.1.0
 Summary: Python library for Agent Identity & Discovery (AID) - v1.1.0 release
 Author-email: Agent Community <maintainers@agentcommunity.org>
 License: MIT
-Project-URL: Homepage, https://github.com/agent-community/agent-interface-discovery
-Project-URL: Repository, https://github.com/agent-community/agent-interface-discovery
+Project-URL: Homepage, https://github.com/agentcommunity/agent-interface-discovery
+Project-URL: Repository, https://github.com/agentcommunity/agent-interface-discovery
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 Requires-Dist: dnspython>=2.6.0
