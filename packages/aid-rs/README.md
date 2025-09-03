@@ -1,5 +1,25 @@
 # aid-rs
 
+## Rust
+
+# Agent Identity & Discovery
+
+> DNS for agents
+
+AID as the public address book for the agentic web.
+
+It's a simple, open standard that uses the internet's own directory—DNS—to answer one question: **"Given a domain, where is its AI agent, and how do I know it's the real one?"**
+
+No more hunting through API docs. No more manual configuration. It's the zero-friction layer for a world of interconnected agents.
+
+Built by the team at [agentcommunity.org](https://agentcommunity.org).
+
+- **Website**: [aid.agentcommunity.org](https://aid.agentcommunity.org)
+- **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)
+- **GitHub**: [github.com/agentcommunity/agent-interface-discovery](https://github.com/agentcommunity/agent-interface-discovery)
+
+---
+
 Rust crate for Agent Identity & Discovery (AID) parsing and generated constants.
 
 - Parser by default; optional PKA handshake behind a feature flag.

@@ -16,6 +16,8 @@ Built by the team at [agentcommunity.org](https://agentcommunity.org).
 - **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)
 - **GitHub**: [github.com/agent-community/agent-interface-discovery](https://github.com/agent-community/agent-interface-discovery)
 
+---
+
 ## Install
 
 ```bash
