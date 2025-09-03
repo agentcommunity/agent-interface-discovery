@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — Go'
+title: 'Go'
 description: 'Discover agents using the Go library'
 icon: material/language-go
 ---

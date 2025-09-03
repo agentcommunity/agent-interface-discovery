@@ -38,7 +38,7 @@ In short, PKA applies the powerful identity philosophy of Pkarr with the pragmat
 
 ## Example TXT
 
-```dns
+```text
 _agent.example.com. 300 IN TXT "v=aid1;p=mcp;u=https://api.example.com/mcp;k=z7rW8r...;i=g1"
 ```
 

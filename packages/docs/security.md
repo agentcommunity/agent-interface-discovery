@@ -1,5 +1,5 @@
 ---
-title: 'Security Best Practices'
+title: 'Security'
 description: 'Operational and client guidance for secure AID usage.'
 icon: material/shield-lock
 ---

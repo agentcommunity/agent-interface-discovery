@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — .NET'
+title: '.NET'
 description: 'Discover and parse AID records in .NET'
 icon: material/language-csharp
 ---

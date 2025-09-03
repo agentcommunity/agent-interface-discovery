@@ -1,5 +1,5 @@
 ---
-title: "Agent Identity & Discovery 'aid'"
+title: "Specification - AID'"
 description: 'Specification'
 icon: material/file-document-outline
 
@@ -80,25 +80,25 @@ Clients **MUST** recognize single-letter lowercase aliases for all keys. A recor
 
 **Remote MCP Agent:**
 
-```dns
+```text
 _agent.example.com. 300 IN TXT "v=aid1;u=https://api.example.com/mcp;p=mcp;a=pat;s=Example AI Tools"
 ```
 
 **Local Agent via Docker:**
 
-```dns
+```text
 _agent.grafana.com. 300 IN TXT "v=aid1;u=docker:grafana/mcp:latest;p=local;a=pat;s=Run Grafana agent locally"
 ```
 
 **Remote MCP with PKA and metadata (v1.1):**
 
-```dns
+```text
 _agent.example.com. 300 IN TXT "v=aid1;p=mcp;u=https://api.example.com/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.example.com/agent;e=2026-01-01T00:00:00Z;s=Secure AI Gateway"
 ```
 
 **Local Zeroconf (v1.1):**
 
-```dns
+```text
 _agent.local.test. 300 IN TXT "v=aid1;p=zeroconf;u=zeroconf:_mcp._tcp;s=Local Dev Agent"
 ```
 

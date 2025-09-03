@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — TypeScript / Node.js'
+title: 'TypeScript / Node.js'
 description: 'Discover agents by domain using @agentcommunity/aid (Node.js)'
 icon: material/language-typescript
 ---

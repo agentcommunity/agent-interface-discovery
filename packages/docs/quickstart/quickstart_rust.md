@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — Rust'
+title: 'Rust'
 description: 'Discover agents using the Rust crate'
 icon: material/language-rust
 ---

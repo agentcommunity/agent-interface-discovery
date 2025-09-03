@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — A2A'
+title: 'How to — A2A'
 description: 'Discover and fetch an A2A AgentCard using AID'
 icon: material/account-voice
 ---

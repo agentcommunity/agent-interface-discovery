@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — MCP'
+title: 'How to MCP'
 description: 'Discover an MCP server endpoint with AID and start a session'
 icon: material/connection
 ---

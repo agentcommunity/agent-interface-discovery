@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — Java'
+title: 'Java'
 description: 'Discover and parse AID records in Java'
 icon: material/language-java
 ---

@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — OpenAPI'
+title: 'OpenAPI'
 description: 'Discover an OpenAPI spec URL using AID and fetch it'
 icon: material/api
 ---

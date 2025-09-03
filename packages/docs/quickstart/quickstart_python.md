@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — Python'
+title: 'Python'
 description: 'Discover agents using the Python package'
 icon: material/language-python
 ---

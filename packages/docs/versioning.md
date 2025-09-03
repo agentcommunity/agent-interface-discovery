@@ -1,5 +1,5 @@
 ---
-title: 'Versioning and Changelog'
+title: 'Versioning'
 description: 'How the AID specification evolves.'
 icon: material/git
 

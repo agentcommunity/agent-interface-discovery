@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — Browser'
+title: 'How to — Browser'
 description: 'Discover agents in the browser via DNS-over-HTTPS'
 icon: material/web
 ---

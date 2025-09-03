@@ -1,5 +1,5 @@
 ---
-title: 'Agent Identity & Discovery - aid'
+title: 'Rationale'
 description: 'Design Rationale'
 icon: material/head-question-outline
 
