@@ -1,6 +1,6 @@
 # AID Terraform Showcase
 
-This directory contains Terraform examples for publishing Agent Interface Discovery (AID) TXT records using the Vercel provider. It is intended for local experimentation and CI validation only.
+This directory contains Terraform examples for publishing Agent Identity & Discovery (AID) TXT records using the Vercel provider. It is intended for local experimentation and CI validation only.
 
 ## Canonical Record
 

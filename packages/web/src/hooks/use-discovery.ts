@@ -26,6 +26,9 @@ export interface DiscoveryMetadata {
   recordType: 'TXT';
   source: 'DNS-over-HTTPS' | 'DNS';
   txtRecord?: string;
+  dnssecPresent?: boolean;
+  pka?: { present: boolean; verified: boolean | null; kid: string | null };
+  tls?: { valid: boolean | null; daysRemaining: number | null };
 }
 
 /** The new result type using the generic Result union. */
@@ -47,16 +50,14 @@ export function useDiscovery() {
 
     const startTime = Date.now();
     try {
-      // Direct call to the library function
+      // Browser-safe discovery
       const libResult = await discover(domain);
       const lookupTime = Date.now() - startTime;
 
-      const resultUri = new URL(libResult.record.uri);
-
-      // We need to reconstruct the raw TXT string for display purposes,
-      // as the browser library does not expose it on success.
+      const parsed = libResult.record as unknown as AidRecord & { uri: string };
+      const resultUri = new URL(parsed.uri);
       const reconstructedTxt = Object.entries(libResult.record)
-        .map(([key, value]) => `${key}=${value}`)
+        .map(([k, v]) => `${k}=${v as string}`)
         .join(';');
 
       // Format the successful result into the shape our UI expects
@@ -64,7 +65,7 @@ export function useDiscovery() {
         ok: true,
         value: {
           record: {
-            ...libResult.record,
+            ...parsed,
             host: resultUri.hostname,
             port: resultUri.port ? Number.parseInt(resultUri.port, 10) : 443,
           },
@@ -74,6 +75,7 @@ export function useDiscovery() {
             recordType: 'TXT',
             source: 'DNS-over-HTTPS',
             txtRecord: reconstructedTxt,
+            pka: parsed.pka || parsed.kid ? { present: Boolean(parsed.pka), verified: null, kid: parsed.kid ?? null } : undefined,
           },
         },
       };

@@ -1,5 +1,5 @@
 /**
- * @agentcommunity/aid/browser - Browser-compatible Agent Interface Discovery
+ * @agentcommunity/aid/browser - Browser-compatible Agent Identity & Discovery
  *
  * This module provides AID functionality for browser environments using DNS-over-HTTPS.
  *
@@ -14,7 +14,8 @@
  */
 
 import { type AidRecord, DNS_SUBDOMAIN } from './constants.js';
-import { AidError, parse } from './parser.js';
+import { AidError, parse, canonicalizeRaw, AidRecordValidator } from './parser.js';
+import { performPKAHandshake } from './pka.js';
 
 /**
  * DNS-over-HTTPS query result from Cloudflare
@@ -62,6 +63,10 @@ export interface DiscoveryOptions {
   protocol?: string;
   /** Custom DNS-over-HTTPS provider URL (default: Cloudflare) */
   dohProvider?: string;
+  /** Enable .well-known fallback on ERR_NO_RECORD (default: true) */
+  wellKnownFallback?: boolean;
+  /** Timeout for .well-known fetch in milliseconds (default: 2000) */
+  wellKnownTimeoutMs?: number;
 }
 
 /**
@@ -98,6 +103,87 @@ function constructQueryName(domain: string, protocol?: string, useUnderscore = f
   }
 
   return `${DNS_SUBDOMAIN}.${normalizedDomain}`;
+}
+
+async function fetchWellKnown(
+  domain: string,
+  timeoutMs = 2000,
+): Promise<{
+  record: AidRecord;
+  raw: string;
+  queryName: string;
+}> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const url = `https://${domain}/.well-known/agent`;
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: 'error',
+    });
+    if (!res.ok) {
+      throw new AidError('ERR_FALLBACK_FAILED', `Well-known HTTP ${res.status}`);
+    }
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (!ct.startsWith('application/json')) {
+      throw new AidError(
+        'ERR_FALLBACK_FAILED',
+        'Invalid content-type for well-known (expected application/json)',
+      );
+    }
+    const text = await res.text();
+    if (text.length > 64 * 1024) {
+      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known response too large (>64KB)');
+    }
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new AidError('ERR_FALLBACK_FAILED', 'Invalid JSON in well-known response');
+    }
+    if (typeof json !== 'object' || json === null) {
+      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known JSON must be an object');
+    }
+    const raw = canonicalizeRaw(json as Record<string, unknown>);
+    const record = AidRecordValidator.validate(raw);
+    if (record.dep) {
+      const depDate = new Date(record.dep);
+      if (!Number.isNaN(depDate.getTime())) {
+        if (depDate.getTime() < Date.now()) {
+          throw new AidError(
+            'ERR_INVALID_TXT',
+            `Record for ${domain} was deprecated on ${record.dep}`,
+          );
+        }
+        console.warn(
+          `[AID] WARNING: Record for ${domain} is scheduled for deprecation on ${record.dep}`,
+        );
+      }
+    }
+    if (record.pka) {
+      try {
+        await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
+      } catch (pkaError) {
+        // Preserve ERR_SECURITY errors from PKA verification
+        if (pkaError instanceof AidError && pkaError.errorCode === 'ERR_SECURITY') {
+          throw pkaError;
+        }
+        throw pkaError;
+      }
+    }
+    return { record, raw: text.trim(), queryName: url };
+  } catch (e) {
+    if (e instanceof AidError) {
+      // Preserve ERR_SECURITY errors from PKA verification, don't convert to ERR_FALLBACK_FAILED
+      if (e.errorCode === 'ERR_SECURITY') {
+        throw e;
+      }
+      throw e;
+    }
+    throw new AidError('ERR_FALLBACK_FAILED', e instanceof Error ? e.message : String(e));
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -189,60 +275,85 @@ export async function discover(
   domain: string,
   options: DiscoveryOptions = {},
 ): Promise<DiscoveryResult> {
-  const { protocol } = options;
+  const { protocol, wellKnownFallback = true, wellKnownTimeoutMs = 2000 } = options;
 
-  // Canonical: Query the base _agent subdomain unless protocol is explicitly requested
-  if (!protocol) {
-    const baseQueryName = constructQueryName(domain);
-    const txtRecords = await queryTxtRecordsDoH(baseQueryName, options);
-
+  const tryQuery = async (name: string): Promise<DiscoveryResult> => {
+    const txtRecords = await queryTxtRecordsDoH(name, options);
     for (const txtRecord of txtRecords) {
       const recordString = txtRecord.data;
       if (recordString.includes('v=aid1') || recordString.includes('v=AID1')) {
         try {
           const record = parse(recordString);
+          if (record.dep) {
+            const depDate = new Date(record.dep);
+            if (!Number.isNaN(depDate.getTime())) {
+              if (depDate.getTime() < Date.now()) {
+                throw new AidError(
+                  'ERR_INVALID_TXT',
+                  `Record for ${name} was deprecated on ${record.dep}`,
+                );
+              }
+              console.warn(
+                `[AID] WARNING: Record for ${name} is scheduled for deprecation on ${record.dep}`,
+              );
+            }
+          }
+          if (record.pka) {
+            await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
+          }
           return {
             record,
             domain,
-            queryName: baseQueryName,
+            queryName: name,
             ttl: txtRecord.ttl,
           };
-        } catch {
-          continue;
-        }
-      }
-    }
-
-    throw new AidError('ERR_NO_RECORD', `No valid AID record found for ${domain}`);
-  }
-
-  // Protocol explicitly requested: try underscore form first, then non-underscore, then base
-  const underscoreName = constructQueryName(domain, protocol, true);
-  const plainName = constructQueryName(domain, protocol, false);
-
-  for (const name of [underscoreName, plainName, constructQueryName(domain)]) {
-    try {
-      const txtRecords = await queryTxtRecordsDoH(name, options);
-      for (const txtRecord of txtRecords) {
-        const recordString = txtRecord.data;
-        if (recordString.includes('v=aid1') || recordString.includes('v=AID1')) {
-          try {
-            const record = parse(recordString);
-            return { record, domain, queryName: name, ttl: txtRecord.ttl };
-          } catch {
-            continue;
+        } catch (err) {
+          // If parsing fails but it's not a deprecation error, just continue to the next TXT record
+          if (err instanceof AidError && err.message.includes('deprecated')) {
+            throw err;
           }
         }
       }
-    } catch (error) {
-      if (error instanceof AidError && error.errorCode === 'ERR_NO_RECORD') {
-        continue;
-      }
-      throw error;
     }
-  }
+    throw new AidError('ERR_NO_RECORD', `No valid AID record found for ${name}`);
+  };
 
-  throw new AidError('ERR_NO_RECORD', `No valid AID record found for ${domain}`);
+  const runDns = async (): Promise<DiscoveryResult> => {
+    // If protocol is explicitly requested, try that first, then fall back to base
+    if (protocol) {
+      const underscoreName = constructQueryName(domain, protocol, true);
+      try {
+        return await tryQuery(underscoreName);
+      } catch (error) {
+        if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
+          throw error;
+        }
+        // Fall through to base query
+      }
+    }
+    // Base query
+    return tryQuery(constructQueryName(domain));
+  };
+
+  try {
+    return await runDns();
+  } catch (error) {
+    if (
+      wellKnownFallback &&
+      error instanceof AidError &&
+      (error.errorCode === 'ERR_NO_RECORD' || error.errorCode === 'ERR_SECURITY') // ERR_SECURITY can be a timeout
+    ) {
+      try {
+        const { record, queryName } = await fetchWellKnown(domain, wellKnownTimeoutMs);
+        // well-known does not provide a TTL, so we use a sensible default.
+        return { record, domain, queryName, ttl: 300 };
+      } catch {
+        // Throw original error if fallback fails to provide better context
+        throw error;
+      }
+    }
+    throw error;
+  }
 }
 
 /**
@@ -296,6 +407,7 @@ export {
   validateRecord,
   isValidProto,
   AidRecordValidator,
+  canonicalizeRaw,
 } from './parser.js';
 
 // Re-export all constants and types for easy access

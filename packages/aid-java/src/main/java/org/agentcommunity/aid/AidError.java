@@ -29,6 +29,8 @@ public class AidError extends RuntimeException {
           return Constants.ERR_SECURITY;
         case "ERR_DNS_LOOKUP_FAILED":
           return Constants.ERR_DNS_LOOKUP_FAILED;
+        case "ERR_FALLBACK_FAILED":
+          return Constants.ERR_FALLBACK_FAILED;
         default:
           throw new IllegalArgumentException("Unknown error code: " + errorCode);
       }
@@ -46,6 +48,8 @@ public class AidError extends RuntimeException {
           return "Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied)";
         case "ERR_DNS_LOOKUP_FAILED":
           return "The DNS query failed for a network-related reason";
+        case "ERR_FALLBACK_FAILED":
+          return "The .well-known fallback failed or returned invalid data";
         default:
           return "Unknown error";
       }

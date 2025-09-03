@@ -9,6 +9,10 @@ aid_py/__init__.py
 aid_py/constants.py
 aid_py/discover.py
 aid_py/parser.py
+aid_py/pka.py
 tests/test_discover.py
 tests/test_parity.py
 tests/test_parser.py
+tests/test_pka.py
+tests/test_pka_vectors.py
+tests/test_wellknown.py

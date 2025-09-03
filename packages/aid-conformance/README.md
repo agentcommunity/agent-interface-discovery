@@ -1,9 +1,12 @@
 # @agentcommunity/aid-conformance
 
-Conformance fixtures and a tiny runner for Agent Interface Discovery (AID).
+Conformance fixtures and a tiny runner for Agent Identity & Discovery (AID) – built by the team at [agentcommunity.org](https://agentcommunity.org).
 
-- Exposes the shared `test-fixtures/golden.json` via a typed export
-- Provides a simple Node runner to execute the fixtures against a parser
+- **Website**: [aid.agentcommunity.org](https://aid.agentcommunity.org)
+- **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)
+- **GitHub**: [github.com/agent-community/agent-interface-discovery](https://github.com/agent-community/agent-interface-discovery)
+
+Exposes the shared `test-fixtures/golden.json` via a typed export (includes v1.1 fields like `docs`/`dep` and `pka`/`kid`) and provides a simple Node runner to execute the fixtures against a parser.
 
 ## Install
 
@@ -43,6 +46,12 @@ npx aid-conformance ./some-fixture.json
 
 Exit code is non-zero if any case fails. Output includes a concise summary.
 
+### v1.1 Notes
+
+- Fixtures now contain records exercising v1.1 additions:
+  - `docs` (https URL), `dep` (ISO 8601 Z)
+  - `pka`/`kid` presence (parsing only — handshake is out of scope for fixtures)
+
 ## Development
 
 - Build: `pnpm build`
@@ -51,4 +60,4 @@ Exit code is non-zero if any case fails. Output includes a concise summary.
 
 ## License
 
-MIT © Agent Community
+MIT © [Agent Community](https://agentcommunity.org)

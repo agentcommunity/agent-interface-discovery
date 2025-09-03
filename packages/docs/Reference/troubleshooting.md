@@ -1,6 +1,6 @@
 ---
 title: 'Troubleshooting'
-description: 'DNS propagation, TTL, and common AID errors (1000–1004)'
+description: 'DNS propagation, TTL, and common AID errors (1000–1005)'
 icon: material/tools
 ---
 
@@ -32,11 +32,22 @@ icon: material/tools
   - DNSSEC failures, invalid local execution, or disallowed scheme.
 - 1004 ERR_DNS_LOOKUP_FAILED: DNS/network timeout/failure
   - Retry, try different resolver, increase client timeout.
+- 1005 ERR_FALLBACK_FAILED: .well-known fetch failed/invalid
+  - Ensure `/.well-known/agent` exists, returns JSON, and uses HTTPS.
+
+## PKA handshake failures (checklist)
+
+- Missing covered fields: ensure exactly `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- Algorithm mismatch: `alg` must be `ed25519`
+- Timestamp skew: `created` or HTTP `Date` outside ±300 seconds
+- `keyid` mismatch: header `keyid` does not equal record `kid` (quotes allowed)
+- Invalid key: `pka` not `z...` base58btc or not 32‑byte Ed25519 public key
 
 ## Quick checks
 
 - CLI: `aid-doctor check <domain>` or `aid-doctor json <domain>`.
 - Web: aid.agentcommunity.org/workbench.
+- For comprehensive diagnostics, use the [aid-doctor CLI](../aid_doctor.md) which provides detailed validation, security checks, and PKA verification.
 
 ## See also
 

@@ -1,14 +1,35 @@
 ---
-title: 'Quickstart — Java'
-description: 'Parse AID records in Java'
+title: 'Java'
+description: 'Discover and parse AID records in Java'
 icon: material/language-java
 ---
 
 # Java
 
-The Java package provides parsing and constants; DNS discovery is out-of-scope.
+## Discover by Domain
 
-## Parse Raw TXT
+```java
+import org.agentcommunity.aid.Discovery;
+import org.agentcommunity.aid.Discovery.DiscoveryOptions;
+
+var result = Discovery.discover("supabase.agentcommunity.org", new DiscoveryOptions());
+System.out.println(result.record.proto + " at " + result.record.uri + " ttl=" + result.ttl + " qname=" + result.queryName);
+```
+
+### Options
+
+```java
+var opts = new DiscoveryOptions();
+opts.protocol = "mcp";                        // Try _agent._mcp., then _agent.mcp., then base
+opts.timeout = java.time.Duration.ofSeconds(5);
+opts.wellKnownFallback = true;                 // Only on ERR_NO_RECORD / ERR_DNS_LOOKUP_FAILED
+opts.wellKnownTimeout = java.time.Duration.ofSeconds(2);
+opts.requireDnssec = true;                     // Optional: fail if DNSSEC validation is missing
+
+var result = Discovery.discover("example.com", opts);
+```
+
+### Parse Raw TXT
 
 ```java
 import org.agentcommunity.aid.Parser;
@@ -22,7 +43,10 @@ public class Main {
 }
 ```
 
-Errors: `AidError` exposes `.errorCode` (symbol) and `.code` (number).
+Notes
+
+- PKA handshake runs automatically when `pka`/`kid` are present.
+- Errors: `AidError` exposes `.errorCode` (symbol) and `.code` (number).
 
 ## See also
 
@@ -32,6 +56,8 @@ Errors: `AidError` exposes `.errorCode` (symbol) and `.code` (number).
 - [Go](./quickstart_go.md)
 - [Python](./quickstart_python.md)
 - [.NET](./quickstart_dotnet.md)
-- [Protocols & Auth Tokens](../protocols.md)
-- [Troubleshooting](../troubleshooting.md)
-- [Conformance](../conformance.md)
+- [Protocols & Auth Tokens](../Reference/protocols.md)
+- [Troubleshooting](../Reference/troubleshooting.md)
+- [Conformance](../Tooling/conformance.md)
+
+!!! info "Implementation Files" - [Generated constants](../packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java)

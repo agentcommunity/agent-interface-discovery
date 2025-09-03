@@ -1,9 +1,10 @@
 # @agentcommunity/aid-doctor
 
-Official CLI for Agent Interface Discovery (AID).
+Official CLI for Agent Identity & Discovery (AID) – built by the team at [agentcommunity.org](https://agentcommunity.org).
 
-- Website: https://aid.agentcommunity.org
-- Docs: https://docs.agentcommunity.org/aid
+- **Website**: [aid.agentcommunity.org](https://aid.agentcommunity.org)
+- **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)
+- **GitHub**: [github.com/agent-community/agent-interface-discovery](https://github.com/agent-community/agent-interface-discovery)
 
 ## Install
 
@@ -27,6 +28,9 @@ aid-doctor json example.com
 
 - `--protocol <proto>`: try a protocol-specific subdomain (e.g., `mcp` tries `_agent._mcp.<domain>` first)
 - `--timeout <ms>`: DNS query timeout (default: 5000)
+- `--no-fallback`: disable `.well-known` fallback on DNS miss
+- `--fallback-timeout <ms>`: HTTP timeout for `.well-known` (default: 2000)
+- `--show-details`: include fallback usage and PKA status in output
 - `--code` (check): exit with specific error code on failure
 
 ### Exit codes
@@ -55,8 +59,27 @@ aid-doctor check example.com --protocol mcp
 
 # JSON for CI
 aid-doctor json example.com > result.json
+
+# Show PKA/fallback details (v1.1)
+aid-doctor check example.com --show-details
+
+# Local testing with a mock HTTP server (insecure well-known)
+# (Use only for local dev)
+AID_ALLOW_INSECURE_WELL_KNOWN=1 aid-doctor check localhost:19081 --show-details --fallback-timeout 2000
+
+### PKA handshake expectations
+
+- Required covered fields: `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- `alg` must be `ed25519`
+- `created` and HTTP `Date` must both be within ±300s of the current time
+- `keyid` must match the record `kid` (quotes allowed in header, compare normalized)
+- Public key is multibase base58btc (`z...`) for the raw 32‑byte Ed25519 key
+
+### Loopback HTTP (dev‑only)
+
+When `AID_ALLOW_INSECURE_WELL_KNOWN=1` is set and the domain is loopback (`localhost`/`127.0.0.1`/`::1`), the doctor permits `http://` in the `.well-known` path for local testing. All other validations, including PKA, still run. TXT discovery always enforces `https://` for remote agents.
 ```
 
 ## License
 
-MIT © Agent Community
+MIT © [Agent Community](https://agentcommunity.org)

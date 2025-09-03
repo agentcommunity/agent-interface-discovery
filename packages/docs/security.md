@@ -1,5 +1,5 @@
 ---
-title: 'Security Best Practices'
+title: 'Security'
 description: 'Operational and client guidance for secure AID usage.'
 icon: material/shield-lock
 ---
@@ -40,3 +40,4 @@ This guide summarizes key operational and client-side recommendations from the s
 - DNSSEC enabled; `_agent` TXT present; TTL 300–900.
 - No secrets in TXT; URI uses `https://` for remote protocols.
 - Local execution policies documented and enforced by host applications.
+- Use the [aid-doctor CLI](../Tooling/aid_doctor.md) to validate security configurations and perform automated security checks.

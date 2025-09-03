@@ -201,7 +201,11 @@ export function DiscoveryChat() {
 
       <div className="flex-shrink-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4 pb-4">
         <div className="max-w-3xl mx-auto px-4 space-y-4">
-          <ExamplePicker variant="buttons" onSelect={handleSubmit} disabled={isLoading} />
+          <ExamplePicker
+            variant="buttons"
+            onSelect={(ex) => handleSubmit(ex.domain || ex.content)}
+            disabled={isLoading}
+          />
           <ChatInput onSubmit={handleSubmit} isLoading={isLoading} autoFocus />
         </div>
       </div>

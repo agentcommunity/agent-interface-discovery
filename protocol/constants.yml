@@ -1,8 +1,8 @@
 # AID Protocol Constants - Single Source of Truth
-# This file defines all constants, types, and tokens used in the AID v1.0.0 specification
+# This file defines all constants, types, and tokens used in the AID v1.x specification
 # Generated code in all languages should derive from this file
 
-schemaVersion: '1.0.0'
+schemaVersion: '1.1.0'
 
 # Specification version that must be present in all AID records
 specVersion: 'aid1'
@@ -12,7 +12,11 @@ protocolTokens:
   mcp: 'Model Context Protocol'
   a2a: 'Agent-to-Agent Protocol'
   openapi: 'URI points to an OpenAPI specification document'
+  grpc: 'gRPC over HTTP/2 or HTTP/3'
+  graphql: 'GraphQL over HTTP'
+  websocket: 'WebSocket transport'
   local: 'The agent runs locally on the client machine'
+  zeroconf: 'mDNS/DNS-SD service discovery'
 
 # Authentication scheme tokens (auth field)
 authTokens:
@@ -42,6 +46,9 @@ errorCodes:
   ERR_DNS_LOOKUP_FAILED:
     code: 1004
     description: 'The DNS query failed for a network-related reason'
+  ERR_FALLBACK_FAILED:
+    code: 1005
+    description: 'The .well-known fallback failed or returned invalid data'
 
 # AID Record structure - required and optional fields
 aidRecord:
@@ -52,9 +59,20 @@ aidRecord:
   optional:
     - auth # Authentication hint token
     - desc # Human-readable description (≤ 60 UTF-8 bytes)
+    - docs # Absolute https:// URL to human docs
+    - dep # ISO 8601 UTC deprecation timestamp
+    - pka # Multibase-encoded Ed25519 public key (32 bytes)
+    - kid # 1–6 char rotation id [a-z0-9]
 
   aliases:
     p: proto # Shorthand alias for proto field
+    u: uri # Alias for uri
+    a: auth # Alias for auth
+    s: desc # Alias for desc
+    d: docs # Alias for docs
+    e: dep # Alias for dep
+    k: pka # Alias for pka
+    i: kid # Alias for kid
 
 # URI schemes allowed for local protocol
 localUriSchemes:
@@ -68,3 +86,8 @@ dns:
   ttlRecommendation:
     min: 300 # 5 minutes
     max: 900 # 15 minutes
+
+# Optional HTTPS fallback for DNS-restricted environments
+wellKnown:
+  path: '/.well-known/agent'
+  errorCode: 'ERR_FALLBACK_FAILED'

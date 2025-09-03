@@ -4,40 +4,29 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, ExternalLink } from 'lucide-react';
+import { CheckCircle, ExternalLink, Languages, Hammer } from 'lucide-react';
 
 const toolkitPackages = [
+  // Tools first
   {
-    name: 'TypeScript / JS',
-    package: '@agentcommunity/aid',
-    description: 'Core discovery library – Node.js & browser',
-    features: ['Promise-based API', 'TypeScript types', 'Built-in validation'],
-    href: 'https://www.npmjs.com/package/@agentcommunity/aid',
+    name: 'Core Engine',
+    package: '@agentcommunity/aid-engine',
+    description: 'Pure business logic for discovery, validation, identity',
+    features: ['Discovery', 'Validation', 'Identity (PKA)'],
+    href: 'https://www.npmjs.com/package/@agentcommunity/aid-engine',
+    docsHref: 'https://docs.agentcommunity.org/aid/Tooling/aid_engine',
     badge: 'Stable',
+    kind: 'Tool',
   },
   {
     name: 'CLI – AID Doctor',
     package: '@agentcommunity/aid-doctor',
-    description: 'Validate & generate DNS records from the terminal',
+    description: 'CLI wrapper around aid-engine: validate & generate records',
     features: ['Record linting', 'Security checks', 'JSON/YAML output'],
     href: 'https://www.npmjs.com/package/@agentcommunity/aid-doctor',
+    docsHref: 'https://docs.agentcommunity.org/aid/Tooling/aid_doctor',
     badge: 'Stable',
-  },
-  {
-    name: 'Go',
-    package: 'github.com/agentcommunity/aid-go',
-    description: 'High-performance Go client',
-    features: ['Context support', 'No external deps'],
-    href: 'https://pkg.go.dev/github.com/agentcommunity/aid-go',
-    badge: 'Stable',
-  },
-  {
-    name: 'Python',
-    package: 'aid-discovery',
-    description: 'Idiomatic Python client',
-    features: ['Type hints', 'Clean API'],
-    href: 'https://pypi.org/project/aid-discovery/',
-    badge: 'Stable',
+    kind: 'Tool',
   },
   {
     name: 'Conformance Suite',
@@ -46,6 +35,7 @@ const toolkitPackages = [
     features: ['Golden fixtures', 'CLI runner', 'Cross-language parity'],
     href: 'https://www.npmjs.com/package/@agentcommunity/aid-conformance',
     badge: 'Stable',
+    kind: 'Tool',
   },
   {
     name: 'Web Workbench',
@@ -54,6 +44,47 @@ const toolkitPackages = [
     features: ['Live DNS lookup', 'Shareable links', 'Export configs'],
     href: '/workbench',
     badge: 'Stable',
+    kind: 'Tool',
+  },
+  {
+    name: 'Coming soon',
+    package: 'more tooling',
+    description: 'Open a PR',
+    features: ['more tooling', 'Language support', 'New ideas'],
+    href: 'https://github.com/agentcommunity/agent-interface-discovery',
+    badge: 'Planned',
+    kind: 'Tool',
+  },
+  // Languages after tools
+  {
+    name: 'TypeScript / JS',
+    package: '@agentcommunity/aid',
+    description: 'SDK for Node.js & browser',
+    features: ['Promise-based API', 'TypeScript types', 'Built-in validation'],
+    href: 'https://www.npmjs.com/package/@agentcommunity/aid',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_ts',
+    badge: 'Stable',
+    kind: 'Language',
+  },
+  {
+    name: 'Go',
+    package: 'github.com/agentcommunity/aid-go',
+    description: 'High-performance Go client',
+    features: ['Context support', 'No external deps'],
+    href: 'https://pkg.go.dev/github.com/agentcommunity/aid-go',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_go',
+    badge: 'Stable',
+    kind: 'Language',
+  },
+  {
+    name: 'Python',
+    package: 'aid-discovery',
+    description: 'Idiomatic Python client',
+    features: ['Type hints', 'Clean API'],
+    href: 'https://pypi.org/project/aid-discovery/',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_python',
+    badge: 'Stable',
+    kind: 'Language',
   },
   {
     name: 'Rust',
@@ -61,7 +92,9 @@ const toolkitPackages = [
     description: 'Idiomatic Rust client',
     features: ['Generated constants', 'Parser parity', 'Discovery support'],
     href: 'https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs',
-    badge: 'WIP',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_rust',
+    badge: 'Stable',
+    kind: 'Language',
   },
   {
     name: 'Java',
@@ -69,7 +102,9 @@ const toolkitPackages = [
     description: 'Idiomatic Java client',
     features: ['Generated constants', 'Parser parity', 'Discovery support'],
     href: 'https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java',
-    badge: 'WIP',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_java',
+    badge: 'Stable',
+    kind: 'Language',
   },
   {
     name: '.NET',
@@ -77,15 +112,9 @@ const toolkitPackages = [
     description: 'C#/.NET client',
     features: ['Generated constants', 'Parser parity', 'Discovery support'],
     href: 'https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet',
-    badge: 'WIP',
-  },
-  {
-    name: 'Coming soon',
-    package: 'Rust / C# / Java',
-    description: 'Tier‑1 language ports following the conformance suite',
-    features: ['Generated constants', 'Parser parity', 'Discovery support'],
-    href: 'https://github.com/agentcommunity',
-    badge: 'Planned',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_dotnet',
+    badge: 'Stable',
+    kind: 'Language',
   },
 ];
 
@@ -111,18 +140,31 @@ export function Toolkit() {
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge
-                      variant={
-                        pkg.badge === 'Stable'
-                          ? 'success'
-                          : (pkg.badge === 'Beta'
-                            ? 'warning'
-                            : 'default')
-                      }
-                      className="text-xs shadow-soft-xs transition-all duration-300 group-hover:shadow-soft-md group-hover:scale-105"
-                    >
-                      {pkg.badge}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className={`text-xs flex items-center gap-1 border ${pkg.kind === 'Language' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}
+                      >
+                        {pkg.kind === 'Language' ? (
+                          <Languages className="h-3.5 w-3.5" />
+                        ) : (
+                          <Hammer className="h-3.5 w-3.5" />
+                        )}
+                        <span>{pkg.kind}</span>
+                      </Badge>
+                      <Badge
+                        variant={
+                          pkg.badge === 'Stable'
+                            ? 'success'
+                            : (pkg.badge === 'Beta'
+                              ? 'warning'
+                              : 'default')
+                        }
+                        className="text-xs shadow-soft-xs transition-all duration-300 group-hover:shadow-soft-md group-hover:scale-105"
+                      >
+                        {pkg.badge}
+                      </Badge>
+                    </div>
                   </div>
                   <CardTitle className="text-lg transition-colors duration-300 group-hover:text-foreground">
                     {pkg.name}
@@ -147,19 +189,29 @@ export function Toolkit() {
                     ))}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full group-button shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105"
-                    asChild
-                  >
-                    <Link
-                      href={pkg.href}
-                      target={pkg.href.startsWith('http') ? '_blank' : undefined}
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full group-button shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105"
+                      asChild
                     >
-                      {pkg.href.startsWith('/') ? 'Try Now' : 'View Package'}
-                      <ExternalLink className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </Link>
-                  </Button>
+                      <Link
+                        href={pkg.href}
+                        target={pkg.href.startsWith('http') ? '_blank' : undefined}
+                      >
+                        {pkg.href.startsWith('/') ? 'Try Now' : 'View Package'}
+                        <ExternalLink className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                      </Link>
+                    </Button>
+                    {pkg.docsHref && (
+                      <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                        <a href={pkg.docsHref} target="_blank" rel="noopener noreferrer">
+                          📚 Documentation
+                          <ExternalLink className="ml-1 h-3 w-3" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}

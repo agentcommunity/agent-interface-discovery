@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Home, ArrowLeft, Search } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Page Not Found - AID',
-  description: 'The page you are looking for does not exist.',
+  title: 'Page Not Found — Agent Identity & Discovery',
+  description: 'This page does not exist. Open the Workbench to try discovery and identity.',
 };
 
 export default function NotFoundPage() {
@@ -36,7 +36,7 @@ export default function NotFoundPage() {
               <Button variant="outline" asChild className="w-full">
                 <Link href="/workbench">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Try the Resolver
+                  Open Workbench
                 </Link>
               </Button>
             </div>

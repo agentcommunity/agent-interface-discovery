@@ -35,10 +35,21 @@ public final class Parser {
       switch (key) {
         case "v":
         case "uri":
+        case "u":
         case "proto":
         case "p":
         case "auth":
+        case "a":
         case "desc":
+        case "s":
+        case "docs":
+        case "d":
+        case "dep":
+        case "e":
+        case "pka":
+        case "k":
+        case "kid":
+        case "i":
           record.put(key, value);
           break;
         default:
@@ -53,7 +64,12 @@ public final class Parser {
     if (!raw.containsKey("v")) {
       throw new AidError("ERR_INVALID_TXT", "Missing required field: v");
     }
-    if (!raw.containsKey("uri")) {
+    boolean hasUri = raw.containsKey("uri");
+    boolean hasU = raw.containsKey("u");
+    if (hasUri && hasU) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"uri\" and \"u\"");
+    }
+    if (!hasUri && !hasU) {
       throw new AidError("ERR_INVALID_TXT", "Missing required field: uri");
     }
 
@@ -81,19 +97,61 @@ public final class Parser {
     }
 
     // Auth token
-    if (raw.containsKey("auth") && !isValidAuth(raw.get("auth"))) {
-      throw new AidError("ERR_INVALID_TXT", "Invalid auth token: " + raw.get("auth"));
+    if (raw.containsKey("auth") && raw.containsKey("a")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"auth\" and \"a\" fields");
+    }
+    String authVal = raw.containsKey("auth") ? raw.get("auth") : (raw.containsKey("a") ? raw.get("a") : null);
+    if (authVal != null && !isValidAuth(authVal)) {
+      throw new AidError("ERR_INVALID_TXT", "Invalid auth token: " + authVal);
     }
 
     // Desc length check (≤ 60 UTF-8 bytes)
-    if (raw.containsKey("desc")) {
-      int bytes = raw.get("desc").getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+    if (raw.containsKey("desc") && raw.containsKey("s")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"desc\" and \"s\" fields");
+    }
+    String descVal = raw.containsKey("desc") ? raw.get("desc") : (raw.containsKey("s") ? raw.get("s") : null);
+    if (descVal != null) {
+      int bytes = descVal.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
       if (bytes > 60) {
         throw new AidError("ERR_INVALID_TXT", "Description field must be ≤ 60 UTF-8 bytes");
       }
     }
+    if (raw.containsKey("docs") && raw.containsKey("d")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"docs\" and \"d\" fields");
+    }
+    String docsVal = raw.containsKey("docs") ? raw.get("docs") : (raw.containsKey("d") ? raw.get("d") : null);
+    if (docsVal != null) {
+      if (!docsVal.startsWith("https://")) {
+        throw new AidError("ERR_INVALID_TXT", "docs MUST be an absolute https:// URL");
+      }
+      try {
+        java.net.URI du = java.net.URI.create(docsVal);
+        if (!"https".equals(du.getScheme()) || du.getHost() == null) {
+          throw new IllegalArgumentException();
+        }
+      } catch (Exception e) {
+        throw new AidError("ERR_INVALID_TXT", "Invalid docs URL: " + docsVal);
+      }
+    }
+    if (raw.containsKey("dep") && raw.containsKey("e")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"dep\" and \"e\" fields");
+    }
+    String depVal = raw.containsKey("dep") ? raw.get("dep") : (raw.containsKey("e") ? raw.get("e") : null);
+    if (depVal != null) {
+      if (!depVal.endsWith("Z")) {
+        throw new AidError("ERR_INVALID_TXT", "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)");
+      }
+      try {
+        java.time.Instant dep = java.time.Instant.parse(depVal);
+        if (dep.isBefore(java.time.Instant.now())) {
+          throw new AidError("ERR_INVALID_TXT", "Record is deprecated as of " + depVal);
+        }
+      } catch (java.time.format.DateTimeParseException e) {
+        throw new AidError("ERR_INVALID_TXT", "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)");
+      }
+    }
 
-    String uri = raw.get("uri");
+    String uri = hasUri ? raw.get("uri") : raw.get("u");
     if ("local".equals(protoValue)) {
       // must be allowed local scheme
       String scheme = extractScheme(uri);
@@ -101,6 +159,26 @@ public final class Parser {
         throw new AidError(
             "ERR_INVALID_TXT",
             "Invalid URI scheme for local protocol. Must be one of: " + String.join(", ", Constants.LOCAL_URI_SCHEMES));
+      }
+    } else if ("zeroconf".equals(protoValue)) {
+      if (!uri.startsWith("zeroconf:")) {
+        throw new AidError(
+            "ERR_INVALID_TXT",
+            "Invalid URI scheme for 'zeroconf'. MUST be 'zeroconf:'");
+      }
+    } else if ("websocket".equals(protoValue)) {
+      if (!uri.startsWith("wss://")) {
+        throw new AidError(
+            "ERR_INVALID_TXT",
+            "Invalid URI scheme for 'websocket'. MUST be 'wss:'");
+      }
+      try {
+        java.net.URI wu = java.net.URI.create(uri);
+        if (!"wss".equals(wu.getScheme()) || wu.getHost() == null) {
+          throw new IllegalArgumentException();
+        }
+      } catch (Exception e) {
+        throw new AidError("ERR_INVALID_TXT", "Invalid URI format: " + uri);
       }
     } else {
       if (!uri.startsWith("https://")) {
@@ -118,17 +196,32 @@ public final class Parser {
       }
     }
 
-    String auth = raw.getOrDefault("auth", null);
-    String desc = raw.getOrDefault("desc", null);
-    return new AidRecord(Constants.SPEC_VERSION, uri, protoValue, auth, desc);
+    String auth = authVal;
+    String desc = descVal;
+    if (raw.containsKey("pka") && raw.containsKey("k")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"pka\" and \"k\" fields");
+    }
+    if (raw.containsKey("kid") && raw.containsKey("i")) {
+      throw new AidError("ERR_INVALID_TXT", "Cannot specify both \"kid\" and \"i\" fields");
+    }
+    String pkaVal = raw.containsKey("pka") ? raw.get("pka") : (raw.containsKey("k") ? raw.get("k") : null);
+    String kidVal = raw.containsKey("kid") ? raw.get("kid") : (raw.containsKey("i") ? raw.get("i") : null);
+    if (pkaVal != null && kidVal == null) {
+      throw new AidError("ERR_INVALID_TXT", "kid is required when pka is present");
+    }
+    return new AidRecord(Constants.SPEC_VERSION, uri, protoValue, auth, desc, docsVal, depVal, pkaVal, kidVal);
   }
 
   public static boolean isValidProto(String token) {
     // Compare against generated PROTO_* constants
-    return "mcp".equals(token)
-        || "a2a".equals(token)
-        || "openapi".equals(token)
-        || "local".equals(token);
+    return Constants.PROTO_MCP.equals(token)
+        || Constants.PROTO_A2A.equals(token)
+        || Constants.PROTO_OPENAPI.equals(token)
+        || Constants.PROTO_LOCAL.equals(token)
+        || Constants.PROTO_GRPC.equals(token)
+        || Constants.PROTO_GRAPHQL.equals(token)
+        || Constants.PROTO_WEBSOCKET.equals(token)
+        || Constants.PROTO_ZEROCONF.equals(token);
   }
 
   private static boolean isValidAuth(String token) {

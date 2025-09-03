@@ -19,8 +19,8 @@ const problems = [
   },
   {
     icon: Settings,
-    title: 'No Discovery Standard',
-    description: 'No universal discovery standard. Every provider invents its own.',
+    title: 'No Discovery & Identity Standard',
+    description: 'No universal way to discover agents and verify who runs them.',
   },
 ];
 
@@ -31,7 +31,7 @@ export function Problem() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center animate-fade-in">
             <h2 className="mb-4 text-4xl md:text-5xl font-bold tracking-tight">
-              The AI Integration Problem
+              The Agent/Tooling Integration Problem
             </h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
               Connecting to AI agents shouldn&apos;t require a PhD in API archaeology

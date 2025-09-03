@@ -2,7 +2,7 @@
 # Copyright (c) 2025 Agent Community
 # Author: Agent Community
 # Repository: https://github.com/agentcommunity/agent-interface-discovery
-"""Agent Interface Discovery (AID) – Python library.
+"""Agent Identity & Discovery (AID) – Python library.
 
 This is a **work-in-progress** implementation providing the same high-level API as the
 TypeScript reference:

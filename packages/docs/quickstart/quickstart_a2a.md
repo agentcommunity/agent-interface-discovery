@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — A2A'
+title: 'How to — A2A'
 description: 'Discover and fetch an A2A AgentCard using AID'
 icon: material/account-voice
 ---
@@ -92,6 +92,8 @@ connectToA2aAgent('a2a.agentcommunity.org'); // Fictional example domain
 For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
 
 ---
+
+!!! info "Implementation Files" - [Generated spec types](../protocol/spec.ts) - [TypeScript constants](../packages/aid/src/constants.ts)
 
 **See also:**
 

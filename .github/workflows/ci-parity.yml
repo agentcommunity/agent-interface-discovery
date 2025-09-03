@@ -1,0 +1,61 @@
+name: CI • Parity
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'protocol/**'
+      - 'packages/aid/**'
+      - 'packages/aid-go/**'
+      - 'packages/aid-py/**'
+      - 'packages/aid-conformance/**'
+      - 'test-fixtures/golden.json'
+      - '.github/workflows/ci-parity.yml'
+      - '!**/*.md'
+  pull_request:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'protocol/**'
+      - 'packages/aid/**'
+      - 'packages/aid-go/**'
+      - 'packages/aid-py/**'
+      - 'packages/aid-conformance/**'
+      - 'test-fixtures/golden.json'
+      - '.github/workflows/ci-parity.yml'
+      - '!**/*.md'
+
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node and pnpm
+        run: |
+          corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Run parity
+        run: pnpm test:parity

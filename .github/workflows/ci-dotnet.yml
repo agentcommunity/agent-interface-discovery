@@ -1,0 +1,52 @@
+name: CI (.NET)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-dotnet/**'
+      - '.github/workflows/ci-dotnet.yml'
+      - '!**/*.md'
+  pull_request:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-dotnet/**'
+      - '.github/workflows/ci-dotnet.yml'
+      - '!**/*.md'
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Dotnet info
+        run: dotnet --info
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('packages/aid-dotnet/**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        working-directory: packages/aid-dotnet
+        run: dotnet restore AidDiscovery.sln
+
+      - name: Build (Release)
+        working-directory: packages/aid-dotnet
+        run: dotnet build AidDiscovery.sln -c Release
+
+      - name: Test (Release)
+        working-directory: packages/aid-dotnet
+        env:
+          AID_RUN_INTEGRATION: '1'
+        run: dotnet test AidDiscovery.sln -c Release --no-build --logger "trx;LogFileName=test_results.trx"

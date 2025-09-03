@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Compass, Rocket, CheckCircle2 } from 'lucide-react';
+import { Compass, Rocket, Package } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Codeblock } from '@/components/ui/codeblock';
 
@@ -23,9 +23,36 @@ print(record.uri) # https://api.example.com/mcp`,
 rec, err := aid.Discover("example.com")
 if err != nil { /* handle */ }
 fmt.Println(rec.Record.URI) // https://api.example.com/mcp`,
+  rust: `use aid_rs::discover;
+use std::time::Duration;
+
+#[tokio::main]
+async fn main() -> Result<(), aid_rs::AidError> {
+    let rec = discover("example.com", Duration::from_secs(5)).await?;
+    println!("{} {}", rec.proto, rec.uri);
+    Ok(())
+}`,
+  java: `import org.agentcommunity.aid.Discovery;
+import org.agentcommunity.aid.Discovery.DiscoveryOptions;
+
+var result = Discovery.discover("example.com", new DiscoveryOptions());
+System.out.println(result.record.proto + " at " + result.record.uri);`,
+  dotnet: `using AidDiscovery;
+
+var result = await Discovery.DiscoverAsync(
+  domain: "example.com",
+  new DiscoveryOptions {
+    Timeout = TimeSpan.FromSeconds(5),
+    WellKnownFallback = true,
+    WellKnownTimeout = TimeSpan.FromSeconds(2)
+  }
+);
+
+Console.WriteLine($"{result.Record.Proto} at {result.Record.Uri}");`,
 };
 
 const DNS_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;uri=https://api.example.com/mcp;p=mcp"`;
+const DNS_PKA_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;u=https://api.example.com/mcp;p=mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1"`;
 const TERRAFORM_SNIPPET = `resource "cloudflare_record" "aid" {
   zone_id = var.zone_id
   name    = "_agent"
@@ -33,25 +60,25 @@ const TERRAFORM_SNIPPET = `resource "cloudflare_record" "aid" {
   value   = "v=aid1;uri=https://api.example.com/mcp;p=mcp"
 }`;
 
-const VALIDATE_CLI = `# Install validator
-npm i -g @agentcommunity/aid-doctor
-
-# Validate your domain
-aid-doctor check example.com`;
+const ENGINE_INSTALL = `# Install engine (core business logic)
+pnpm add @agentcommunity/aid-engine
+# or
+npm i @agentcommunity/aid-engine`;
 
 // ---------------------------------------------------------------------------
 
 export function QuickStart() {
-  const [step, setStep] = useState<'discover' | 'publish' | 'validate'>('discover');
-  const [lang, setLang] = useState<'typescript' | 'python' | 'go'>('typescript');
-  const [publishTab, setPublishTab] = useState<'dns' | 'terraform'>('dns');
+  const [step, setStep] = useState<'discover' | 'publish' | 'engine'>('discover');
+  const [lang, setLang] = useState<'typescript' | 'python' | 'go' | 'rust' | 'java' | 'dotnet'>(
+    'typescript',
+  );
+  const [publishTab, setPublishTab] = useState<'dns' | 'terraform' | 'dns+identity'>('dns');
 
-  const STEPS: Array<{ id: 'discover' | 'publish' | 'validate'; label: string; Icon: LucideIcon }> =
-    [
-      { id: 'discover', label: 'Discover', Icon: Compass },
-      { id: 'publish', label: 'Publish', Icon: Rocket },
-      { id: 'validate', label: 'Validate', Icon: CheckCircle2 },
-    ];
+  const STEPS: Array<{ id: 'discover' | 'publish' | 'engine'; label: string; Icon: LucideIcon }> = [
+    { id: 'discover', label: 'Discover', Icon: Compass },
+    { id: 'publish', label: 'Publish', Icon: Rocket },
+    { id: 'engine', label: 'Install Engine', Icon: Package },
+  ];
 
   return (
     <section className="section-padding bg-muted/30">
@@ -104,60 +131,199 @@ export function QuickStart() {
 
             <CardContent>
               {step === 'discover' && (
-                <Codeblock
-                  title="discover"
-                  content={DISCOVER_SNIPPETS[lang]}
-                  rightSlot={
-                    <div className="flex gap-1">
-                      {(['typescript', 'python', 'go'] as const).map((l) => (
-                        <Button
-                          key={l}
-                          size="sm"
-                          variant={lang === l ? 'default' : 'outline'}
-                          className="capitalize text-xs"
-                          onClick={() => setLang(l)}
-                        >
-                          {l}
-                        </Button>
-                      ))}
-                    </div>
-                  }
-                />
+                <div className="space-y-4">
+                  <Codeblock
+                    title="discover"
+                    content={DISCOVER_SNIPPETS[lang]}
+                    rightSlot={
+                      <div className="flex gap-1 flex-wrap">
+                        {(['typescript', 'python', 'go', 'rust', 'java', 'dotnet'] as const).map(
+                          (l) => (
+                            <Button
+                              key={l}
+                              size="sm"
+                              variant={lang === l ? 'default' : 'outline'}
+                              className="capitalize text-xs"
+                              onClick={() => setLang(l)}
+                            >
+                              {l === 'dotnet' ? '.NET' : l}
+                            </Button>
+                          ),
+                        )}
+                      </div>
+                    }
+                  />
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/quickstart_ts"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        TypeScript
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/quickstart_go"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Go
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/quickstart_python"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Python
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/quickstart_rust"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Rust
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/quickstart_java"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Java
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/quickstart_dotnet"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        .NET
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Reference/discovery_api"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Discovery API
+                      </a>
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {step === 'publish' && (
-                <Codeblock
-                  title={publishTab}
-                  content={publishTab === 'dns' ? DNS_SNIPPET : TERRAFORM_SNIPPET}
-                  rightSlot={
-                    <div className="flex gap-1">
-                      {(['dns', 'terraform'] as const).map((t) => (
-                        <Button
-                          key={t}
-                          size="sm"
-                          variant={publishTab === t ? 'default' : 'outline'}
-                          className="capitalize text-xs"
-                          onClick={() => setPublishTab(t)}
-                        >
-                          {t}
-                        </Button>
-                      ))}
-                    </div>
-                  }
-                />
+                <div className="space-y-4">
+                  <Codeblock
+                    title={publishTab}
+                    content={
+                      publishTab === 'dns'
+                        ? DNS_SNIPPET
+                        : (publishTab === 'terraform'
+                          ? TERRAFORM_SNIPPET
+                          : DNS_PKA_SNIPPET)
+                    }
+                    rightSlot={
+                      <div className="flex gap-1">
+                        {(['dns', 'terraform', 'dns+identity'] as const).map((t) => (
+                          <Button
+                            key={t}
+                            size="sm"
+                            variant={publishTab === t ? 'default' : 'outline'}
+                            className="capitalize text-xs"
+                            onClick={() => setPublishTab(t)}
+                          >
+                            {t}
+                          </Button>
+                        ))}
+                      </div>
+                    }
+                  />
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/quickstart/index"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Quick Start Guide
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/specification"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Specification
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Tooling/aid_doctor"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        aid-doctor CLI
+                      </a>
+                    </Button>
+                  </div>
+                </div>
               )}
 
-              {step === 'validate' && (
+              {step === 'engine' && (
                 <div className="space-y-4">
-                  <Codeblock title="cli" content={VALIDATE_CLI} />
-                  <Button
-                    asChild
-                    className="shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105 w-full sm:w-auto"
-                  >
-                    <a href="/workbench" target="_blank" rel="noopener noreferrer">
-                      Open Web Workbench
-                    </a>
-                  </Button>
+                  <Codeblock title="install" content={ENGINE_INSTALL} />
+                  <div className="text-sm text-muted-foreground">
+                    Use the engine for discovery, validation, and identity.
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Tooling/aid_engine"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Engine Docs
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Tooling/aid_doctor"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        aid-doctor CLI
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Tooling/conformance"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Conformance Suite
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Reference/identity_pka"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        PKA Identity
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

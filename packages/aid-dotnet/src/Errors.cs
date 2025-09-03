@@ -15,6 +15,7 @@ public sealed class AidError : Exception
             nameof(Constants.ERR_UNSUPPORTED_PROTO) => Constants.ERR_UNSUPPORTED_PROTO,
             nameof(Constants.ERR_SECURITY) => Constants.ERR_SECURITY,
             nameof(Constants.ERR_DNS_LOOKUP_FAILED) => Constants.ERR_DNS_LOOKUP_FAILED,
+            nameof(Constants.ERR_FALLBACK_FAILED) => Constants.ERR_FALLBACK_FAILED,
             _ => -1,
         };
     }

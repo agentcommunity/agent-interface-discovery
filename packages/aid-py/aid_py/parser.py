@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import re
 from typing import Dict, Tuple, TypedDict
+from urllib.parse import urlparse
+import datetime as _dt
 
 from .constants import (
     SPEC_VERSION,
@@ -51,6 +53,10 @@ class AidRecord(TypedDict, total=False):
     proto: str
     auth: str
     desc: str
+    docs: str
+    dep: str
+    pka: str
+    kid: str
 
 
 RawAidRecord = Dict[str, str]
@@ -99,10 +105,18 @@ def validate_record(raw: RawAidRecord) -> AidRecord:
     # Required fields
     if "v" not in raw:
         raise AidError("ERR_INVALID_TXT", "Missing required field: v")
-    if "uri" not in raw:
+
+    # Alias duplication checks
+    alias_pairs = [("proto", "p"), ("uri", "u"), ("auth", "a"), ("desc", "s"), ("docs", "d"), ("dep", "e"), ("pka", "k"), ("kid", "i")]
+    for full, alias in alias_pairs:
+        if full in raw and alias in raw:
+            raise AidError("ERR_INVALID_TXT", f"Cannot specify both \"{full}\" and \"{alias}\"")
+
+    # Canonicalize
+    uri_val = raw.get("uri") or raw.get("u")
+    if not uri_val:
         raise AidError("ERR_INVALID_TXT", "Missing required field: uri")
 
-    # proto or p but not both
     has_proto = "proto" in raw
     has_p = "p" in raw
     if has_proto and has_p:
@@ -122,15 +136,40 @@ def validate_record(raw: RawAidRecord) -> AidRecord:
         raise AidError("ERR_UNSUPPORTED_PROTO", f"Unsupported protocol: {proto_value}")
 
     # Auth token validation
-    if "auth" in raw and raw["auth"] not in AUTH_TOKENS:
+    auth_val = raw.get("auth") or raw.get("a")
+    import hmac
+    if auth_val and not hmac.compare_digest(auth_val.encode('utf-8'), AUTH_TOKENS.get(auth_val, '').encode('utf-8')):
         raise AidError("ERR_INVALID_TXT", f"Invalid auth token: {raw['auth']}")
 
     # Description length ≤ 60 UTF-8 bytes
-    if "desc" in raw and len(raw["desc"].encode("utf-8")) > 60:
+    desc_val = raw.get("desc") or raw.get("s")
+    if desc_val and len(desc_val.encode("utf-8")) > 60:
         raise AidError("ERR_INVALID_TXT", "Description field must be ≤ 60 UTF-8 bytes")
 
+    # docs must be https URL when present
+    docs_val = raw.get("docs") or raw.get("d")
+    if docs_val:
+        if not docs_val.startswith("https://"):
+            raise AidError("ERR_INVALID_TXT", "docs MUST be an absolute https:// URL")
+        try:
+            parsed = urlparse(docs_val)
+            if not parsed.scheme or not parsed.netloc:
+                raise ValueError
+        except Exception:
+            raise AidError("ERR_INVALID_TXT", f"Invalid docs URL: {docs_val}")
+
+    # dep must be ISO 8601 UTC with Z
+    dep_val = raw.get("dep") or raw.get("e")
+    if dep_val:
+        if not dep_val.endswith("Z"):
+            raise AidError("ERR_INVALID_TXT", "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)")
+        try:
+            _dt.datetime.strptime(dep_val, "%Y-%m-%dT%H:%M:%SZ")
+        except Exception:
+            raise AidError("ERR_INVALID_TXT", "dep MUST be an ISO 8601 UTC timestamp (e.g., 2026-01-01T00:00:00Z)")
+
     # URI validation
-    uri = raw["uri"]
+    uri = uri_val
     if proto_value == "local":
         # Must use approved local scheme
         if not _is_valid_local_uri(uri):
@@ -138,6 +177,18 @@ def validate_record(raw: RawAidRecord) -> AidRecord:
                 "ERR_INVALID_TXT",
                 f"Invalid URI scheme for local protocol. Must be one of: {', '.join(LOCAL_URI_SCHEMES)}",
             )
+    elif proto_value == "zeroconf":
+        if not uri.startswith("zeroconf:"):
+            raise AidError("ERR_INVALID_TXT", "Invalid URI scheme for 'zeroconf'. MUST be 'zeroconf:'")
+    elif proto_value == "websocket":
+        if not uri.startswith("wss://"):
+            raise AidError("ERR_INVALID_TXT", "Invalid URI scheme for 'websocket'. MUST be 'wss:'")
+        try:
+            parsed = urlparse(uri)
+            if not parsed.scheme or not parsed.netloc:
+                raise ValueError
+        except Exception:
+            raise AidError("ERR_INVALID_TXT", f"Invalid URI format: {uri}")
     else:
         if not uri.startswith("https://"):
             raise AidError(
@@ -146,8 +197,6 @@ def validate_record(raw: RawAidRecord) -> AidRecord:
             )
         # Basic URL validation
         try:
-            from urllib.parse import urlparse
-
             parsed = urlparse(uri)
             if not parsed.scheme or not parsed.netloc:
                 raise ValueError
@@ -160,10 +209,22 @@ def validate_record(raw: RawAidRecord) -> AidRecord:
         "uri": uri,
         "proto": proto_value,  # type: ignore[assignment]
     }
-    if "auth" in raw:
-        record["auth"] = raw["auth"]
-    if "desc" in raw:
-        record["desc"] = raw["desc"]
+    if auth_val:
+        record["auth"] = auth_val
+    if desc_val:
+        record["desc"] = desc_val
+    if docs_val:
+        record["docs"] = docs_val
+    if dep_val:
+        record["dep"] = dep_val
+    pka_val = raw.get("pka") or raw.get("k")
+    kid_val = raw.get("kid") or raw.get("i")
+    if pka_val and not kid_val:
+        raise AidError("ERR_INVALID_TXT", "kid is required when pka is present")
+    if pka_val:
+        record["pka"] = pka_val
+    if kid_val:
+        record["kid"] = kid_val
     return record
 
 

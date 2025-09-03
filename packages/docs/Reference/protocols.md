@@ -41,9 +41,10 @@ v=aid1;uri=https://api.example.com/mcp;proto=mcp;auth=pat;desc=Example MCP
 
 Notes
 
-- Prefer `proto`; `p` is a shorthand alias (don’t set both).
+- Prefer `proto`; `p` is a shorthand alias (don't set both).
 - `desc` is optional, ≤ 60 UTF-8 bytes.
 - Remote protocols must use `https://`; `local` uses approved schemes.
+- Use the [aid-doctor CLI](../aid_doctor.md) to validate your protocol implementation and generate compliant records.
 
 ## See also
 

@@ -15,34 +15,121 @@ export function Footer() {
 
           <div className="space-y-3">
             <h4 className="text-sm font-semibold">Documentation</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  Getting Started
+                </p>
+                <ul className="space-y-1">
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/quickstart"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      Quick Start
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/specification"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      Specification
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/rationale"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      Design Rationale
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  SDKs & Tools
+                </p>
+                <ul className="space-y-1">
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/quickstart/quickstart_ts"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      TypeScript
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/quickstart/quickstart_go"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      Go
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/quickstart/quickstart_python"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      Python
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="https://docs.agentcommunity.org/aid/Tooling/aid_doctor"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                    >
+                      CLI Tool
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Reference
+              </p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                 <Link
-                  href="https://docs.agentcommunity.org/aid/specification"
+                  href="https://docs.agentcommunity.org/aid/Reference/discovery_api"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
-                  Specification
+                  Discovery API
                 </Link>
-              </li>
-              <li>
                 <Link
-                  href="https://docs.agentcommunity.org/aid/quickstart"
+                  href="https://docs.agentcommunity.org/aid/Reference/identity_pka"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
-                  Quick Start
+                  Identity & PKA
                 </Link>
-              </li>
-              {/*
-              <li>
                 <Link
-                  href="https://docs.agentcommunity.org/aid/examples"
+                  href="https://docs.agentcommunity.org/aid/Reference/protocols"
                   className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
                 >
-                  Examples
+                  Protocols
                 </Link>
-              </li>
-              */}
-            </ul>
+                <Link
+                  href="https://docs.agentcommunity.org/aid/security"
+                  className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                >
+                  Security
+                </Link>
+                <Link
+                  href="https://docs.agentcommunity.org/aid/Reference/troubleshooting"
+                  className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                >
+                  Troubleshooting
+                </Link>
+                <Link
+                  href="https://docs.agentcommunity.org/aid/versioning"
+                  className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:translate-x-1"
+                >
+                  Versioning
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3">

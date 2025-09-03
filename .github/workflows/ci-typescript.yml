@@ -1,0 +1,100 @@
+name: CI (TypeScript)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/e2e-tests/**'
+      - 'packages/web/**'
+      - 'scripts/**'
+      - 'protocol/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ci-typescript.yml'
+      - 'eslint.config.mjs'
+      - '!**/*.md'
+  pull_request:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/e2e-tests/**'
+      - 'packages/web/**'
+      - 'scripts/**'
+      - 'protocol/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ci-typescript.yml'
+      - 'eslint.config.mjs'
+      - '!**/*.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ secrets.VERCEL_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build JS
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm exec turbo run build \
+            --filter=@agentcommunity/aid \
+            --filter=@agentcommunity/aid-conformance \
+            --filter=@agentcommunity/aid-doctor \
+            --filter=@agentcommunity/aid-web \
+            --filter=@agentcommunity/e2e-tests
+
+      # ---- Static Checks (Phase 2: Linting) -----------------------------
+      # Now that all packages are built, the linter can find the type
+      # declarations and will work correctly.
+      - name: Lint (ESLint flat config)
+        run: pnpm lint
+
+      # ---- Testing Phase ------------------------------------------------
+      - name: Test JS
+        run: |
+          pnpm exec turbo run test \
+            --filter=@agentcommunity/aid \
+            --filter=@agentcommunity/aid-conformance \
+            --filter=@agentcommunity/aid-doctor \
+            --filter=@agentcommunity/aid-web \
+            --filter=@agentcommunity/e2e-tests
+
+      # ---- Cross-Language Checks ----------------------------------------
+      - name: E2E Tests
+        run: pnpm e2e
+      - name: E2E PKA (aid-doctor mock)
+        run: pnpm -C packages/aid-doctor build && pnpm -C packages/e2e-tests run e2e:pka
+
+  doctor-e2e-matrix:
+    name: Doctor E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build aid and aid-doctor
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm exec turbo run build --filter="@agentcommunity/aid" --filter="@agentcommunity/aid-doctor"

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
+//
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Textarea } from '@/components/ui/textarea';
+import { Toggle } from '@/components/ui/toggle';
+//
 import { Codeblock } from '@/components/ui/codeblock';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ExamplePicker } from './example-picker';
@@ -13,19 +13,26 @@ import {
   XCircle,
   Globe,
   Lightbulb,
-  Link as LinkIcon,
   AlertCircle,
   ChevronDown,
   Key,
 } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
-import { buildTxtRecord, validateTxtRecord, type AidGeneratorData } from '@/lib/aid-generator';
 
-import { AUTH_TOKENS } from '@agentcommunity/aid';
+
+import { buildTxtRecord as buildTxtV11, buildWellKnownJson, computeBytes, suggestAliases, validate as validateV11, parseRecordString } from '@/lib/generator/core';
+import type { AidGeneratorFormData } from '@/lib/generator/types';
+import { CoreFields } from './v11-fields/core-fields';
+import { MetadataFields } from './v11-fields/metadata-fields';
+import { SecurityFields } from './v11-fields/security-fields';
+
+
 import type { ProtocolToken, AuthToken } from '@agentcommunity/aid';
 
-type FormData = AidGeneratorData;
+type FormData = AidGeneratorFormData & { useAliases: boolean };
+
+type FormPatch = Partial<FormData>;
 
 const PROTOCOL_ORDER: ProtocolToken[] = ['mcp', 'a2a', 'openapi', 'local'];
 
@@ -52,28 +59,56 @@ function parseExample(example: string): Partial<FormData> {
 
 export function GeneratorPanel() {
   const [formData, setFormData] = useState<FormData>({
-    uri: 'https://{example.com}',
-    proto: '',
-    auth: '',
-    desc: '',
     domain: 'example.com',
+    uri: '',
+    proto: 'mcp',
+    auth: 'pat',
+    desc: '',
+    docs: '',
+    dep: '',
+    pka: '',
+    kid: '',
+    useAliases: true,
   });
 
-  const txtRecordString = useMemo(() => buildTxtRecord(formData), [formData]);
-  const validationResult = useMemo(() => validateTxtRecord(txtRecordString), [txtRecordString]);
+  const txtRecordString = useMemo(() => buildTxtV11(formData, { useAliases: formData.useAliases }), [formData]);
+  const { txtBytes, descBytes } = useMemo(() => computeBytes(txtRecordString, formData.desc), [txtRecordString, formData.desc]);
+  const specValidation = useMemo(() => validateV11(formData), [formData]);
+  const [serverResult, setServerResult] = useState<{
+    txt: string;
+    json: Record<string, unknown>;
+    bytes: { txt: number; desc: number };
+    errors: Array<{ code: string; message: string }>;
+    warnings: Array<{ code: string; message: string }>;
+    success: boolean;
+    suggestAliases?: boolean;
+  } | null>(null);
 
-  const updateField = (field: keyof FormData, value: string) => {
-    setFormData((prev: FormData) => ({ ...prev, [field]: value }));
-  };
-
-  const handleExampleSelect = (content: string) => {
-    const parsed = parseExample(content);
-    setFormData((prev: FormData) => ({ ...prev, ...parsed }));
-  };
+  // Debounced server validation
+  useMemo(() => {
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/generator/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const json = (await res.json()) as typeof serverResult;
+        setServerResult(json as any);
+      } catch {
+        /* no-op */
+      }
+    }, 250);
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [formData]);
 
   const dnsHost = `_agent.${formData.domain}`;
-  const descByteLength = new TextEncoder().encode(formData.desc).length;
-  const isDescTooLong = descByteLength > 60;
 
   return (
     <div className="h-full flex flex-col">
@@ -84,116 +119,82 @@ export function GeneratorPanel() {
               <CardTitle className="text-lg">AID Generator</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">
-                  Protocol <span className="text-destructive">*</span>
-                </label>
-                <ToggleGroup
-                  type="single"
-                  className="mt-2 flex flex-wrap gap-2"
-                  value={formData.proto}
-                  onValueChange={(v) => updateField('proto', v)}
-                >
-                  {PROTOCOL_ORDER.map((proto) => (
-                    <ToggleGroupItem key={proto} value={proto} className="text-left capitalize">
-                      {proto.toUpperCase()}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
+              <CoreFields
+                proto={formData.proto}
+                auth={formData.auth}
+                uri={formData.uri}
+                domain={formData.domain}
+                onChange={(patch: FormPatch) => setFormData((p) => ({ ...p, ...patch }))}
+              />
 
-              <div>
-                <label className="text-sm font-medium">Authentication (optional)</label>
-                <ToggleGroup
-                  type="single"
-                  className="mt-2 flex flex-wrap gap-2"
-                  value={formData.auth}
-                  onValueChange={(v) => updateField('auth', v)}
-                >
-                  <ToggleGroupItem value="">none</ToggleGroupItem>
-                  {(Object.keys(AUTH_TOKENS) as AuthToken[]).map((auth) => (
-                    <ToggleGroupItem key={auth} value={auth} className="capitalize">
-                      {auth}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
+              <MetadataFields
+                desc={formData.desc}
+                docs={formData.docs}
+                dep={formData.dep}
+                descBytes={descBytes}
+                onChange={(patch: FormPatch) => setFormData((p) => ({ ...p, ...patch }))}
+              />
 
-              <div className="space-y-2">
-                <label htmlFor="uri" className="text-sm font-medium">
-                  URI <span className="text-destructive">*</span>
-                </label>
-                <div className="relative">
-                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="uri"
-                    className="pl-10"
-                    placeholder="https://{example.com}"
-                    value={formData.uri}
-                    onFocus={() =>
-                      formData.uri === 'https://{example.com}' && updateField('uri', '')
-                    }
-                    onChange={(e) => updateField('uri', e.target.value)}
-                  />
-                </div>
-              </div>
+              <SecurityFields
+                pka={formData.pka}
+                kid={formData.kid}
+                onChange={(patch: FormPatch) => setFormData((p) => ({ ...p, ...patch }))}
+              />
 
-              <div className="space-y-2">
-                <label htmlFor="domain" className="text-sm font-medium">
-                  Domain
-                </label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="domain"
-                    className="pl-10"
-                    placeholder="example.com"
-                    value={formData.domain}
-                    onChange={(e) => updateField('domain', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="desc" className="text-sm font-medium">
-                  Description
-                  <span
-                    className={`ml-2 text-xs ${
-                      isDescTooLong ? 'text-destructive' : 'text-muted-foreground'
-                    }`}
-                  >
-                    {descByteLength}/60 bytes
-                  </span>
-                </label>
-                <Textarea
-                  id="desc"
-                  placeholder="Short description"
-                  value={formData.desc}
-                  onChange={(e) => updateField('desc', e.target.value)}
-                />
-                {isDescTooLong && (
-                  <p className="text-xs text-destructive">
-                    Description exceeds 60 UTF-8 bytes limit
-                  </p>
-                )}
-              </div>
+              {/* Description now lives in MetadataFields with bytes counter */}
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row justify-between items-center">
-              <CardTitle className="text-base">Preview</CardTitle>
-              {validationResult.isValid ? (
-                <div className="flex items-center gap-1 text-green-600">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Valid
+            <CardHeader className="flex flex-col gap-2">
+              <div className="flex flex-row justify-between items-center">
+                <CardTitle className="text-base">Preview</CardTitle>
+                <div className="flex items-center gap-3">
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
+                    <span>Aliases</span>
+                    <Toggle
+                      pressed={formData.useAliases}
+                      onPressedChange={(v) => setFormData((p) => ({ ...p, useAliases: v }))}
+                      aria-label="Toggle alias keys"
+                    >
+                      {formData.useAliases ? 'On' : 'Off'}
+                    </Toggle>
+                    {serverResult && (
+                      <span className="text-xs">
+                        {serverResult.suggestAliases ? '(suggested)' : '(full preferred)'}
+                      </span>
+                    )}
+                  </div>
+                  {(serverResult?.success ?? specValidation.isValid) ? (
+                  <div className="flex items-center gap-1 text-green-600">
+                    <CheckCircle2 className="w-4 h-4" />
+                    Valid
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-destructive">
+                    <XCircle className="w-4 h-4" />
+                    Invalid
+                  </div>
+                )}
                 </div>
-              ) : (
-                <div className="flex items-center gap-1 text-destructive">
-                  <XCircle className="w-4 h-4" />
-                  Invalid
-                </div>
-              )}
+              </div>
+              {serverResult && !serverResult.success ? (
+                <ul className="text-sm text-destructive space-y-1">
+                  {serverResult.errors.map((e) => (
+                    <li key={e.code} className="flex items-start gap-1">
+                      <AlertCircle className="h-3 w-3 mt-0.5" /> {e.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : !specValidation.isValid ? (
+                <ul className="text-sm text-destructive space-y-1">
+                  {specValidation.errors.map((e) => (
+                    <li key={e.code} className="flex items-start gap-1">
+                      <AlertCircle className="h-3 w-3 mt-0.5" /> {e.message}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-sm space-y-2">
@@ -208,15 +209,27 @@ export function GeneratorPanel() {
                   <span className="font-mono">Type</span>
                   <span>TXT</span>
                 </div>
+                <div className="flex items-center gap-3">
+                  <Codeblock
+                    title="Value"
+                    icon={<Key className="w-4 h-4" />}
+                    content={serverResult?.txt || txtRecordString}
+                    variant="inline"
+                  />
+                  <div className={`text-xs ${(serverResult?.bytes.txt ?? txtBytes) > 255 ? 'text-destructive' : 'text-muted-foreground'}`}>{serverResult?.bytes.txt ?? txtBytes} bytes</div>
+                </div>
+              </div>
+
+              <div className="text-sm space-y-2">
+                <p className="mb-1 font-medium">.well-known Fallback (JSON)</p>
                 <Codeblock
-                  title="Value"
-                  icon={<Key className="w-4 h-4" />}
-                  content={txtRecordString}
-                  variant="inline"
+                  title="/\.well-known/agent"
+                  icon={<Globe className="w-4 h-4" />}
+                  content={JSON.stringify(serverResult?.json || buildWellKnownJson(formData, { useAliases: formData.useAliases }), null, 2)}
                 />
               </div>
 
-              {validationResult.isValid && (
+              {specValidation.isValid && (
                 <Alert>
                   <Lightbulb className="h-4 w-4" />
                   <AlertTitle>Ready to publish!</AlertTitle>
@@ -226,14 +239,17 @@ export function GeneratorPanel() {
                 </Alert>
               )}
 
-              {!validationResult.isValid && validationResult.error && (
-                <p className="text-sm text-destructive flex items-start gap-1">
-                  <AlertCircle className="h-3 w-3 mt-0.5" />
-                  {validationResult.error}
-                </p>
+              {!specValidation.isValid && (
+                <ul className="text-sm text-destructive space-y-1">
+                  {specValidation.errors.map((e) => (
+                    <li key={e.code} className="flex items-start gap-1">
+                      <AlertCircle className="h-3 w-3 mt-0.5" /> {e.message}
+                    </li>
+                  ))}
+                </ul>
               )}
 
-              {validationResult.isValid && (
+              {specValidation.isValid && (
                 <Collapsible>
                   <CollapsibleTrigger className="flex items-center text-sm text-muted-foreground gap-1 hover:text-foreground mt-2">
                     <ChevronDown className="w-4 h-4" />
@@ -261,7 +277,37 @@ export function GeneratorPanel() {
           </Card>
 
           <div className="space-y-2">
-            <ExamplePicker variant="toggle" onSelect={handleExampleSelect} />
+            <ExamplePicker
+              variant="toggle"
+              onSelect={async (ex) => {
+                // Load example TXT into form (and set domain)
+                const parsed = parseRecordString(ex.content);
+                const aliasesSuggested = await suggestAliases({
+                  domain: ex.domain,
+                  uri: parsed.uri ?? '',
+                  proto: parsed.proto ?? 'mcp',
+                  auth: parsed.auth ?? '',
+                  desc: parsed.desc ?? '',
+                  docs: parsed.docs,
+                  dep: parsed.dep,
+                  pka: parsed.pka,
+                  kid: parsed.kid,
+                });
+                setFormData((prev) => ({
+                  ...prev,
+                  domain: ex.domain,
+                  uri: parsed.uri ?? prev.uri,
+                  proto: parsed.proto ?? prev.proto,
+                  auth: parsed.auth ?? prev.auth,
+                  desc: parsed.desc ?? prev.desc,
+                  docs: parsed.docs ?? prev.docs,
+                  dep: parsed.dep ?? prev.dep,
+                  pka: parsed.pka ?? prev.pka,
+                  kid: parsed.kid ?? prev.kid,
+                  useAliases: aliasesSuggested,
+                }));
+              }}
+            />
           </div>
         </div>
       </div>

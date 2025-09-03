@@ -5,6 +5,10 @@ export type AidRecord = {
   proto: string;
   auth?: string;
   desc?: string;
+  docs?: string;
+  dep?: string;
+  pka?: string;
+  kid?: string;
 };
 
 // Re-export the shared golden fixtures without duplicating the file.
@@ -19,6 +23,7 @@ export type GoldenRecordCase = {
 
 export type GoldenFixture = {
   records: GoldenRecordCase[];
+  invalid?: { name: string; raw: string; errorCode?: string }[];
 };
 
 export const fixtures: GoldenFixture = golden as unknown as GoldenFixture;

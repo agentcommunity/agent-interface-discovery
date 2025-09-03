@@ -1,4 +1,4 @@
-# Agent Interface Discovery (AID) - Agent Context
+# Agent Identity & Discovery (AID) - Agent Context
 
 ## 🎯 Project Overview
 

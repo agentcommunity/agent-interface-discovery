@@ -1,7 +1,7 @@
 {
   "name": "@agentcommunity/aid",
   "version": "1.0.0",
-  "description": "Agent Interface Discovery (AID) - DNS-based discovery protocol for AI agents",
+  "description": "Agent Identity & Discovery (AID) - DNS-based discovery protocol for AI agents",
   "keywords": [
     "agent",
     "discovery",

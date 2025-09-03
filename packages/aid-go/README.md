@@ -1,6 +1,6 @@
 # aid-go
 
-> Official Go implementation of the [Agent Interface Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
+> Official Go implementation of the [Agent Identity & Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/agentcommunity/agent-interface-discovery/aid-go.svg)](https://pkg.go.dev/github.com/agentcommunity/agent-interface-discovery/aid-go)
 [![Go 1.23+](https://img.shields.io/badge/go-1.23+-blue.svg)](https://golang.org/dl/)
@@ -56,6 +56,22 @@ Discovers an agent by looking up the `_agent` TXT record for the given domain.
 - `AidRecord`: Parsed and validated record
 - `uint32`: DNS TTL in seconds (0 if unavailable)
 - `error`: Error if discovery fails
+
+### `func DiscoverWithOptions(domain string, timeout time.Duration, opts DiscoveryOptions) (AidRecord, uint32, error)`
+
+Enhanced discovery with protocol-specific DNS lookup and `.well-known` controls.
+
+```go
+rec, ttl, err := aid.DiscoverWithOptions(
+    "example.com",
+    5*time.Second,
+    aid.DiscoveryOptions{
+        Protocol:          "mcp",      // queries _agent._mcp.example.com then _agent.mcp.example.com, then base
+        WellKnownFallback: true,        // only on ERR_NO_RECORD / ERR_DNS_LOOKUP_FAILED
+        WellKnownTimeout:  2*time.Second,
+    },
+)
+```
 
 ### `func Parse(txt string) (AidRecord, error)`
 
@@ -269,3 +285,25 @@ go test -v ./...
 ## License
 
 MIT - see [LICENSE](https://github.com/agentcommunity/agent-interface-discovery/blob/main/LICENSE) for details.
+
+## v1.1 Notes (PKA + Fallback)
+
+- PKA handshake: When a record includes `pka` (`k`) and `kid` (`i`), the client verifies endpoint control using HTTP Message Signatures (RFC 9421) with Ed25519. This package uses Go's `crypto/ed25519` for verification and triggers the handshake automatically during discovery.
+
+- `.well-known` fallback: When DNS lookup fails (`ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`), the client fetches `https://<domain>/.well-known/agent` (TLS-anchored) and validates the JSON document (accepts aliases). TTL defaults to `DnsTtlMin` (300s) for this path.
+
+### Handshake expectations (summary)
+
+- Covered fields set (exact): `"AID-Challenge" "@method" "@target-uri" "host" "date"`
+- `alg` must be `ed25519`
+- `created` and HTTP `Date` within ±300 seconds of now
+- `keyid` equals record `kid` (normalize quotes for compare)
+- `pka` is multibase base58btc (`z...`) of a 32‑byte Ed25519 public key
+
+## Redirect Security
+
+AID clients do not auto‑follow cross‑origin redirects (different hostname or port) from a discovered URI. If a 301/302/307/308 points to a different origin, treat it as a potential security risk: either fail with a security error or require explicit user confirmation.
+
+## More on PKA
+
+See the documentation “Quick Start → PKA handshake expectations” for exact coverage fields, algorithm, timestamps, and key format.

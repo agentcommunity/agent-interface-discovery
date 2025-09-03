@@ -1,0 +1,44 @@
+name: CI (Rust)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-rs/**'
+      - '.github/workflows/ci-rust.yml'
+      - '!**/*.md'
+  pull_request:
+    branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-rs/**'
+      - '.github/workflows/ci-rust.yml'
+      - '!**/*.md'
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/aid-rs
+
+      - name: Build (Rust)
+        working-directory: packages/aid-rs
+        run: cargo build --locked
+
+      - name: Test (Rust)
+        working-directory: packages/aid-rs
+        run: cargo test --locked --features handshake

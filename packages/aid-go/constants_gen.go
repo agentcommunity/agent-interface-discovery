@@ -12,18 +12,26 @@ const SpecVersion = "aid1"
 // Protocol tokens
 // ---------------------------------------------------------------------------
 const (
-	ProtoA2a     = "a2a"
-	ProtoLocal   = "local"
-	ProtoMcp     = "mcp"
-	ProtoOpenapi = "openapi"
+	ProtoA2a       = "a2a"
+	ProtoGraphql   = "graphql"
+	ProtoGrpc      = "grpc"
+	ProtoLocal     = "local"
+	ProtoMcp       = "mcp"
+	ProtoOpenapi   = "openapi"
+	ProtoWebsocket = "websocket"
+	ProtoZeroconf  = "zeroconf"
 )
 
 // ProtocolTokens maps protocol names to their string representation
 var ProtocolTokens = map[string]string{
-	"a2a":     "a2a",
-	"local":   "local",
-	"mcp":     "mcp",
-	"openapi": "openapi",
+	"a2a":       "a2a",
+	"graphql":   "graphql",
+	"grpc":      "grpc",
+	"local":     "local",
+	"mcp":       "mcp",
+	"openapi":   "openapi",
+	"websocket": "websocket",
+	"zeroconf":  "zeroconf",
 }
 
 // ---------------------------------------------------------------------------
@@ -57,6 +65,7 @@ var AuthTokens = map[string]string{
 // ---------------------------------------------------------------------------
 const (
 	ErrDnsLookupFailed  = 1004
+	ErrFallbackFailed   = 1005
 	ErrInvalidTxt       = 1001
 	ErrNoRecord         = 1000
 	ErrSecurity         = 1003
@@ -66,6 +75,7 @@ const (
 // ErrorMessages maps error codes to their human-readable descriptions
 var ErrorMessages = map[int]string{
 	ErrDnsLookupFailed:  "The DNS query failed for a network-related reason",
+	ErrFallbackFailed:   "The .well-known fallback failed or returned invalid data",
 	ErrInvalidTxt:       "A record was found but is malformed or missing required keys",
 	ErrNoRecord:         "No _agent TXT record was found for the domain",
 	ErrSecurity:         "Discovery failed due to a security policy (e.g., DNSSEC failure, local execution denied)",

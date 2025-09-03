@@ -1,4 +1,4 @@
-# Agent Interface Discovery - Architecture Documentation
+# Agent Identity & Discovery - Architecture Documentation
 
 > **Why this matters:** Understanding the architectural decisions behind this monorepo ensures consistent development practices and enables future contributors to extend the project effectively.
 
@@ -10,10 +10,13 @@
 packages/
 ├── aid/                    # Core TypeScript library (published to npm)
 ├── aid-doctor/            # CLI validation and generation tool (published to npm)
-├── aid-py/               # Python implementation + test runner (private)
-├── aid-go/               # Go implementation + test runner (private)
+├── aid-py/               # Python SDK (published to PyPI as aid-discovery)
+├── aid-go/               # Go SDK (module)
+├── aid-rs/               # Rust SDK (parser + discovery, feature-gated handshake)
+├── aid-dotnet/           # .NET SDK (parser + discovery + PKA)
+├── aid-java/             # Java SDK (parser + discovery + PKA)
 ├── web/                  # Next.js web interface (private)
-└── e2e-tests/           # End-to-end tests against live records (private)
+└── e2e-tests/            # End-to-end tests against live records (private)
 
 # NOTE: The official Python package is currently published at https://pypi.org/project/aid-discovery/ and is not yet community-owned. Community transfer is planned.
 
@@ -90,6 +93,22 @@ export const baseConfig = defineConfig({
 - Java: `packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java`
 
 The web module is consumed by the UI via a thin adapter layer that normalizes spec-shaped data into canonical types, insulating the UI from spec churn.
+
+### v1.1 Discovery Parity (Core Architecture)
+
+- DNS-first discovery across all SDKs with IDNA normalization to A-label (Punycode) prior to queries.
+- Protocol-specific flow (when requested): `_agent._<proto>.<domain>` → `_agent.<proto>.<domain>` → base `_agent.<domain>`.
+- Strict TXT parsing per spec: aliases, scheme enforcement, metadata validation.
+- PKA handshake (when `pka`/`kid` present): Ed25519 HTTP Message Signatures; exact covered fields set; time window ±300s; `alg=ed25519`; normalized `keyid==kid`.
+- Well-known fallback guards: only on `ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`; HTTPS only; content-type `application/json` prefix; ≤64KB; ~2s timeout; no redirects; TTL=300 on success.
+- Redirect policy: no auto-follow in security-sensitive paths (handshake, well-known fetch).
+- Loopback relax: permitted only for well-known path, loopback-only, and feature-gated (env/flag) per language; never for TXT.
+
+Language specifics
+
+- Node.js: native DNS; Browser: DNS-over-HTTPS; both export the same API.
+- Go/Rust: added options forms while keeping legacy wrappers for back-compat.
+- .NET/Java: high-level discovery wrappers added; DoH used for DNS; compose with well-known + PKA.
 
 ### Cross-Platform Compatibility
 
@@ -223,6 +242,76 @@ pnpm test
 - **Environment Control**: Language-specific test setups
 - **Parallel Execution**: Turbo runs compatible tests simultaneously
 
+### aid-doctor CLI E2E Harness
+
+- Package: `packages/e2e-tests`
+- Entrypoints:
+  - `src/aid_doctor.e2e.ts` – JSON smoke checks against showcase domains, spawns the built CLI (`packages/aid-doctor/dist/cli.js`)
+  - `src/pka_e2e.ts` – Loopback HTTP server that serves a `.well-known/agent` JSON and signs a valid PKA handshake for local testing
+- Run locally:
+  ```bash
+  pnpm -C packages/aid-doctor build
+  pnpm -C packages/e2e-tests e2e
+  pnpm -C packages/e2e-tests e2e:pka
+  ```
+-
+- CI note: The checker honors `AID_SKIP_SECURITY=1` to skip TLS inspection in smoke runs; PKA loopback uses `AID_ALLOW_INSECURE_WELL_KNOWN=1` (loopback only) for local HTTP testing.
+
+### aid-doctor CLI Architecture
+
+**Core Architecture Pattern**: Clean separation between pure business logic (`aid-engine`) and side-effectful CLI wrapper (`aid-doctor`).
+
+#### **@agentcommunity/aid-engine** (Pure Core Library)
+
+A stateless, pure library containing all AID business logic:
+
+- **Discovery Logic**: DNS resolution, TXT record parsing, well-known fallback handling
+- **Validation Engine**: Record format validation, protocol verification, security checks
+- **PKA Handshake**: Ed25519 HTTP Message Signatures implementation with time window validation
+- **Protocol Support**: MCP, A2A, OpenAPI, GraphQL, gRPC, WebSocket, Zeroconf
+- **Error Handling**: Standardized error codes and messages across all operations
+- **Type Safety**: Full TypeScript interfaces with exact optional property types
+
+**Why Pure**: No filesystem access, no network I/O beyond DNS/well-known, deterministic behavior.
+
+#### **@agentcommunity/aid-doctor** (CLI Wrapper)
+
+A thin command-line interface that orchestrates the engine:
+
+- **State Management**: Filesystem caching, configuration persistence
+- **User Interaction**: Commander.js CLI, interactive prompts, clipboard integration
+- **Key Management**: PKA key generation and storage in `~/.aid/keys/`
+- **Output Formatting**: Human-readable reports with actionable suggestions
+- **Side Effects**: All I/O operations (file writes, network calls beyond DNS)
+
+**Enhanced Features (v1.1)**:
+
+- **Draft Saving**: Interactive wizard supports `--save-draft <path>` for saving generated records to files
+- **PKA Key Management**: Integrated key generation and verification with proper file system handling
+- **Enhanced Diagnostics**: Actionable suggestions, detailed TLS/PKA reporting, and byte size warnings
+- **Comprehensive Test Coverage**: Full unit tests for all CLI functionality (6/6 tests passing)
+
+#### **Module Structure**
+
+**aid-engine (packages/aid-engine/)**:
+
+- `checker.ts` – Core discovery and validation logic (stateless)
+- `generator.ts` – Record generation logic (pure functions)
+- `dns.ts` – DNS resolution utilities
+- `tls_inspect.ts` – TLS certificate validation
+- `pka.ts` – PKA handshake implementation
+- `protoProbe.ts` – Protocol-specific subdomain probing
+- `types.ts` – TypeScript interfaces for all data structures
+- `error_messages.ts` – Centralized error message constants
+
+**aid-doctor (packages/aid-doctor/)**:
+
+- `cli.ts` – Commander.js setup with all commands and flags
+- `output.ts` – Human-readable formatting with actionable suggestions
+- `keys.ts` – PKA key generation and filesystem storage (side-effectful)
+- `cache.ts` – Cache persistence to `~/.aid/cache.json` (side-effectful)
+- `index.ts` – Package entry point
+
 ## 🔄 CI/CD Architecture
 
 ### Build Optimization
@@ -255,7 +344,7 @@ To prevent ecosystem drift across languages, CI includes a dedicated parity job:
   - Go `go test ./...`
   - Python `pytest` for `packages/aid-py`
 
-The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go.
+The parity job runs on PRs and main to ensure spec compliance across TS/Py/Go. Additional jobs cover Rust/.NET/Java including PKA vectors and well-known fallback checks.
 
 ### Language-specific CI jobs (Rust / .NET / Java)
 

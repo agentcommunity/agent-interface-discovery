@@ -5,6 +5,7 @@ import { Problem } from '@/components/landing/features';
 import { Solution } from '@/components/landing/solution';
 import { Toolkit } from '@/components/landing/showcase';
 import { Vision } from '@/components/landing/vision';
+import { Identity } from '@/components/landing/identity';
 import { Footer } from '@/components/layout/footer';
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <QuickStart />
       <Problem />
       <Solution />
+      <Identity />
       <Toolkit />
       <Vision />
       <Footer />

@@ -1,5 +1,6 @@
 import { type AidRecord, DNS_TTL_MIN, SPEC_VERSION, DNS_SUBDOMAIN } from './constants';
-import { AidError, parse } from './parser';
+import { AidError, parse, AidRecordValidator, canonicalizeRaw } from './parser';
+import { performPKAHandshake } from './pka.js';
 import { query } from 'dns-query';
 
 /**
@@ -10,6 +11,10 @@ export interface DiscoveryOptions {
   timeout?: number;
   /** Protocol-specific subdomain to try (optional). When provided, underscore and non-underscore forms are attempted. */
   protocol?: string;
+  /** Enable .well-known fallback on ERR_NO_RECORD or ERR_DNS_LOOKUP_FAILED (default: true) */
+  wellKnownFallback?: boolean;
+  /** Timeout for .well-known fetch in milliseconds (default: 2000) */
+  wellKnownTimeoutMs?: number;
 }
 
 function normalizeDomain(domain: string): string {
@@ -27,6 +32,188 @@ function constructQueryName(domain: string, protocol?: string, useUnderscore = f
     return `${DNS_SUBDOMAIN}.${protoPart}.${normalized}`;
   }
   return `${DNS_SUBDOMAIN}.${normalized}`;
+}
+
+/**
+ * Build a canonical RawAidRecord from JSON that may include alias keys
+ */
+/*
+function canonicalizeRaw(json: Record<string, unknown>): RawAidRecord {
+  const out: RawAidRecord = {};
+  const getStr = (k: string) =>
+    typeof json[k] === 'string' ? (json[k] as string).trim() : undefined;
+  // Only set fields when defined to comply with exactOptionalPropertyTypes
+  const v = getStr('v');
+  if (v !== undefined) out.v = v;
+  const uri = getStr('uri') ?? getStr('u');
+  if (uri !== undefined) out.uri = uri;
+  const proto = getStr('proto') ?? getStr('p');
+  if (proto !== undefined) out.proto = proto;
+  const auth = getStr('auth') ?? getStr('a');
+  if (auth !== undefined) out.auth = auth;
+  const desc = getStr('desc') ?? getStr('s');
+  if (desc !== undefined) out.desc = desc;
+  const docs = getStr('docs') ?? getStr('d');
+  if (docs !== undefined) out.docs = docs;
+  const dep = getStr('dep') ?? getStr('e');
+  if (dep !== undefined) out.dep = dep;
+  const pka = getStr('pka') ?? getStr('k');
+  if (pka !== undefined) out.pka = pka;
+  const kid = getStr('kid') ?? getStr('i');
+  if (kid !== undefined) out.kid = kid;
+  return out;
+}
+*/
+
+// Minimal fetch/response types to avoid DOM lib dependency
+type HeadersLike = { get(name: string): string | null };
+type ResponseLike = { ok: boolean; status: number; headers: HeadersLike; text(): Promise<string> };
+type FetchInit = { signal?: unknown; redirect?: 'error' | 'follow' | 'manual' };
+type FetchLike = (input: string, init?: FetchInit) => Promise<ResponseLike>;
+
+async function fetchWellKnown(
+  domain: string,
+  timeoutMs = 2000,
+): Promise<{
+  record: AidRecord;
+  raw: string;
+  queryName: string;
+}> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  // Preserve port (and IPv6 brackets) when building the well-known URL
+  const parsedForHost = new URL(`http://${domain}`);
+  const host = parsedForHost.host; // includes :port when present
+  const insecure =
+    typeof process !== 'undefined' &&
+    process.env &&
+    process.env.AID_ALLOW_INSECURE_WELL_KNOWN === '1';
+  const scheme = insecure ? 'http' : 'https';
+  // Work around IPv6 localhost resolution quirks in some Node fetch stacks by preferring IPv4
+  const correctedHost =
+    insecure && parsedForHost.hostname === 'localhost'
+      ? parsedForHost.port
+        ? `127.0.0.1:${parsedForHost.port}`
+        : '127.0.0.1'
+      : host;
+  const url = `${scheme}://${correctedHost}/.well-known/agent`;
+  try {
+    const fetchImpl = (globalThis as unknown as { fetch?: FetchLike }).fetch;
+    if (typeof fetchImpl !== 'function') {
+      throw new AidError('ERR_FALLBACK_FAILED', 'fetch is not available in this environment');
+    }
+    const res = (await fetchImpl(url, {
+      signal: controller.signal as unknown,
+      redirect: 'error',
+    })) as ResponseLike;
+    const text = await res.text(); // Await text early for snippet
+    if (!res.ok) {
+      throw new AidError('ERR_FALLBACK_FAILED', `Well-known HTTP ${res.status}`, {
+        httpStatus: res.status,
+        snippet: text.slice(0, 1024),
+      });
+    }
+    const ct = (res.headers.get('content-type') || '').toLowerCase();
+    if (!ct.startsWith('application/json')) {
+      throw new AidError(
+        'ERR_FALLBACK_FAILED',
+        'Invalid content-type for well-known (expected application/json)',
+        {
+          httpStatus: res.status,
+          contentType: res.headers.get('content-type'),
+          snippet: text.slice(0, 1024),
+        },
+      );
+    }
+    if (text.length > 64 * 1024) {
+      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known response too large (>64KB)', {
+        httpStatus: res.status,
+        contentType: ct,
+        byteLength: text.length,
+      });
+    }
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      throw new AidError('ERR_FALLBACK_FAILED', 'Invalid JSON in well-known response', {
+        httpStatus: res.status,
+        contentType: ct,
+        snippet: text.slice(0, 1024),
+      });
+    }
+    if (typeof json !== 'object' || json === null) {
+      throw new AidError('ERR_FALLBACK_FAILED', 'Well-known JSON must be an object', {
+        httpStatus: res.status,
+        contentType: ct,
+        snippet: text.slice(0, 1024),
+      });
+    }
+    const raw = canonicalizeRaw(json as Record<string, unknown>);
+    // Strict validation first
+    let record: AidRecord;
+    try {
+      record = AidRecordValidator.validate(raw);
+    } catch (err) {
+      // Narrow relaxation: allow loopback HTTP only for well-known when explicitly enabled
+      const isLoopback = ['localhost', '127.0.0.1', '::1'].includes(parsedForHost.hostname);
+      const isHttpRemote = typeof raw.uri === 'string' && raw.uri.startsWith('http://');
+      const isRemoteProto =
+        typeof raw.proto === 'string' && !['local', 'zeroconf', 'websocket'].includes(raw.proto);
+      const allowInsecure = insecure && isLoopback && isHttpRemote && isRemoteProto;
+      if (!allowInsecure) throw err;
+      // Validate all other fields by temporarily upgrading the URI scheme for validation
+      const rawHttps = {
+        ...raw,
+        uri: (raw.uri as string).replace(/^http:\/\//, 'https://'),
+      } as Record<string, unknown>;
+      const validated = AidRecordValidator.validate(rawHttps);
+      // Construct the final record but restore the original http URI
+      record = { ...validated, uri: raw.uri! } as AidRecord;
+    }
+    if (record.dep) {
+      const depDate = new Date(record.dep);
+      if (!Number.isNaN(depDate.getTime())) {
+        if (depDate.getTime() < Date.now()) {
+          throw new AidError(
+            'ERR_INVALID_TXT',
+            `Record for ${domain} was deprecated on ${record.dep}`,
+          );
+        }
+
+        console.warn(
+          `[AID] WARNING: Record for ${domain} is scheduled for deprecation on ${record.dep}`,
+        );
+      }
+    }
+    if (record.pka) {
+      try {
+        await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
+      } catch (pkaError) {
+        // Preserve ERR_SECURITY errors from PKA verification
+        if (pkaError instanceof AidError && pkaError.errorCode === 'ERR_SECURITY') {
+          throw pkaError;
+        }
+        throw pkaError;
+      }
+    }
+    return { record, raw: text.trim(), queryName: url };
+  } catch (e) {
+    if (e instanceof AidError) {
+      // Preserve ERR_SECURITY errors from PKA verification, don't convert to ERR_FALLBACK_FAILED
+      if (e.errorCode === 'ERR_SECURITY') {
+        throw e;
+      }
+      // Re-throw with fallback code if it's not already set and not a security error
+      if (e.errorCode !== 'ERR_FALLBACK_FAILED') {
+        throw new AidError('ERR_FALLBACK_FAILED', e.message, e.details);
+      }
+      throw e;
+    }
+    throw new AidError('ERR_FALLBACK_FAILED', e instanceof Error ? e.message : String(e));
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -50,7 +237,7 @@ export async function discover(
   domain: string,
   options: DiscoveryOptions = {},
 ): Promise<DiscoveryResult> {
-  const { protocol, timeout = 5000 } = options;
+  const { protocol, timeout = 5000, wellKnownFallback = true, wellKnownTimeoutMs = 2000 } = options;
 
   // helper to perform single DNS query for a given name
   const queryOnce = async (queryName: string): Promise<DiscoveryResult> => {
@@ -82,6 +269,24 @@ export async function discover(
         if (rawTrimmed.toLowerCase().startsWith(`v=${SPEC_VERSION}`)) {
           try {
             const record = parse(rawTrimmed);
+            if (record.dep) {
+              const depDate = new Date(record.dep);
+              if (!Number.isNaN(depDate.getTime())) {
+                if (depDate.getTime() < Date.now()) {
+                  throw new AidError(
+                    'ERR_INVALID_TXT',
+                    `Record for ${queryName} was deprecated on ${record.dep}`,
+                  );
+                }
+
+                console.warn(
+                  `[AID] WARNING: Record for ${queryName} is scheduled for deprecation on ${record.dep}`,
+                );
+              }
+            }
+            if (record.pka) {
+              await performPKAHandshake(record.uri, record.pka, record.kid ?? '');
+            }
             // Success! Return the parsed record, raw string, and TTL.
             return {
               record,
@@ -127,9 +332,49 @@ export async function discover(
 
   const baseName = constructQueryName(domain);
 
-  // Canonical: base _agent.<domain> query
-  // If protocol is explicitly requested, attempt protocol-specific subdomains afterwards
-  if (!protocol) {
+  const runDns = async (): Promise<DiscoveryResult> => {
+    // Canonical: base _agent.<domain> query
+    // If protocol is explicitly requested, attempt protocol-specific subdomains afterwards
+    if (!protocol) {
+      return await Promise.race([
+        queryOnce(baseName),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${baseName}`)),
+            timeout,
+          ),
+        ),
+      ]);
+    }
+
+    // Protocol explicitly requested: try underscore form first, then fall back to base
+    const protoNameUnderscore = constructQueryName(domain, protocol, true);
+
+    // 1) underscore form
+    try {
+      return await Promise.race([
+        queryOnce(protoNameUnderscore),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                new AidError(
+                  'ERR_DNS_LOOKUP_FAILED',
+                  `DNS query timeout for ${protoNameUnderscore}`,
+                ),
+              ),
+            timeout,
+          ),
+        ),
+      ]);
+    } catch (error) {
+      if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
+        throw error;
+      }
+    }
+
+    // 2) fallback to base
     return await Promise.race([
       queryOnce(baseName),
       new Promise<never>((_, reject) =>
@@ -139,59 +384,29 @@ export async function discover(
         ),
       ),
     ]);
-  }
+  };
 
-  // Protocol explicitly requested: try underscore form first, then non-underscore; finally base
-  const protoNameUnderscore = constructQueryName(domain, protocol, true);
-  const protoName = constructQueryName(domain, protocol, false);
-
-  // 1) underscore form
   try {
-    return await Promise.race([
-      queryOnce(protoNameUnderscore),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${protoNameUnderscore}`),
-            ),
-          timeout,
-        ),
-      ),
-    ]);
+    return await runDns();
   } catch (error) {
-    if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
-      throw error;
+    if (
+      wellKnownFallback &&
+      error instanceof AidError &&
+      (error.errorCode === 'ERR_NO_RECORD' || error.errorCode === 'ERR_DNS_LOOKUP_FAILED')
+    ) {
+      try {
+        const { record, raw, queryName } = await fetchWellKnown(domain, wellKnownTimeoutMs);
+        return { record, raw, ttl: DNS_TTL_MIN, queryName };
+      } catch (fallbackError) {
+        if (fallbackError instanceof AidError) {
+          // Propagate rich details from the fallback
+          throw fallbackError;
+        }
+        throw error; // Throw original DNS error if fallback has an unknown error
+      }
     }
+    throw error;
   }
-
-  // 2) non-underscore form
-  try {
-    return await Promise.race([
-      queryOnce(protoName),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${protoName}`)),
-          timeout,
-        ),
-      ),
-    ]);
-  } catch (error) {
-    if (!(error instanceof AidError) || error.errorCode !== 'ERR_NO_RECORD') {
-      throw error;
-    }
-  }
-
-  // 3) fallback to base
-  return await Promise.race([
-    queryOnce(baseName),
-    new Promise<never>((_, reject) =>
-      setTimeout(
-        () => reject(new AidError('ERR_DNS_LOOKUP_FAILED', `DNS query timeout for ${baseName}`)),
-        timeout,
-      ),
-    ),
-  ]);
 }
 
 /**

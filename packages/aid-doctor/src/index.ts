@@ -1,8 +1,8 @@
 /**
- * @agentcommunity/aid-doctor - CLI tool for Agent Interface Discovery
+ * @agentcommunity/aid-doctor - CLI tool for Agent Identity & Discovery
  *
  * This package provides a command-line interface for discovering and validating
- * AID (Agent Interface Discovery) records via DNS TXT records.
+ * AID (Agent Identity & Discovery) records via DNS TXT records.
  *
  * @example
  * ```bash

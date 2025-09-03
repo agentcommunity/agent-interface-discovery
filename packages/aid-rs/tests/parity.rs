@@ -1,77 +1,36 @@
-use std::fs;
-use std::path::PathBuf;
-
+use std::{fs, path::PathBuf};
 use aid_rs::parse;
+use serde_json::Value;
 
-fn repo_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
-}
-
-fn load_fixture() -> String {
-    let path = repo_root().join("test-fixtures").join("golden.json");
-    fs::read_to_string(path).expect("read golden.json")
-}
-
-#[derive(Debug)]
-struct FixtureRec {
-    raw: String,
-    expected: std::collections::HashMap<String, String>,
-}
-
-fn parse_golden_minimal(json: &str) -> Vec<FixtureRec> {
-    let mut out = Vec::new();
-    let mut i = 0;
-    let bytes = json.as_bytes();
-    while i < bytes.len() {
-        if let Some(pos) = json[i..].find("\"raw\"") {
-            i += pos;
-            let after_colon = json[i..].find(':').map(|p| i + p + 1).unwrap();
-            let start_quote = json[after_colon..].find('"').map(|p| after_colon + p + 1).unwrap();
-            let end_quote = json[start_quote..].find('"').map(|p| start_quote + p).unwrap();
-            let raw = &json[start_quote..end_quote];
-
-            let expected_key_pos = json[end_quote..].find("\"expected\"").unwrap();
-            let j = end_quote + expected_key_pos;
-            let brace_start = json[j..].find('{').map(|p| j + p).unwrap();
-            let mut k = brace_start + 1;
-            let mut depth = 1;
-            while k < bytes.len() {
-                match bytes[k] as char {
-                    '{' => depth += 1,
-                    '}' => { depth -= 1; if depth == 0 { break; } }
-                    _ => {}
-                }
-                k += 1;
-            }
-            let obj = &json[brace_start + 1..k];
-            let mut expected = std::collections::HashMap::new();
-            for entry in obj.split(',') {
-                let mut parts = entry.splitn(2, ':');
-                let key = parts.next().unwrap_or("").trim().trim_matches('"');
-                let val = parts.next().unwrap_or("").trim().trim_matches('"');
-                if !key.is_empty() && !val.is_empty() { expected.insert(key.to_string(), val.to_string()); }
-            }
-            out.push(FixtureRec { raw: raw.to_string(), expected });
-            i = k;
-        } else { break; }
-    }
-    out
-}
+fn repo_root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("..") }
+fn load_fixture() -> String { fs::read_to_string(repo_root().join("test-fixtures").join("golden.json")).expect("read golden.json") }
 
 #[test]
 fn parity_from_golden() {
     let data = load_fixture();
-    let cases = parse_golden_minimal(&data);
-    assert!(!cases.is_empty(), "no cases parsed from golden.json");
-    for case in cases {
-        let parsed = parse(&case.raw).expect("parse ok");
-        let mut got = std::collections::HashMap::new();
-        got.insert("v".to_string(), parsed.v);
-        got.insert("uri".to_string(), parsed.uri);
-        got.insert("proto".to_string(), parsed.proto);
-        if let Some(a) = parsed.auth { got.insert("auth".to_string(), a); }
-        if let Some(d) = parsed.desc { got.insert("desc".to_string(), d); }
-        assert_eq!(got, case.expected);
+    let v: Value = serde_json::from_str(&data).expect("valid json");
+    let recs = v.get("records").and_then(|r| r.as_array()).expect("records array");
+    assert!(!recs.is_empty(), "no cases parsed from golden.json");
+    for rec in recs {
+        let raw = rec.get("raw").and_then(|s| s.as_str()).expect("raw string");
+        let expected = rec.get("expected").and_then(|o| o.as_object()).expect("expected obj");
+        let parsed = parse(raw).expect("parse ok");
+        // Compare only keys present in expected
+        for (k, v) in expected {
+            let val = match k.as_str() {
+                "v" => parsed.v.clone(),
+                "uri" => parsed.uri.clone(),
+                "proto" => parsed.proto.clone(),
+                "auth" => parsed.auth.clone().unwrap_or_default(),
+                "desc" => parsed.desc.clone().unwrap_or_default(),
+                "docs" => parsed.docs.clone().unwrap_or_default(),
+                "dep" => parsed.dep.clone().unwrap_or_default(),
+                "pka" => parsed.pka.clone().unwrap_or_default(),
+                "kid" => parsed.kid.clone().unwrap_or_default(),
+                _ => String::new(),
+            };
+            assert_eq!(val, v.as_str().unwrap_or_default(), "key {} mismatch", k);
+        }
     }
 }
 

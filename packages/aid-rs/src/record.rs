@@ -5,4 +5,8 @@ pub struct AidRecord {
     pub proto: String,
     pub auth: Option<String>,
     pub desc: Option<String>,
+    pub docs: Option<String>,
+    pub dep: Option<String>,
+    pub pka: Option<String>,
+    pub kid: Option<String>,
 }

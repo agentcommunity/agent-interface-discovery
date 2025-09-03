@@ -7,7 +7,7 @@ export function RecordStrip() {
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-base md:text-lg text-muted-foreground">
             One <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">_agent</code> TXT
-            record for instant discovery.
+            record for instant discovery and agent identity you can verify.
           </p>
         </div>
       </div>

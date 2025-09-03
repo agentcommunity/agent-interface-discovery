@@ -7,9 +7,13 @@ pub const SPEC_VERSION: &str = "aid1";
 
 // Protocol tokens
 pub const PROTO_A2A: &str = "a2a";
+pub const PROTO_GRAPHQL: &str = "graphql";
+pub const PROTO_GRPC: &str = "grpc";
 pub const PROTO_LOCAL: &str = "local";
 pub const PROTO_MCP: &str = "mcp";
 pub const PROTO_OPENAPI: &str = "openapi";
+pub const PROTO_WEBSOCKET: &str = "websocket";
+pub const PROTO_ZEROCONF: &str = "zeroconf";
 
 // Auth tokens
 pub const AUTH_APIKEY: &str = "apikey";
@@ -23,6 +27,7 @@ pub const AUTH_PAT: &str = "pat";
 
 // Error codes
 pub const ERR_DNS_LOOKUP_FAILED: u16 = 1004;
+pub const ERR_FALLBACK_FAILED: u16 = 1005;
 pub const ERR_INVALID_TXT: u16 = 1001;
 pub const ERR_NO_RECORD: u16 = 1000;
 pub const ERR_SECURITY: u16 = 1003;

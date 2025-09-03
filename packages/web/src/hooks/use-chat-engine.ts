@@ -154,7 +154,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
       // Narrative 1 (always)
       await (scenario?.narrative1
         ? sendAssistant(scenario.narrative1.replace('{domain}', domain))
-        : sendAssistant('Let me see…'));
+        : sendAssistant('Let me see… Connecting with AID…'));
 
       // 1. Discovery phase
       setStatus('discovering');
@@ -194,7 +194,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         // non-fatal; adapter is best-effort for now
       }
 
-      // Successful discovery narrative2
+      // Successful discovery narrative2 (now includes security context when available)
       if (scenario?.narrative2 && !scenario.narrative2.includes('{error}')) {
         const formatted = scenario.narrative2
           .replace('{desc}', discoveryRecord.desc ?? '')
@@ -235,7 +235,23 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         if (scenario?.narrative3) {
           const handshakeData = handshakeRes.value;
           const capCount = handshakeData.capabilities.length;
-          await sendAssistant(scenario.narrative3.replace('{capCount}', String(capCount)));
+          const pkaStatus = handshakeData.security?.pka?.verified
+            ? 'PKA verified'
+            : handshakeData.security?.pka?.present
+              ? 'PKA present'
+              : 'no PKA';
+          const tlsStatus =
+            handshakeData.security?.tls?.valid === true
+              ? 'TLS valid'
+              : handshakeData.security?.tls?.valid === false
+                ? 'TLS invalid'
+                : 'TLS unknown';
+          await sendAssistant(
+            [
+              scenario.narrative3.replace('{capCount}', String(capCount)),
+              `\nSecurity: ${pkaStatus}; ${tlsStatus}.`,
+            ].join(''),
+          );
         }
         setStatus('connected');
         return;
@@ -251,10 +267,14 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
           result: handshakeRes,
         });
         setStatus('needs_auth');
+        // Gentle assistant message clarifying AID worked but auth is required
+        await sendAssistant(
+          'Ⓧ Connection not established (authentication required). AID worked. I don’t have your private keys - you need to provide a token to continue. (Do not copy your keys here, this is a test environment)',
+        );
       } else {
-        if (scenario?.narrative3) {
-          await sendAssistant(`Connection failed: ${handshakeRes.error.message}`);
-        }
+        // De-emphasize failure: acknowledge AID success but connection issue
+        const reason = handshakeRes.error.message || 'Unknown reason';
+        await sendAssistant(`Ⓧ Agent connection not established. AID worked. ${reason}`);
         addMessage({
           type: 'connection_result',
           id: uniqueId(),

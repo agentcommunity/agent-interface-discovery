@@ -2,7 +2,8 @@ use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
 use crate::constants_gen::{
-    ERR_DNS_LOOKUP_FAILED, ERR_INVALID_TXT, ERR_NO_RECORD, ERR_SECURITY, ERR_UNSUPPORTED_PROTO,
+    ERR_DNS_LOOKUP_FAILED, ERR_FALLBACK_FAILED, ERR_INVALID_TXT, ERR_NO_RECORD, ERR_SECURITY,
+    ERR_UNSUPPORTED_PROTO,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,6 +21,7 @@ impl AidError {
             "ERR_UNSUPPORTED_PROTO" => ERR_UNSUPPORTED_PROTO,
             "ERR_SECURITY" => ERR_SECURITY,
             "ERR_DNS_LOOKUP_FAILED" => ERR_DNS_LOOKUP_FAILED,
+            "ERR_FALLBACK_FAILED" => ERR_FALLBACK_FAILED,
             _ => ERR_INVALID_TXT,
         };
         Self { code, error_code, message: message.into() }

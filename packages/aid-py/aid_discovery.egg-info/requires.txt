@@ -3,3 +3,6 @@ idna>=3.6
 
 [dev]
 pytest>=8
+
+[pka]
+cryptography>=42

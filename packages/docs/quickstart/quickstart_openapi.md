@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — OpenAPI'
+title: 'OpenAPI'
 description: 'Discover an OpenAPI spec URL using AID and fetch it'
 icon: material/api
 ---
@@ -97,6 +97,8 @@ discoverAndAnalyzeApi('openapi.agentcommunity.org'); // Fictional example domain
 For libraries in other languages (including Rust/.NET/Java WIP), see the [Package Overview](./index.md#package-overview).
 
 ---
+
+!!! info "Implementation Files" - [Generated spec types](../protocol/spec.ts) - [TypeScript constants](../packages/aid/src/constants.ts)
 
 **See also:**
 

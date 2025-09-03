@@ -1,5 +1,5 @@
 /**
- * @agentcommunity/aid - Agent Interface Discovery
+ * @agentcommunity/aid - Agent Identity & Discovery
  *
  * A minimal, DNS-based discovery protocol for AI agents.
  *
@@ -28,10 +28,12 @@ export {
   validateRecord,
   isValidProto,
   AidRecordValidator,
+  canonicalizeRaw,
 } from './parser.js';
 
 // Security helpers
 export { enforceRedirectPolicy } from './security.js';
+export { performPKAHandshake } from './pka.js';
 
 // Re-export client functions and types
 export { type DiscoveryResult, type DiscoveryOptions, discover } from './client.js';

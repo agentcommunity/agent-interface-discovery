@@ -1,6 +1,6 @@
 # aid-discovery (Python)
 
-> Official Python implementation of the [Agent Interface Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
+> Official Python implementation of the [Agent Identity & Discovery (AID)](https://github.com/agentcommunity/agent-interface-discovery) specification.
 
 [![PyPI version](https://img.shields.io/pypi/v/aid-discovery.svg?color=blue)](https://pypi.org/project/aid-discovery/)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -33,13 +33,17 @@ except AidError as e:
 
 ## API Reference
 
-### `discover(domain: str) -> DiscoveryResult`
+### `discover(domain: str, *, protocol: str | None = None, timeout: float = 5.0, well_known_fallback: bool = True, well_known_timeout: float = 2.0) -> (dict, int)`
 
 Discovers an agent by looking up the `_agent` TXT record for the given domain.
 
 **Parameters:**
 
 - `domain` (str): The domain name to discover
+- `protocol` (str, optional): Try protocol-specific subdomain first (e.g., `mcp`)
+- `timeout` (float): DNS timeout in seconds (default 5.0)
+- `well_known_fallback` (bool): If true, falls back to `https://<domain>/.well-known/agent` on `ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED` (default True)
+- `well_known_timeout` (float): Timeout for the `.well-known` HTTP fetch (default 2.0)
 
 **Returns:**
 
@@ -93,13 +97,14 @@ Exception raised when discovery or parsing fails:
 
 ## Error Codes
 
-| Code | Symbol                  | Description                  |
-| ---- | ----------------------- | ---------------------------- |
-| 1000 | `ERR_NO_RECORD`         | No `_agent` TXT record found |
-| 1001 | `ERR_INVALID_TXT`       | Record found but malformed   |
-| 1002 | `ERR_UNSUPPORTED_PROTO` | Protocol not supported       |
-| 1003 | `ERR_SECURITY`          | Security policy violation    |
-| 1004 | `ERR_DNS_LOOKUP_FAILED` | DNS query failed             |
+| Code | Symbol                  | Description                   |
+| ---- | ----------------------- | ----------------------------- |
+| 1000 | `ERR_NO_RECORD`         | No `_agent` TXT record found  |
+| 1001 | `ERR_INVALID_TXT`       | Record found but malformed    |
+| 1002 | `ERR_UNSUPPORTED_PROTO` | Protocol not supported        |
+| 1003 | `ERR_SECURITY`          | Security policy violation     |
+| 1004 | `ERR_DNS_LOOKUP_FAILED` | DNS query failed              |
+| 1005 | `ERR_FALLBACK_FAILED`   | `.well-known` fallback failed |
 
 ## Advanced Usage
 
@@ -133,6 +138,23 @@ try:
 except AidError as e:
     print(f"Invalid record: {e}")
 ```
+
+### v1.1 Notes (PKA + Fallback)
+
+- PKA handshake: When a record includes `pka` (`k`) and `kid` (`i`), the client performs an Ed25519 HTTP Message Signatures handshake to verify endpoint control. This requires an Ed25519 verification backend. Install one of:
+  - `pip install aid-discovery[pka]` (installs `PyNaCl` and `cryptography`)
+  - Or add `PyNaCl>=1.5` or `cryptography>=42` to your environment
+    If no backend is available, discovery raises `ERR_SECURITY` when PKA is present.
+
+- `.well-known` fallback: On DNS issues (`ERR_NO_RECORD` or `ERR_DNS_LOOKUP_FAILED`), the client may fetch `https://<domain>/.well-known/agent` (TLS-anchored). Disable with `well_known_fallback=False`.
+
+## Redirect Security
+
+Client implementations do not automatically follow cross‑origin redirects from the discovered URI. If an initial request returns a redirect to a different origin (hostname or port), treat it as a potential security risk and either raise an error or require explicit confirmation.
+
+## More on PKA
+
+See the documentation “Quick Start → PKA handshake expectations” for header coverage, algorithm requirements, timestamps, and key format.
 
 ## Development
 

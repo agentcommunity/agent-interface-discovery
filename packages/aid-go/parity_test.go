@@ -50,6 +50,18 @@ func TestParity(t *testing.T) {
 		if parsed.Desc != "" {
 			got["desc"] = parsed.Desc
 		}
+		if parsed.Docs != "" {
+			got["docs"] = parsed.Docs
+		}
+		if parsed.Dep != "" {
+			got["dep"] = parsed.Dep
+		}
+		if parsed.Pka != "" {
+			got["pka"] = parsed.Pka
+		}
+		if parsed.Kid != "" {
+			got["kid"] = parsed.Kid
+		}
 		if !reflect.DeepEqual(got, rec.Expected) {
 			jg, _ := json.Marshal(got)
 			je, _ := json.Marshal(rec.Expected)

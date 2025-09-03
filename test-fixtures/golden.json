@@ -18,6 +18,36 @@
         "proto": "local",
         "desc": "Local Docker Agent"
       }
+    },
+    {
+      "name": "v1.1-with-docs-dep",
+      "raw": "v=aid1;uri=https://api.example.com/mcp;p=mcp;d=https://docs.example.com/agent;e=2026-01-01T00:00:00Z",
+      "expected": {
+        "v": "aid1",
+        "uri": "https://api.example.com/mcp",
+        "proto": "mcp",
+        "docs": "https://docs.example.com/agent",
+        "dep": "2026-01-01T00:00:00Z"
+      }
+    },
+    {
+      "name": "v1.1-with-pka-kid",
+      "raw": "v=aid1;uri=https://api.example.com/mcp;p=mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1",
+      "expected": {
+        "v": "aid1",
+        "uri": "https://api.example.com/mcp",
+        "proto": "mcp",
+        "pka": "z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ",
+        "kid": "g1"
+      }
+    }
+  ]
+  ,
+  "invalid": [
+    {
+      "name": "pka-missing-kid",
+      "raw": "v=aid1;uri=https://api.example.com/mcp;p=mcp;k=z111",
+      "errorCode": "ERR_INVALID_TXT"
     }
   ]
 }

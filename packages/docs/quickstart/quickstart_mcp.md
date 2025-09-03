@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — MCP'
+title: 'How to MCP'
 description: 'Discover an MCP server endpoint with AID and start a session'
 icon: material/connection
 ---
@@ -88,6 +88,8 @@ connectToMcpServer('supabase.agentcommunity.org');
 **Why AID here?** It turns a domain into the exact MCP endpoint, so clients can connect without hardcoding URLs.
 
 ---
+
+!!! info "Implementation Files" - [Generated spec types](../protocol/spec.ts) - [TypeScript constants](../packages/aid/src/constants.ts)
 
 **See also:**
 

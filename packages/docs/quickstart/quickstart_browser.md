@@ -1,5 +1,5 @@
 ---
-title: 'Quickstart — Browser'
+title: 'How to — Browser'
 description: 'Discover agents in the browser via DNS-over-HTTPS'
 icon: material/web
 ---
@@ -54,6 +54,8 @@ Security
 - [Python](./quickstart_python.md)
 - [Java](./quickstart_java.md)
 - [.NET](./quickstart_dotnet.md)
-- [Protocols & Auth Tokens](../protocols.md)
-- [Troubleshooting](../troubleshooting.md)
-- [Conformance](../conformance.md)
+- [Protocols & Auth Tokens](../Reference/protocols.md)
+- [Troubleshooting](../Reference/troubleshooting.md)
+- [Conformance](../Tooling/conformance.md)
+
+!!! info "Implementation Files" - [Generated constants](../packages/aid/src/constants.ts) - [Generated spec types](../protocol/spec.ts)

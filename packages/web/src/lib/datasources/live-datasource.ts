@@ -13,16 +13,17 @@ export class LiveDatasource implements Datasource {
       const libResult = await discover(domain);
       const lookupTime = Date.now() - startTime;
 
-      const resultUri = new URL(libResult.record.uri);
+      const record = libResult.record;
+      const resultUri = new URL(record.uri);
       const reconstructedTxt = Object.entries(libResult.record)
-        .map(([key, value]) => `${key}=${value}`)
+        .map(([k, v]) => `${k}=${v as string}`)
         .join(';');
 
       const ok: DiscoveryResult = {
         ok: true,
         value: {
           record: {
-            ...libResult.record,
+            ...record,
             host: resultUri.hostname,
             port: resultUri.port ? Number.parseInt(resultUri.port, 10) : 443,
           },
