@@ -2,13 +2,13 @@ name: CI (Go)
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feat/aid1.1-spec]
     paths:
       - 'packages/aid-go/**'
       - '.github/workflows/ci-go.yml'
       - '!**/*.md'
   pull_request:
-    branches: [main]
+    branches: [main, feat/aid1.1-spec]
     paths:
       - 'packages/aid-go/**'
       - '.github/workflows/ci-go.yml'
