@@ -14,6 +14,7 @@ const toolkitPackages = [
     description: 'Pure business logic for discovery, validation, identity',
     features: ['Discovery', 'Validation', 'Identity (PKA)'],
     href: 'https://www.npmjs.com/package/@agentcommunity/aid-engine',
+    docsHref: 'https://docs.agentcommunity.org/aid/Tooling/aid_engine',
     badge: 'Stable',
     kind: 'Tool',
   },
@@ -23,6 +24,7 @@ const toolkitPackages = [
     description: 'CLI wrapper around aid-engine: validate & generate records',
     features: ['Record linting', 'Security checks', 'JSON/YAML output'],
     href: 'https://www.npmjs.com/package/@agentcommunity/aid-doctor',
+    docsHref: 'https://docs.agentcommunity.org/aid/Tooling/aid_doctor',
     badge: 'Stable',
     kind: 'Tool',
   },
@@ -60,6 +62,7 @@ const toolkitPackages = [
     description: 'SDK for Node.js & browser',
     features: ['Promise-based API', 'TypeScript types', 'Built-in validation'],
     href: 'https://www.npmjs.com/package/@agentcommunity/aid',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_ts',
     badge: 'Stable',
     kind: 'Language',
   },
@@ -69,6 +72,7 @@ const toolkitPackages = [
     description: 'High-performance Go client',
     features: ['Context support', 'No external deps'],
     href: 'https://pkg.go.dev/github.com/agentcommunity/aid-go',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_go',
     badge: 'Stable',
     kind: 'Language',
   },
@@ -78,6 +82,7 @@ const toolkitPackages = [
     description: 'Idiomatic Python client',
     features: ['Type hints', 'Clean API'],
     href: 'https://pypi.org/project/aid-discovery/',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_python',
     badge: 'Stable',
     kind: 'Language',
   },
@@ -87,6 +92,7 @@ const toolkitPackages = [
     description: 'Idiomatic Rust client',
     features: ['Generated constants', 'Parser parity', 'Discovery support'],
     href: 'https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-rs',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_rust',
     badge: 'Stable',
     kind: 'Language',
   },
@@ -96,6 +102,7 @@ const toolkitPackages = [
     description: 'Idiomatic Java client',
     features: ['Generated constants', 'Parser parity', 'Discovery support'],
     href: 'https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-java',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_java',
     badge: 'Stable',
     kind: 'Language',
   },
@@ -105,6 +112,7 @@ const toolkitPackages = [
     description: 'C#/.NET client',
     features: ['Generated constants', 'Parser parity', 'Discovery support'],
     href: 'https://github.com/agentcommunity/agent-interface-discovery/tree/main/packages/aid-dotnet',
+    docsHref: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_dotnet',
     badge: 'Stable',
     kind: 'Language',
   },
@@ -181,19 +189,29 @@ export function Toolkit() {
                     ))}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full group-button shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105"
-                    asChild
-                  >
-                    <Link
-                      href={pkg.href}
-                      target={pkg.href.startsWith('http') ? '_blank' : undefined}
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className="w-full group-button shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105"
+                      asChild
                     >
-                      {pkg.href.startsWith('/') ? 'Try Now' : 'View Package'}
-                      <ExternalLink className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-                    </Link>
-                  </Button>
+                      <Link
+                        href={pkg.href}
+                        target={pkg.href.startsWith('http') ? '_blank' : undefined}
+                      >
+                        {pkg.href.startsWith('/') ? 'Try Now' : 'View Package'}
+                        <ExternalLink className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                      </Link>
+                    </Button>
+                    {pkg.docsHref && (
+                      <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+                        <a href={pkg.docsHref} target="_blank" rel="noopener noreferrer">
+                          📚 Documentation
+                          <ExternalLink className="ml-1 h-3 w-3" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}

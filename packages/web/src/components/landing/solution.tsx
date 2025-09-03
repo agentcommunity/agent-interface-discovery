@@ -10,6 +10,10 @@ const solutions = [
       'Add a single _agent.example.com TXT record. That&apos;s it. No registries, no APIs, no complexity.',
     iconColor: 'text-primary',
     iconBg: 'bg-primary/10',
+    links: [
+      { label: 'Quick Start', href: 'https://docs.agentcommunity.org/aid/quickstart/index' },
+      { label: 'Specification', href: 'https://docs.agentcommunity.org/aid/specification' },
+    ],
   },
   {
     number: '2',
@@ -19,6 +23,16 @@ const solutions = [
       'Any tool can instantly find your agent by looking up the _agent subdomain. Zero manual configuration.',
     iconColor: 'text-accent-foreground',
     iconBg: 'bg-accent/20',
+    links: [
+      {
+        label: 'Discovery API',
+        href: 'https://docs.agentcommunity.org/aid/Reference/discovery_api',
+      },
+      {
+        label: 'Troubleshooting',
+        href: 'https://docs.agentcommunity.org/aid/Reference/troubleshooting',
+      },
+    ],
   },
   {
     number: '3',
@@ -28,6 +42,15 @@ const solutions = [
       'The same DNS record works for MCP, A2A, OpenAPI, local packages and any custom protocol.',
     iconColor: 'text-primary',
     iconBg: 'bg-muted',
+    links: [
+      { label: 'MCP Guide', href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_mcp' },
+      { label: 'A2A Guide', href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_a2a' },
+      {
+        label: 'OpenAPI Guide',
+        href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_openapi',
+      },
+      { label: 'Protocols', href: 'https://docs.agentcommunity.org/aid/Reference/protocols' },
+    ],
   },
   {
     number: '4',
@@ -37,6 +60,13 @@ const solutions = [
       'Publish a public key (PKA) and let clients verify your endpoint using HTTP Message Signatures (Ed25519).',
     iconColor: 'text-primary',
     iconBg: 'bg-primary/10',
+    links: [
+      {
+        label: 'Identity & PKA',
+        href: 'https://docs.agentcommunity.org/aid/Reference/identity_pka',
+      },
+      { label: 'Security', href: 'https://docs.agentcommunity.org/aid/security' },
+    ],
   },
 ];
 
@@ -77,6 +107,21 @@ export function Solution() {
                   <CardDescription className="text-base leading-relaxed transition-colors duration-300 group-hover:text-muted-foreground/80">
                     {solution.description}
                   </CardDescription>
+                  {solution.links && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {solution.links.map((link, linkIndex) => (
+                        <a
+                          key={linkIndex}
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground hover:text-primary transition-colors duration-200 underline decoration-1 underline-offset-2"
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
