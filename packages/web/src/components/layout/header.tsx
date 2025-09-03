@@ -70,7 +70,6 @@ export function Header() {
   }, [pathname]);
 
   const navigation = [
-    { name: 'Join Community', href: 'https://agentcommunity.org/auth/sign-in', external: true },
     { name: 'Docs', href: 'https://docs.agentcommunity.org/aid', external: true },
     {
       name: 'GitHub',
@@ -79,23 +78,51 @@ export function Header() {
     },
   ];
 
+  const centeredLink = {
+    name: 'Secure your .agent domain',
+    href: 'https://agentcommunity.org/auth/sign-in',
+    external: true,
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-soft shadow-soft">
       <div className="container flex h-16 items-center justify-between">
         {/* === Left Side: Logo === */}
         <Logo className="flex-shrink-0" asLink />
 
-        {/* === Center: Workbench Switcher (Desktop Only) === */}
-        {isWorkbench && (
-          <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex">
+        {/* === Center: Workbench Switcher or Centered Link === */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden sm:flex">
+          {isWorkbench ? (
             <WorkbenchModeSwitcher />
-          </div>
-        )}
+          ) : (
+            <Link
+              href={centeredLink.href}
+              target={centeredLink.external ? '_blank' : undefined}
+              rel={centeredLink.external ? 'noopener noreferrer' : undefined}
+              className="transition-all duration-200 hover:text-foreground flex items-center gap-1 hover:scale-105 text-sm font-medium text-muted-foreground"
+            >
+              {centeredLink.name}
+              {centeredLink.external && <ExternalLink className="h-3 w-3" />}
+            </Link>
+          )}
+        </div>
 
         {/* === Right Side: Nav, Buttons, and Mobile Toggles === */}
         <div className="flex items-center gap-2">
           {/* --- Desktop Navigation --- */}
           <nav className="hidden sm:flex items-center space-x-6 text-sm font-medium">
+            {/* Add centered link before Docs on workbench page */}
+            {isWorkbench && (
+              <Link
+                href={centeredLink.href}
+                target={centeredLink.external ? '_blank' : undefined}
+                rel={centeredLink.external ? 'noopener noreferrer' : undefined}
+                className="transition-all duration-200 hover:text-foreground flex items-center gap-1 hover:scale-105 text-muted-foreground"
+              >
+                {centeredLink.name}
+                {centeredLink.external && <ExternalLink className="h-3 w-3" />}
+              </Link>
+            )}
             {navigation.map((item) => (
               <Link
                 key={item.href}
@@ -137,6 +164,32 @@ export function Header() {
       {isMenuOpen && (
         <div className="sm:hidden bg-background/95 backdrop-blur-soft border-t">
           <nav className="container flex flex-col items-start space-y-4 py-4">
+            {/* Add centered link before Docs on workbench page */}
+            {isWorkbench && (
+              <Link
+                href={centeredLink.href}
+                target={centeredLink.external ? '_blank' : undefined}
+                rel={centeredLink.external ? 'noopener noreferrer' : undefined}
+                className="text-lg font-medium text-foreground hover:text-primary flex items-center gap-1.5"
+                onClick={() => setIsMenuOpen(false)} // Close menu on click
+              >
+                {centeredLink.name}
+                {centeredLink.external && <ExternalLink className="h-4 w-4" />}
+              </Link>
+            )}
+            {/* Centered link at top for non-workbench pages */}
+            {!isWorkbench && (
+              <Link
+                href={centeredLink.href}
+                target={centeredLink.external ? '_blank' : undefined}
+                rel={centeredLink.external ? 'noopener noreferrer' : undefined}
+                className="text-lg font-medium text-foreground hover:text-primary flex items-center gap-1.5"
+                onClick={() => setIsMenuOpen(false)} // Close menu on click
+              >
+                {centeredLink.name}
+                {centeredLink.external && <ExternalLink className="h-4 w-4" />}
+              </Link>
+            )}
             {navigation.map((item) => (
               <Link
                 key={item.href}
