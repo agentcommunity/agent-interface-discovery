@@ -12,7 +12,7 @@ import {
 
 interface ExamplePickerProps {
   variant: 'buttons' | 'toggle';
-  onSelect: (content: string) => void;
+  onSelect: (example: Example) => void;
   disabled?: boolean;
 }
 
@@ -50,18 +50,17 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
         <div className="border-b border-muted mb-4 w-full" />
         <ToggleGroup
           type="single"
-          onValueChange={(value) => value && onSelect(value)}
+          onValueChange={(value) => {
+            const ex = [...BASIC_EXAMPLES, ...REAL_WORLD_EXAMPLES].find((e) => e.content === value);
+            if (ex) onSelect(ex);
+          }}
           className="flex flex-col sm:flex-row gap-6 w-full items-start"
         >
           <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
             <h3 className="text-sm font-semibold">Simple Examples</h3>
             <div className="flex flex-wrap gap-2 w-full">
               {BASIC_EXAMPLES.map((ex) => (
-                <ToggleGroupItem
-                  key={ex.title}
-                  value={ex.content}
-                  className="text-sm font-medium text-foreground"
-                >
+                <ToggleGroupItem key={ex.title} value={ex.content} className="text-sm font-medium text-foreground">
                   {ex.title}
                 </ToggleGroupItem>
               ))}
@@ -71,11 +70,7 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
             <h3 className="text-sm font-semibold">Real World Examples</h3>
             <div className="flex flex-wrap gap-2 w-full">
               {REAL_WORLD_EXAMPLES.map((ex) => (
-                <ToggleGroupItem
-                  key={ex.title}
-                  value={ex.content}
-                  className="flex items-center gap-2 text-sm font-medium !text-foreground"
-                >
+                <ToggleGroupItem key={ex.title} value={ex.content} className="flex items-center gap-2 text-sm font-medium !text-foreground">
                   <ExampleItem example={ex} />
                 </ToggleGroupItem>
               ))}
@@ -96,7 +91,7 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
           key={ex.title}
           variant="outline"
           className="text-sm px-3 py-1 h-auto"
-          onClick={() => onSelect(ex.domain || ex.content)}
+          onClick={() => onSelect(ex)}
           disabled={disabled}
         >
           <ExampleItem example={ex} />

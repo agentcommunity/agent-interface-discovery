@@ -5,7 +5,7 @@ interface TitleSectionProps {
 const MODE_CONFIG = {
   resolver: {
     title: 'Resolver',
-    subtitle: 'Discover and initialize MCP agents from any domain',
+    subtitle: 'Discover and initialize agents from any domain',
   },
   generator: {
     title: 'Generator',
@@ -19,7 +19,7 @@ export function TitleSection({ mode }: TitleSectionProps) {
   return (
     <div className="text-center pt-2 pb-2">
       <h1 className="text-3xl font-semibold">
-        <span className="text-gray-900">Agent Interface Discovery </span>
+        <span className="text-gray-900">Agent Identity & Discovery </span>
         <span className="text-gray-500">{config.title}</span>
       </h1>
       <p className="text-gray-600 text-lg">{config.subtitle}</p>

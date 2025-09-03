@@ -8,13 +8,20 @@ import Head from 'next/head';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Agent Interface Discovery - the DNS forAgents',
-  description:
-    'The open, decentralized DNS-based discovery protocol for AI agents. Register your .agent domain and connect your agent to the world.',
+  title: 'Agent Identity & Discovery - the DNS forAgents',
+  description: 'DNS for Agents. - Identity for the Agentic Web.',
   metadataBase: new URL('https://aid.agentcommunity.org'),
   keywords: [
     'agent domain',
     '.agent',
+    'identity',
+    'agent identity',
+    'agent discovery',
+    'agent discovery protocol',
+    'agent discovery standard',
+    'agent discovery protocol',
+    'agent standard',
+    'agent community',
     'AI agents',
     'DNS',
     'discovery',
@@ -26,16 +33,16 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Agent Community' }],
   openGraph: {
-    title: 'Agent Interface Discovery - the DNS forAgents',
-    description: 'Agent Interface Discovery -  the universal standard for agent discovery.',
+    title: 'Agent Identity & Discovery - the DNS forAgents',
+    description: 'DNS for Agents. - Identity for the Agentic Web.',
     url: 'https://aid.agentcommunity.org',
-    siteName: '.agent Domain',
+    siteName: '_agent Identity & Discovery',
     images: [
       {
         url: '/og-card.png',
         width: 1200,
         height: 630,
-        alt: '_agent Interface Discovery',
+        alt: 'Agent Identity & Discovery',
       },
     ],
     locale: 'en_US',
@@ -45,8 +52,8 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@agentcommunity_',
     creator: '@agentcommunity_',
-    title: 'Agent Interface Discovery - the DNS forAgents',
-    description: 'DNS for Agents by Agent Community.',
+    title: 'Agent Identity & Discovery - the DNS forAgents',
+    description: 'DNS for Agents. - Identity for the Agentic Web.',
     images: ['https://aid.agentcommunity.org/og-card.png'], // absolute URL
   },
   robots: {
@@ -67,10 +74,10 @@ export const metadata: Metadata = {
   other: {
     'twitter:site': '@agentcommunity_',
     'twitter:creator': '@agentcommunity_',
-    'twitter:title': 'Agent Interface Discovery - the DNS forAgents',
-    'twitter:description': 'Decentralized DNS based agent discovery protocol.',
+    'twitter:title': 'Agent Identity & Discovery - the DNS forAgents',
+    'twitter:description': 'DNS for Agents. - Identity for the Agentic Web.',
     'twitter:image': 'https://aid.agentcommunity.org/og-card.png', // absolute URL
-    'twitter:image:alt': '_agent banner',
+    'twitter:image:alt': 'Agent Identity & Discovery',
   },
 };
 
@@ -87,10 +94,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:site" content="@agentcommunity_" />
         <meta name="twitter:creator" content="@agentcommunity_" />
-        <meta name="twitter:title" content="Agent Interface Discovery - the DNS forAgents" />
-        <meta name="twitter:description" content="DNS for Agents by Agent Community." />
+        <meta name="twitter:title" content="Agent Identity & Discovery - the DNS forAgents" />
+        <meta name="twitter:description" content="DNS for Agents. - Identity for the Agentic Web." />
         <meta name="twitter:image" content="https://aid.agentcommunity.org/og-card.png" />
-        <meta name="twitter:image:alt" content="_agent banner" />
+        <meta name="twitter:image:alt" content="Agent Identity & Discovery" />
       </Head>
       <body className={inter.className}>
         <div className="flex h-dvh flex-col">

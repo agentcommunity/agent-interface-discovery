@@ -50,11 +50,11 @@ export function Hero() {
             variant="secondary"
             className="mb-6 animate-fade-in shadow-soft-xs hover:shadow-soft-md transition-all duration-200"
           >
-            v{aidVersion} • DNS-based Agent Discovery
+            v{aidVersion} • DNS-based Agent Identity & Discovery
           </Badge>
 
           <h1 className="mb-8 text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-balance animate-fade-in-up">
-            _agent Interface <span className=" text-muted-foreground">Discovery</span>
+            _agent Identity<span className=" text-muted-foreground"> & Discovery</span>
           </h1>
 
           <p className="mx-auto mb-8 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">

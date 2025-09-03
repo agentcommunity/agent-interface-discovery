@@ -7,6 +7,13 @@ export interface HandshakeSuccessData {
   protocolVersion: string;
   serverInfo: { name: string; version: string };
   capabilities: { id: string; type: 'tool' | 'resource' }[];
+  security?: {
+    dnssec?: boolean;
+    pka?: { present: boolean; attempted: boolean; verified: boolean | null; kid: string | null };
+    tls?: { checked: boolean; valid: boolean | null; daysRemaining: number | null };
+    warnings?: Array<{ code: string; message: string }>;
+    errors?: Array<{ code: string; message: string }>;
+  };
 }
 
 /**

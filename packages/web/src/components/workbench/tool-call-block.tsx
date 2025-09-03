@@ -57,9 +57,9 @@ function getStatusColor(status: ToolStatus) {
     case 'success':
       return 'text-green-500';
     case 'error':
-      return 'text-red-500';
+      return 'text-gray-400';
     case 'needs_auth':
-      return 'text-yellow-600';
+      return 'text-gray-400';
     default:
       // The default case correctly handles 'running' and 'pending'.
       return 'text-gray-400';

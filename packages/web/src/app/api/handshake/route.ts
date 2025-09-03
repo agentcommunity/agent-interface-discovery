@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { runCheck } from '@agentcommunity/aid-engine';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { WebSocketClientTransport } from '@modelcontextprotocol/sdk/client/websocket.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
@@ -89,12 +90,33 @@ export async function POST(request: Request) {
     const capabilities = await client.listTools();
     await client.close();
 
+    // Build a minimal security snapshot via engine (domain-based)
+    let security: Record<string, unknown> | undefined;
+    try {
+      const report = await runCheck(url.hostname, {
+        timeoutMs: 4000,
+        allowFallback: true,
+        wellKnownTimeoutMs: 1500,
+        showDetails: true,
+      });
+      security = {
+        dnssec: report.dnssec.present,
+        pka: report.pka,
+        tls: report.tls,
+        warnings: report.record.warnings,
+        errors: report.record.errors,
+      };
+    } catch {
+      /* best-effort; ignore */
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         protocolVersion: '2024-11-05',
         serverInfo: { name: 'Connected Server', version: '1.0.0' },
         capabilities: capabilities.tools ?? [],
+        security,
       },
     });
   } catch (error: unknown) {

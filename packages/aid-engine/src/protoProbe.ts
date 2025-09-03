@@ -8,11 +8,9 @@ export async function runProtocolProbe(
 ): Promise<{ attempt: ProbeAttempt; error?: AidError }> {
   const name = `_agent._${protocol}.${domain}`;
   try {
-    const res = await discover(domain, {
-      protocol,
+    const res = await discover(name, {
       timeout: timeoutMs,
       wellKnownFallback: false, // Probes are DNS-only
-      protocolSubdomain: true, // Force probe
     });
     return {
       attempt: {

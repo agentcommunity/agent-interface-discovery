@@ -6,6 +6,10 @@ import type { DiscoveryResult } from '@/hooks/use-discovery';
 import type { HandshakeResult } from '@/hooks/use-connection';
 import { DiscoverySuccessBlock } from './discovery-success-block';
 import { ToolListSummary } from './tool-list-summary';
+import { SecurityBadge } from '@/components/ui/security-badge';
+import { TlsInspector } from '@/components/ui/tls-inspector';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 import type { ChatLogMessage } from '@/hooks/use-chat-engine';
 
 // --- Removed legacy type definitions ---
@@ -111,6 +115,57 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
       codeSnippets={getCodeSnippets()}
       defaultExpanded={status === 'error'}
     >
+      {result?.ok && (
+        <div className="flex flex-wrap gap-2 text-xs mb-2">
+          {result.value.metadata.dnssecPresent !== undefined && (
+            <SecurityBadge variant={result.value.metadata.dnssecPresent ? 'success' : 'info'}>
+              {result.value.metadata.dnssecPresent ? 'DNSSEC signed' : 'DNSSEC not present'}
+            </SecurityBadge>
+          )}
+          {result.value.metadata.pka && (
+            <SecurityBadge
+              variant={
+                result.value.metadata.pka.verified === true
+                  ? 'success'
+                  : result.value.metadata.pka.present
+                    ? 'warning'
+                    : 'info'
+              }
+            >
+              {result.value.metadata.pka.verified === true
+                ? 'PKA verified'
+                : result.value.metadata.pka.present
+                  ? 'PKA present'
+                  : 'PKA not present'}
+            </SecurityBadge>
+          )}
+          {result.value.metadata.tls && (
+            <TlsInspector
+              valid={result.value.metadata.tls.valid}
+              daysRemaining={result.value.metadata.tls.daysRemaining}
+            />
+          )}
+        </div>
+      )}
+      {result?.ok && (
+        <Collapsible>
+          <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground gap-1 hover:text-foreground mt-2">
+            <ChevronDown className="w-3 h-3" /> Security details
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 text-xs space-y-2">
+            {result.value.metadata.txtRecord && (
+              <div>
+                <div className="font-medium">TXT bytes</div>
+                <div className="font-mono break-all">{result.value.metadata.txtRecord.length}</div>
+              </div>
+            )}
+            <div>
+              <div className="font-medium">DNS query</div>
+              <div className="font-mono break-all">{result.value.metadata.dnsQuery}</div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
       {result && !result.ok && (
         <>
           <DiscoveryDetailsView result={result} />
@@ -181,14 +236,16 @@ export function ConnectionToolBlock({
       const capCount = result.value?.capabilities?.length || 0;
       return `Connected (${capCount} capabilities)`;
     } else if (status === 'needs_auth') {
-      return 'Authentication required';
+      return 'Ⓧ Connection not established (authentication required). AID worked.';
     } else {
       const errorMessage = (result.error as AuthError)?.message;
-      return errorMessage || 'Connection failed';
+      return `Ⓧ Agent connection ${
+        discoveryResult?.ok ? discoveryResult.value?.record?.protocol?.toUpperCase() : ''
+      }${errorMessage ? ` – ${errorMessage}` : ''}`;
     }
   };
 
-  const defaultExpand = status === 'needs_auth' || status === 'error';
+  const defaultExpand = false;
 
   // Helper: get compliantAuth and metadata from error if present
   let compliantAuth: boolean | null = null;
@@ -207,6 +264,67 @@ export function ConnectionToolBlock({
       codeSnippets={getCodeSnippets()}
       defaultExpanded={defaultExpand}
     >
+      {result?.ok && result.value.security && (
+        <div className="flex flex-wrap gap-2 text-xs mb-2">
+          {typeof result.value.security.dnssec === 'boolean' && (
+            <SecurityBadge variant={result.value.security.dnssec ? 'success' : 'info'}>
+              {result.value.security.dnssec ? 'DNSSEC signed' : 'DNSSEC not present'}
+            </SecurityBadge>
+          )}
+          {result.value.security.pka && (
+            <SecurityBadge
+              variant={
+                result.value.security.pka.verified === true
+                  ? 'success'
+                  : result.value.security.pka.present
+                    ? 'warning'
+                    : 'info'
+              }
+            >
+              {result.value.security.pka.verified === true
+                ? 'PKA verified'
+                : result.value.security.pka.present
+                  ? 'PKA present'
+                  : 'PKA not present'}
+            </SecurityBadge>
+          )}
+          {result.value.security.tls && (
+            <TlsInspector
+              valid={result.value.security.tls.valid}
+              daysRemaining={result.value.security.tls.daysRemaining}
+            />
+          )}
+        </div>
+      )}
+      {result?.ok && result.value.security && (
+        <Collapsible>
+          <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground gap-1 hover:text-foreground mt-2">
+            <ChevronDown className="w-3 h-3" /> Security details
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 text-xs space-y-2">
+            {result.value.security.warnings && result.value.security.warnings.length > 0 && (
+              <div>
+                <div className="font-medium">Warnings</div>
+                <ul className="list-disc pl-4">
+                  {result.value.security.warnings.map((w, i) => (
+                    <li key={i} className="font-mono break-words">{w.code}: {w.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {result.value.security.errors && result.value.security.errors.length > 0 && (
+              <div>
+                <div className="font-medium">Errors</div>
+                <ul className="list-disc pl-4">
+                  {result.value.security.errors.map((e, i) => (
+                    <li key={i} className="font-mono break-words text-red-700">{e.code}: {e.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
       {result && <ConnectionDetailsView result={result} />}
       {status === 'needs_auth' &&
         (compliantAuth && metadata ? (

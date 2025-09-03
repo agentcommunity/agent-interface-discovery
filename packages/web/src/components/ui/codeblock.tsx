@@ -28,16 +28,18 @@ export function Codeblock({
     return (
       <div
         className={cn(
-          'flex items-center justify-between gap-2 px-3 py-2 bg-muted border rounded-lg text-sm',
+          'flex items-center justify-between gap-2 px-3 py-2 bg-muted border rounded-lg text-sm max-w-full',
           className,
         )}
       >
-        <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="flex items-center gap-2 overflow-x-auto min-w-0">
           {icon && icon}
           {title && (
-            <span className="text-muted-foreground font-medium whitespace-nowrap">{title}</span>
+            <span className="text-muted-foreground font-medium whitespace-nowrap shrink-0">{title}</span>
           )}
-          <code className="text-foreground font-mono text-sm whitespace-nowrap">{content}</code>
+          <code className="text-foreground font-mono text-sm whitespace-pre break-all truncate block max-w-[60vw] sm:max-w-[50vw]">
+            {content}
+          </code>
         </div>
         <CopyButton
           textToCopy={content}

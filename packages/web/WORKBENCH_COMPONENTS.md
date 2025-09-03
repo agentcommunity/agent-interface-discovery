@@ -373,6 +373,26 @@ The goal of this phase was to make the application gracefully handle any user in
 | Local test harness: tiny in-repo mock MCP server                                                        | [x]    | Added `/tests/mock-server` for CI             |
 | CI: run integration test against Vercel preview deployment                                              | [x]    | Added playwright test in `packages/e2e-tests` |
 
+### **Phase 2.1: AID v1.1 Integration (In Progress)**
+
+**Goal:** Seamlessly integrate v1.1 security features into the existing workbench architecture without breaking the chat-based discovery flow.
+
+| Component | v1.1 Enhancement | UI Integration | Status |
+|-----------|------------------|----------------|---------|
+| **DiscoveryToolBlock** | PKA verification status | Security badges in parsed record display | 🔄 Pending |
+| | DNSSEC validation | Green/gray DNSSEC indicator | 🔄 Pending |
+| | TLS certificate info | Certificate expiry warnings | 🔄 Pending |
+| | Documentation URLs | Clickable docs link in record display | 🔄 Pending |
+| | Deprecation warnings | Yellow warning banner for deprecated records | 🔄 Pending |
+| **ConnectionToolBlock** | PKA handshake verification | PKA signature validation status | 🔄 Pending |
+| | Enhanced error codes | Detailed error messages with spec references | 🔄 Pending |
+| | Security validation | TLS/DNSSEC status carryover from discovery | 🔄 Pending |
+| **GeneratorPanel** | v1.1 field support | New form fields: docs, dep, pka, kid | 🔄 Pending |
+| | PKA key generation | Integrated key generation UI | 🔄 Pending |
+| | Alias optimization | Toggle between full keys and aliases | 🔄 Pending |
+| **useChatEngine** | v1.1-aware narratives | Context-aware messaging for security features | 🔄 Pending |
+| **Tool Manifests** | Security-focused demos | New manifests showcasing PKA/DNSSEC features | 🔄 Pending |
+
 **Decision Gate:** If the SDK prototype fails size/perf budget, pivot to the previously-defined custom minimal implementation and keep the remainder of the checklist unchanged.
 
 ### **Phase 3: Auth-Aware Handshake & Real-DNS Cleanup** ✅ _Completed_\*
