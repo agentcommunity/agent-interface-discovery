@@ -1,5 +1,12 @@
 # @agentcommunity/aid-doctor
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [e3929c1]
+  - @agentcommunity/aid-engine@0.2.1
+
 ## 1.1.0
 
 ### Minor Changes
