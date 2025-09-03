@@ -8,8 +8,8 @@ import Head from 'next/head';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Agent Identity & Discovery - the DNS forAgents',
-  description: 'DNS for Agents. - Identity for the Agentic Web.',
+  title: 'Agent Identity & Discovery — DNS for Agents',
+  description: 'DNS-first agent discovery and identity for the agentic web.',
   metadataBase: new URL('https://aid.agentcommunity.org'),
   keywords: [
     'agent domain',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     'agent discovery',
     'agent discovery protocol',
     'agent discovery standard',
-    'agent discovery protocol',
+    'endpoint identity',
     'agent standard',
     'agent community',
     'AI agents',
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Agent Community' }],
   openGraph: {
-    title: 'Agent Identity & Discovery - the DNS forAgents',
-    description: 'DNS for Agents. - Identity for the Agentic Web.',
+    title: 'Agent Identity & Discovery — DNS for Agents',
+    description: 'DNS-first agent discovery and identity for the agentic web.',
     url: 'https://aid.agentcommunity.org',
     siteName: '_agent Identity & Discovery',
     images: [
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: '/favicon.png',
     apple: '/apple-touch-icon.png',
   },
   other: {
@@ -95,7 +95,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="twitter:site" content="@agentcommunity_" />
         <meta name="twitter:creator" content="@agentcommunity_" />
         <meta name="twitter:title" content="Agent Identity & Discovery - the DNS forAgents" />
-        <meta name="twitter:description" content="DNS for Agents. - Identity for the Agentic Web." />
+        <meta
+          name="twitter:description"
+          content="DNS for Agents. - Identity for the Agentic Web."
+        />
         <meta name="twitter:image" content="https://aid.agentcommunity.org/og-card.png" />
         <meta name="twitter:image:alt" content="Agent Identity & Discovery" />
       </Head>

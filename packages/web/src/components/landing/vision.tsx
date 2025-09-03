@@ -13,7 +13,7 @@ const visionFeatures = [
       'Cross-platform interoperability',
       'Automatic capability discovery',
       'Zero-config networking',
-      'Universal protocol bridge',
+      'Verifiable agent identity (PKA)',
     ],
   },
   {
@@ -24,7 +24,7 @@ const visionFeatures = [
     highlights: [
       'MIT-licensed core',
       'Self-host or cloud',
-      'Pluggable runtimes',
+      'Token registries & open index',
       'Community governance',
     ],
   },

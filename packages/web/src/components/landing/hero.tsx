@@ -58,7 +58,7 @@ export function Hero() {
           </h1>
 
           <p className="mx-auto mb-8 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
-            DNS for agents.
+            DNS for agents. Discover endpoints and verify identity.
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-center mb-12 animate-fade-in-up">
@@ -82,6 +82,14 @@ export function Hero() {
               <Link href="https://docs.agentcommunity.org/aid/specification">
                 Read the Specification
                 <ExternalLink className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
+          </div>
+
+          <div className="flex justify-center">
+            <Button variant="ghost" asChild className="text-sm">
+              <Link href="https://docs.agentcommunity.org/aid/Reference/identity_pka">
+                Learn Agent Identity
               </Link>
             </Button>
           </div>
@@ -114,6 +122,9 @@ export function Hero() {
                   npm install @agentcommunity/aid
                 </span>
                 <CopyButton textToCopy="npm install @agentcommunity/aid" />
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                Core SDK. The CLI wraps the engine.
               </div>
             </div>
           </div>

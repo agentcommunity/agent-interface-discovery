@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Compass, Rocket, CheckCircle2 } from 'lucide-react';
+import { Compass, Rocket, Package } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Codeblock } from '@/components/ui/codeblock';
 
@@ -26,6 +26,7 @@ fmt.Println(rec.Record.URI) // https://api.example.com/mcp`,
 };
 
 const DNS_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;uri=https://api.example.com/mcp;p=mcp"`;
+const DNS_PKA_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;u=https://api.example.com/mcp;p=mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1"`;
 const TERRAFORM_SNIPPET = `resource "cloudflare_record" "aid" {
   zone_id = var.zone_id
   name    = "_agent"
@@ -33,25 +34,23 @@ const TERRAFORM_SNIPPET = `resource "cloudflare_record" "aid" {
   value   = "v=aid1;uri=https://api.example.com/mcp;p=mcp"
 }`;
 
-const VALIDATE_CLI = `# Install validator
-npm i -g @agentcommunity/aid-doctor
-
-# Validate your domain
-aid-doctor check example.com`;
+const ENGINE_INSTALL = `# Install engine (core business logic)
+pnpm add @agentcommunity/aid-engine
+# or
+npm i @agentcommunity/aid-engine`;
 
 // ---------------------------------------------------------------------------
 
 export function QuickStart() {
-  const [step, setStep] = useState<'discover' | 'publish' | 'validate'>('discover');
+  const [step, setStep] = useState<'discover' | 'publish' | 'engine'>('discover');
   const [lang, setLang] = useState<'typescript' | 'python' | 'go'>('typescript');
-  const [publishTab, setPublishTab] = useState<'dns' | 'terraform'>('dns');
+  const [publishTab, setPublishTab] = useState<'dns' | 'terraform' | 'dns+identity'>('dns');
 
-  const STEPS: Array<{ id: 'discover' | 'publish' | 'validate'; label: string; Icon: LucideIcon }> =
-    [
-      { id: 'discover', label: 'Discover', Icon: Compass },
-      { id: 'publish', label: 'Publish', Icon: Rocket },
-      { id: 'validate', label: 'Validate', Icon: CheckCircle2 },
-    ];
+  const STEPS: Array<{ id: 'discover' | 'publish' | 'engine'; label: string; Icon: LucideIcon }> = [
+    { id: 'discover', label: 'Discover', Icon: Compass },
+    { id: 'publish', label: 'Publish', Icon: Rocket },
+    { id: 'engine', label: 'Install Engine', Icon: Package },
+  ];
 
   return (
     <section className="section-padding bg-muted/30">
@@ -128,10 +127,16 @@ export function QuickStart() {
               {step === 'publish' && (
                 <Codeblock
                   title={publishTab}
-                  content={publishTab === 'dns' ? DNS_SNIPPET : TERRAFORM_SNIPPET}
+                  content={
+                    publishTab === 'dns'
+                      ? DNS_SNIPPET
+                      : (publishTab === 'terraform'
+                        ? TERRAFORM_SNIPPET
+                        : DNS_PKA_SNIPPET)
+                  }
                   rightSlot={
                     <div className="flex gap-1">
-                      {(['dns', 'terraform'] as const).map((t) => (
+                      {(['dns', 'terraform', 'dns+identity'] as const).map((t) => (
                         <Button
                           key={t}
                           size="sm"
@@ -147,15 +152,19 @@ export function QuickStart() {
                 />
               )}
 
-              {step === 'validate' && (
+              {step === 'engine' && (
                 <div className="space-y-4">
-                  <Codeblock title="cli" content={VALIDATE_CLI} />
-                  <Button
-                    asChild
-                    className="shadow-soft hover:shadow-soft-md transition-all duration-200 hover:scale-105 w-full sm:w-auto"
-                  >
-                    <a href="/workbench" target="_blank" rel="noopener noreferrer">
-                      Open Web Workbench
+                  <Codeblock title="install" content={ENGINE_INSTALL} />
+                  <div className="text-sm text-muted-foreground">
+                    Use the engine for discovery, validation, and identity.
+                  </div>
+                  <Button variant="ghost" asChild className="text-sm">
+                    <a
+                      href="https://docs.agentcommunity.org/aid/Tooling/aid_engine"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Engine Docs
                     </a>
                   </Button>
                 </div>

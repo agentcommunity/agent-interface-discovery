@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Globe, Zap, Layers } from 'lucide-react';
+import { Globe, Zap, Layers, ShieldCheck } from 'lucide-react';
 
 const solutions = [
   {
@@ -29,6 +29,15 @@ const solutions = [
     iconColor: 'text-primary',
     iconBg: 'bg-muted',
   },
+  {
+    number: '4',
+    icon: ShieldCheck,
+    title: 'Agent Identity',
+    description:
+      'Publish a public key (PKA) and let clients verify your endpoint using HTTP Message Signatures (Ed25519).',
+    iconColor: 'text-primary',
+    iconBg: 'bg-primary/10',
+  },
 ];
 
 export function Solution() {
@@ -45,7 +54,7 @@ export function Solution() {
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {solutions.map((solution, index) => (
               <Card
                 key={index}
