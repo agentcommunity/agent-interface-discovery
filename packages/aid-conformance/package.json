@@ -1,6 +1,6 @@
 {
   "name": "@agentcommunity/aid-conformance",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Conformance fixtures and runner for Agent Identity & Discovery (AID)",
   "keywords": [
     "agent",

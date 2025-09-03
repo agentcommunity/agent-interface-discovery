@@ -1,6 +1,16 @@
 # @agentcommunity/aid-engine
 
-Pure business logic library for Agent Identity & Discovery (AID) – built by the team at [agentcommunity.org](https://agentcommunity.org).
+# Agent Identity & Discovery
+
+> DNS for agents
+
+AID as the public address book for the agentic web.
+
+It's a simple, open standard that uses the internet's own directory—DNS—to answer one question: **"Given a domain, where is its AI agent, and how do I know it's the real one?"**
+
+No more hunting through API docs. No more manual configuration. It's the zero-friction layer for a world of interconnected agents.
+
+Built by the team at [agentcommunity.org](https://agentcommunity.org).
 
 - **Website**: [aid.agentcommunity.org](https://aid.agentcommunity.org)
 - **Docs**: [docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)

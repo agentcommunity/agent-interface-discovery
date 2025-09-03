@@ -12,13 +12,13 @@ icon: material/dns
 
 > Type a domain. Connect to its agent. Instantly.
 
-Think of AID as the public address book for the agentic web.
+AID as the public address book for the agentic web.
 
 It's a simple, open standard that uses the internet's own directory—DNS—to answer one question: **"Given a domain, where is its AI agent, and how do I know it's the real one?"**
 
 No more hunting through API docs. No more manual configuration. It's the zero-friction layer for a world of interconnected agents.
 
-[**:rocket: Try it Now — Live Resolver & Generator**](https://aid.agentcommunity.org/workbench){ .md-button .md-button--secondary target="\_blank" }
+[🚀 Try it Now — Live Resolver & Generator\*\*](https://aid.agentcommunity.org/workbench){ .md-button .md-button--secondary target="\_blank" }
 
 ---
 
