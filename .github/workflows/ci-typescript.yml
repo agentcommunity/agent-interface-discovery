@@ -2,7 +2,7 @@ name: CI (TypeScript)
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feat/aid1.1-spec]
     paths:
       - 'packages/aid/**'
       - 'packages/aid-conformance/**'
@@ -21,7 +21,7 @@ on:
       - 'eslint.config.mjs'
       - '!**/*.md'
   pull_request:
-    branches: [main]
+    branches: [main, feat/aid1.1-spec]
     paths:
       - 'packages/aid/**'
       - 'packages/aid-conformance/**'

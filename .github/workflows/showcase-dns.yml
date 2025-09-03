@@ -2,9 +2,10 @@ name: Showcase DNS
 
 on:
   pull_request:
+    branches: [main, feat/aid1.1-spec]
     paths: ['showcase/terraform/**']
   push:
-    branches: [main]
+    branches: [main, feat/aid1.1-spec]
     paths: ['showcase/terraform/**']
   workflow_dispatch: {}
 
