@@ -3,8 +3,16 @@ on:
   workflow_dispatch:
   push:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-dotnet/**'
+      - '.github/workflows/ci-dotnet.yml'
+      - '!**/*.md'
   pull_request:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-dotnet/**'
+      - '.github/workflows/ci-dotnet.yml'
+      - '!**/*.md'
 
 jobs:
   dotnet:

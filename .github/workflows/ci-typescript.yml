@@ -3,8 +3,42 @@ on:
   workflow_dispatch:
   push:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/e2e-tests/**'
+      - 'packages/web/**'
+      - 'scripts/**'
+      - 'protocol/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ci-typescript.yml'
+      - 'eslint.config.mjs'
+      - '!**/*.md'
   pull_request:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/e2e-tests/**'
+      - 'packages/web/**'
+      - 'scripts/**'
+      - 'protocol/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'turbo.json'
+      - 'tsconfig.base.json'
+      - 'tsconfig.json'
+      - '.github/workflows/ci-typescript.yml'
+      - 'eslint.config.mjs'
+      - '!**/*.md'
 
 jobs:
   build:
