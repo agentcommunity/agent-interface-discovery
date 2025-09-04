@@ -3,24 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main, feat/aid1.1-spec]
-    paths:
-      - 'packages/aid-java/**'
-      - 'gradle/**'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'settings.gradle'
-      - '.github/workflows/ci-java.yml'
-      - '!**/*.md'
   pull_request:
     branches: [main, feat/aid1.1-spec]
-    paths:
-      - 'packages/aid-java/**'
-      - 'gradle/**'
-      - 'gradlew'
-      - 'gradlew.bat'
-      - 'settings.gradle'
-      - '.github/workflows/ci-java.yml'
-      - '!**/*.md'
 
 jobs:
   java:
