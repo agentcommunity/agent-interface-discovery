@@ -1,5 +1,11 @@
 # @agentcommunity/aid-engine
 
+## 0.2.1
+
+### Patch Changes
+
+- e3929c1: Patch to deploy V1.1 Agent Interface Community
+
 ## 0.2.0
 
 ### Minor Changes
