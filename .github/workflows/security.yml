@@ -5,12 +5,8 @@ on:
     - cron: '0 2 * * *'
   push:
     branches: [main, feat/aid1.1-spec]
-    paths:
-      - '.github/workflows/security.yml'
   pull_request:
     branches: [main, feat/aid1.1-spec]
-    paths:
-      - '.github/workflows/security.yml'
 
 permissions:
   contents: read
