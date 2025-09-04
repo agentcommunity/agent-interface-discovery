@@ -80,7 +80,7 @@ export function Header() {
 
   const centeredLink = {
     name: 'Secure your .agent domain',
-    href: 'https://agentcommunity.org/',
+    href: 'https://agentcommunity.org',
     external: true,
   };
 
