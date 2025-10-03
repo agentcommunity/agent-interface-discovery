@@ -53,6 +53,11 @@
       "dependsOn": ["build"],
       "cache": false,
       "inputs": ["dist/**", "e2e/**", "**/*.e2e.ts", "**/*.e2e.tsx"]
+    },
+    "gen": {
+      "cache": false,
+      "inputs": ["protocol/**", "scripts/**"],
+      "outputs": ["packages/**/src/generated/**", "protocol/spec.ts", "showcase/terraform/examples.tf"]
     }
   }
 }

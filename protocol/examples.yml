@@ -1,0 +1,104 @@
+# AID Examples - Single Source of Truth
+# Auto-generated outputs:
+# - showcase/terraform/examples.tf (Terraform locals)
+# - packages/web/src/generated/examples.ts (Web constants)
+#
+# Run 'pnpm gen' to regenerate after changes
+
+examples:
+  # Basic educational examples
+  basic:
+    simple:
+      domain: 'simple.agentcommunity.org'
+      record: 'v=aid1;u=https://api.example.com/mcp;p=mcp;a=pat;s=Basic MCP Example'
+      icon: '🤖'
+      description: 'Simple MCP server example'
+      category: 'basic'
+
+    local_docker:
+      domain: 'local-docker.agentcommunity.org'
+      record: 'v=aid1;u=docker:myimage;p=local;s=Local Docker Agent'
+      icon: '🐳'
+      description: 'Local agent via Docker'
+      category: 'basic'
+
+    messy:
+      domain: 'messy.agentcommunity.org'
+      record: ' v=aid1 ; u=https://api.example.com/mcp ; p=mcp ; extra=ignored '
+      icon: '🧹'
+      description: 'Messy formatting with extra fields'
+      category: 'basic'
+
+    multi_string:
+      domain: 'multi-string.agentcommunity.org'
+      record: 'v=aid1;u=https://api.example.com/mcp;p=mcp;s=Multi string part 1'
+      icon: '📄'
+      description: 'Multi-string DNS record example'
+      category: 'basic'
+
+    pka_basic:
+      domain: 'pka-basic.agentcommunity.org'
+      record: 'v=aid1;p=mcp;u=https://api.example.com/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=p1;s=Basic PKA Example'
+      icon: '🔐'
+      description: 'MCP with PKA authentication'
+      category: 'basic'
+
+    complete_v1_1:
+      domain: 'complete.agentcommunity.org'
+      record: 'v=aid1;p=mcp;u=https://api.complete.agentcommunity.org/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/complete;e=2026-12-31T23:59:59Z;s=Complete v1.1 with all features'
+      icon: '✨'
+      description: 'Complete v1.1 example with all features'
+      category: 'basic'
+
+  # Real-world service examples (with PKA)
+  real_world:
+    supabase:
+      domain: 'supabase.agentcommunity.org'
+      record: 'v=aid1;u=https://api.supabase.com/mcp;p=mcp;a=pat;k=zAbCdEfGhIjKlMnOpQrStUvWxYz0123456789AbCdEf;i=s1;d=https://supabase.com/docs/guides/getting-started/mcp;s=Supabase MCP (Mock Service)'
+      icon: '/icons/supabase.svg'
+      description: 'Supabase database service'
+      category: 'real_world'
+
+    auth0:
+      domain: 'auth0.agentcommunity.org'
+      record: 'v=aid1;u=https://ai.auth0.com/mcp;p=mcp;a=pat;k=zEfGhIjKlMnOpQrStUvWxYz0123456789AbCdEfGhI;i=a1;d=https://auth0.com/docs/get-started/auth0-mcp-server;s=Auth0 MCP (Mock Service)'
+      icon: '/icons/auth0.svg'
+      description: 'Auth0 identity service'
+      category: 'real_world'
+
+    firecrawl:
+      domain: 'firecrawl.agentcommunity.org'
+      record: 'v=aid1;u=https://api.firecrawl.dev;p=a2a;k=zIjKlMnOpQrStUvWxYz0123456789AbCdEfGhIjKlM;i=f1;d=https://docs.firecrawl.dev/mcp-server;s=Firecrawl A2A (Mock Service)'
+      icon: '🔥'
+      description: 'Firecrawl web scraping service'
+      category: 'real_world'
+
+    playwright:
+      domain: 'playwright.agentcommunity.org'
+      record: 'v=aid1;u=https://api.playwright.dev;p=openapi;k=zMnOpQrStUvWxYz0123456789AbCdEfGhIjKlMnOp;i=p1;d=https://github.com/microsoft/playwright-mcp;s=Playwright OpenAPI (Mock Service)'
+      icon: '/icons/playwright.svg'
+      description: 'Playwright browser automation'
+      category: 'real_world'
+
+  # Error testing cases
+  error_cases:
+    no_server:
+      domain: 'no-server.agentcommunity.org'
+      record: 'v=aid1;u=https://does-not-exist.agentcommunity.org:1234;p=mcp;s=Offline Agent'
+      icon: '❌'
+      description: 'Non-responsive server for testing'
+      category: 'error_cases'
+
+    deprecated:
+      domain: 'deprecated.agentcommunity.org'
+      record: 'v=aid1;u=https://api.deprecated.agentcommunity.org/mcp;p=mcp;a=pat;e=2025-12-31T23:59:59Z;d=https://docs.agentcommunity.org/migration;s=Deprecated - migrate soon'
+      icon: '⚠️'
+      description: 'Deprecated service example'
+      category: 'error_cases'
+
+    secure:
+      domain: 'secure.agentcommunity.org'
+      record: 'v=aid1;u=https://api.secure.agentcommunity.org/mcp;p=mcp;a=pat;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/secure;s=Secure MCP with PKA'
+      icon: '🔒'
+      description: 'Secure service with PKA'
+      category: 'error_cases'

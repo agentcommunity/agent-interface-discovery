@@ -71,6 +71,16 @@ pnpm gen
 Generated spec module (canonical): `protocol/spec.ts`.
 Mirrored for Web (back-compat): `packages/web/src/generated/spec.ts`.
 
+## Examples generation
+
+* Edit `protocol/examples.yml` only for example records.
+* Examples are generated for both Terraform deployment and Web UI.
+* Includes PKA keys and v1.1 features across all examples.
+
+Generated files:
+- Terraform: `showcase/terraform/examples.tf`
+- Web constants: `packages/web/src/generated/examples.ts`
+
 TS SDK must export these names from `packages/aid/src/constants.ts`:
 
 ```
