@@ -29,7 +29,7 @@
     "clean": "turbo run clean",
     "one-shot": "eslint --cache --max-warnings 0 .",
     "format": "prettier --write .",
-    "gen": "tsx scripts/generate-constants.ts",
+    "gen": "tsx scripts/generate-constants.ts && tsx scripts/generate-examples.ts",
     "docs:sync": "turbo run sync:docs",
     "e2e": "turbo run e2e",
     "changeset": "changeset",
