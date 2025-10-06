@@ -16,10 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build JS
+      - name: Check generated files are up-to-date
         run: |
           corepack enable
           pnpm install --frozen-lockfile
+          pnpm gen
+          git diff --exit-code
+
+      - name: Build JS
+        run: |
           pnpm exec turbo run build \
             --filter=@agentcommunity/aid \
             --filter=@agentcommunity/aid-conformance \

@@ -85,6 +85,7 @@ graph TD
 | **Interactive Workbench**  | **[aid.agentcommunity.org](https://aid.agentcommunity.org)**           | The best way to see the protocol in action with a live resolver and generator.                                                                                                 |
 | **Official Documentation** | **[docs.agentcommunity.org/aid](https://docs.agentcommunity.org/aid)** | Read the full specification, guides, and API reference.                                                                                                                        |
 | **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check, validate, generate, and save AID records. Built on @agentcommunity/aid-engine with draft saving, PKA key generation, and comprehensive diagnostics. |
+| **Examples Guide**         | **[EXAMPLES.md](./EXAMPLES.md)**                                       | Complete guide to the examples system: how examples are defined, generated, and used across DNS, UI, and testing.                                                              |
 
 **GitHub Repository**: [github.com/agentcommunity/agent-interface-discovery](https://github.com/agentcommunity/agent-interface-discovery) - Source code, issues, and community discussions.
 
