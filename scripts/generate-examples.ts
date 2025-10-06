@@ -28,6 +28,10 @@ interface ExamplesData {
   };
 }
 
+interface FormattedExample extends ExampleRecord {
+  name: string;
+}
+
 const GENERATED_WARNING = `/**
  * GENERATED FILE - DO NOT EDIT
  *
@@ -39,7 +43,7 @@ function generateTerraformLocals(examples: ExamplesData): string {
   const allExamples: Record<string, { name: string; value: string }> = {};
 
   // Flatten all examples into a single map
-  Object.entries(examples.examples).forEach(([category, categoryExamples]) => {
+  Object.entries(examples.examples).forEach(([, categoryExamples]) => {
     Object.entries(categoryExamples).forEach(([name, example]) => {
       allExamples[name] = {
         name: `_agent.${name}`,
@@ -54,7 +58,7 @@ function generateTerraformLocals(examples: ExamplesData): string {
     .map(
       ([name, config]) => `  ${name} = {
     name  = "${config.name}"
-    value = "${config.value.replace(/"/g, '\\"')}"
+    value = "${config.value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"
   }`,
     )
     .join('\n\n');
@@ -119,7 +123,7 @@ export interface Example {
   const realWorldExamples = allExamples.filter((ex) => ex.category === 'real_world');
   const otherExamples = allExamples.filter((ex) => ex.category === 'error_cases');
 
-  function formatExampleArray(examples: any[]): string {
+  function formatExampleArray(examples: FormattedExample[]): string {
     return examples
       .map(
         (ex) => `  {
@@ -127,7 +131,7 @@ export interface Example {
     label: '${ex.name}',
     domain: '${ex.domain}',
     icon: '${ex.icon}',
-    content: '${ex.record.replace(/'/g, "\\'")}',
+    content: '${ex.record.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}',
     category: '${ex.category}',
   }`,
       )
