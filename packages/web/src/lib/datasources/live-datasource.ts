@@ -1,7 +1,7 @@
 import { discover } from '@agentcommunity/aid/browser';
 import type { DiscoveryResult } from '@/hooks/use-discovery';
 import type { HandshakeResult, HandshakeSuccessData } from '@/hooks/use-connection';
-import type { Datasource } from './types';
+import type { Datasource, HandshakeOptions } from './types';
 
 /**
  * Concrete datasource that executes real network operations.
@@ -16,7 +16,7 @@ export class LiveDatasource implements Datasource {
       const record = libResult.record;
       const resultUri = new URL(record.uri);
       const reconstructedTxt = Object.entries(libResult.record)
-        .map(([k, v]) => `${k}=${v as string}`)
+        .map(([k, v]) => k + '=' + (v as string))
         .join(';');
 
       const ok: DiscoveryResult = {
@@ -45,27 +45,53 @@ export class LiveDatasource implements Datasource {
     }
   }
 
-  async handshake(
-    uri: string,
-    { authBearer }: { authBearer?: string } = {},
-  ): Promise<HandshakeResult> {
+  async handshake(uri: string, options: HandshakeOptions = {}): Promise<HandshakeResult> {
+    const { authBearer, proto } = options;
     try {
       const response = await fetch('/api/handshake', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uri, ...(authBearer ? { auth: { bearer: authBearer } } : {}) }),
+        body: JSON.stringify({
+          uri,
+          ...(proto ? { proto } : {}),
+          ...(authBearer ? { auth: { bearer: authBearer } } : {}),
+        }),
       });
 
       const json = (await response.json()) as unknown;
       const raw = json as {
         success: boolean;
+        proto?: string;
         needsAuth?: boolean;
         compliantAuth?: boolean;
         metadataUri?: string;
         metadata?: unknown;
         data?: HandshakeSuccessData;
+        guidance?: {
+          canConnect: false;
+          title: string;
+          description: string;
+          command?: string;
+          docsUrl?: string;
+          nextSteps: string[];
+        };
+        security?: Record<string, unknown>;
         error?: string;
       };
+
+      // Handle guidance response for non-MCP protocols
+      if (raw.success && raw.guidance) {
+        return {
+          ok: true,
+          value: {
+            protocolVersion: 'N/A',
+            serverInfo: { name: raw.guidance.title, version: '1.0.0' },
+            capabilities: [],
+            guidance: raw.guidance,
+            security: raw.security as HandshakeSuccessData['security'],
+          },
+        };
+      }
 
       if (raw.success && raw.data) {
         return { ok: true, value: raw.data };

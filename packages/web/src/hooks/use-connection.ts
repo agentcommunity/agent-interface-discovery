@@ -3,10 +3,22 @@
 import { useState } from 'react';
 import type { Result } from '@/lib/types/result';
 
+/** Guidance for non-MCP protocols that do not support direct connection testing */
+export interface ProtocolGuidance {
+  canConnect: false;
+  title: string;
+  description: string;
+  command?: string;
+  docsUrl?: string;
+  nextSteps: string[];
+}
+
 export interface HandshakeSuccessData {
   protocolVersion: string;
   serverInfo: { name: string; version: string };
   capabilities: { id: string; type: 'tool' | 'resource' }[];
+  /** Present for non-MCP protocols - provides user guidance instead of connection */
+  guidance?: ProtocolGuidance;
   security?: {
     dnssec?: boolean;
     pka?: { present: boolean; attempted: boolean; verified: boolean | null; kid: string | null };
@@ -52,9 +64,6 @@ export function useConnection() {
 
   const execute = async (uri: string, options?: ExecuteOptions): Promise<HandshakeResult> => {
     setStatus('running');
-    // ────────────────────────────────────────
-    // Real network request
-    // ────────────────────────────────────────
     try {
       const response = await fetch('/api/handshake', {
         method: 'POST',

@@ -8,6 +8,15 @@ import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 export const runtime = 'nodejs';
 
 type SupportedScheme = 'http:' | 'https:' | 'ws:' | 'wss:';
+type ProtocolToken =
+  | 'mcp'
+  | 'a2a'
+  | 'openapi'
+  | 'grpc'
+  | 'graphql'
+  | 'websocket'
+  | 'local'
+  | 'zeroconf';
 
 interface AuthCredentials {
   bearer?: string;
@@ -17,16 +26,119 @@ interface AuthCredentials {
 
 interface HandshakeRequestBody {
   uri: string;
+  proto?: ProtocolToken;
   auth?: AuthCredentials;
 }
 
-/** Minimal superset of the SDK’s Transport with header helpers */
+interface ProtocolGuidance {
+  canConnect: false;
+  title: string;
+  description: string;
+  command?: string;
+  docsUrl?: string;
+  nextSteps: string[];
+}
+
+/** Minimal superset of the SDK's Transport with header helpers */
 export interface HeaderCapableTransport {
   start: () => Promise<void>;
   close: () => Promise<void>;
   send: (...args: unknown[]) => Promise<void>;
   setHeaders?: (headers: Record<string, string>) => void;
   headers?: Record<string, string>;
+}
+
+/** Get protocol-specific guidance for non-MCP agents */
+function getProtocolGuidance(proto: ProtocolToken, uri: string): ProtocolGuidance {
+  const guides: Record<Exclude<ProtocolToken, 'mcp'>, ProtocolGuidance> = {
+    a2a: {
+      canConnect: false,
+      title: 'A2A Agent Discovered',
+      description:
+        'This agent uses the Agent-to-Agent (A2A) protocol. Connection testing requires an A2A-compatible client.',
+      docsUrl: 'https://google.github.io/A2A/',
+      nextSteps: [
+        'Use an A2A-compatible client to connect',
+        'Fetch the agent card at ' + uri,
+        'The agent card describes available skills and auth requirements',
+      ],
+    },
+    openapi: {
+      canConnect: false,
+      title: 'OpenAPI Agent Discovered',
+      description: 'This URI points to an OpenAPI specification document describing the agent API.',
+      docsUrl: 'https://swagger.io/specification/',
+      nextSteps: [
+        'Fetch the OpenAPI spec at ' + uri,
+        'Use tools like Swagger UI or Postman to explore the API',
+        'Generate a client using openapi-generator',
+      ],
+    },
+    graphql: {
+      canConnect: false,
+      title: 'GraphQL Agent Discovered',
+      description: 'This agent exposes a GraphQL API endpoint.',
+      docsUrl: 'https://graphql.org/',
+      nextSteps: [
+        'Connect to ' + uri + ' with a GraphQL client',
+        'Run an introspection query to discover the schema',
+        'Use GraphQL Playground or Apollo Studio to explore',
+      ],
+    },
+    grpc: {
+      canConnect: false,
+      title: 'gRPC Agent Discovered',
+      description: 'This agent uses gRPC over HTTP/2. Browser-based connection is limited.',
+      docsUrl: 'https://grpc.io/',
+      nextSteps: [
+        'Use grpcurl or a native gRPC client',
+        'grpcurl -plaintext ' + safeHostFromUri(uri) + ' list',
+        'Check if the server supports gRPC-Web for browser access',
+      ],
+    },
+    websocket: {
+      canConnect: false,
+      title: 'WebSocket Agent Discovered',
+      description: 'This agent communicates over WebSocket (WSS).',
+      nextSteps: [
+        'Connect to ' + uri + ' using a WebSocket client',
+        'Check the agent documentation for message format',
+        'Use browser DevTools or wscat for testing',
+      ],
+    },
+    local: {
+      canConnect: false,
+      title: 'Local Agent Discovered',
+      description: 'This agent runs locally on your machine via Docker, npx, or pip.',
+      command: uri,
+      nextSteps: [
+        'Run: ' + uri.replace(':', ' '),
+        'The agent will start on your local machine',
+        'Connect to it using the appropriate client',
+      ],
+    },
+    zeroconf: {
+      canConnect: false,
+      title: 'Zeroconf Agent Discovered',
+      description: 'This agent is discovered via mDNS/DNS-SD on your local network.',
+      nextSteps: [
+        'Browse for service: ' + uri.replace('zeroconf:', ''),
+        'Use dns-sd or avahi-browse to find local instances',
+        'Connect to the discovered IP:port',
+      ],
+    },
+  };
+
+  return guides[proto as Exclude<ProtocolToken, 'mcp'>];
+}
+
+/** Safely extract host from URI, handling non-URL schemes */
+function safeHostFromUri(uri: string): string {
+  try {
+    return new URL(uri).host;
+  } catch {
+    return uri.split('/')[0] || uri;
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -39,22 +151,60 @@ export async function POST(request: Request) {
     return NextResponse.json(parsed.error, { status: 400 });
   }
 
-  const { uri, auth } = parsed.value;
+  const { uri, proto, auth } = parsed.value;
+
+  // Handle non-MCP protocols with guidance instead of connection attempt
+  if (proto && proto !== 'mcp') {
+    const guidance = getProtocolGuidance(proto, uri);
+
+    // Still try to get security info via aid-engine for non-MCP protocols
+    let security: Record<string, unknown> | undefined;
+    try {
+      const parsedUri = safeHostFromUri(uri);
+      const isSecureScheme = uri.startsWith('https://') || uri.startsWith('wss://');
+      if (parsedUri && isSecureScheme && !isPrivateHost(parsedUri.split(':')[0])) {
+        const report = await runCheck(parsedUri.split(':')[0], {
+          timeoutMs: 4000,
+          allowFallback: true,
+          wellKnownTimeoutMs: 1500,
+          showDetails: true,
+        });
+        security = {
+          dnssec: report.dnssec.present,
+          pka: report.pka,
+          tls: report.tls,
+          warnings: report.record.warnings,
+          errors: report.record.errors,
+        };
+      }
+    } catch {
+      /* best-effort security check */
+    }
+
+    return NextResponse.json({
+      success: true,
+      proto,
+      guidance,
+      security,
+    });
+  }
+
   const url = new URL(uri);
 
   // Guardrails
   if (isPrivateHost(url.hostname)) {
     return NextResponse.json({ success: false, error: 'Target host not allowed' }, { status: 400 });
   }
-  // If the scheme isn't one we can connect to directly from the browser, treat it as
-  // requiring a local Personal Access Token (PAT) / CLI proxy rather than a hard failure.
   if (!isSupportedScheme(url.protocol as SupportedScheme)) {
     return NextResponse.json(
       {
         success: false,
         needsAuth: true,
         compliantAuth: false,
-        error: `Unsupported URI scheme: ${url.protocol}. Provide a Personal Access Token or run a local proxy.`,
+        error:
+          'Unsupported URI scheme: ' +
+          url.protocol +
+          '. Provide a Personal Access Token or run a local proxy.',
       },
       { status: 401 },
     );
@@ -85,12 +235,10 @@ export async function POST(request: Request) {
     const transport = createTransport(url, auth);
     const client = new Client({ name: 'aid-discovery-web', version: '1.0.0' });
 
-    // The cast is safe because createTransport conforms to Transport at runtime
     await client.connect(transport as unknown as Transport);
     const capabilities = await client.listTools();
     await client.close();
 
-    // Build a minimal security snapshot via engine (domain-based)
     let security: Record<string, unknown> | undefined;
     try {
       const report = await runCheck(url.hostname, {
@@ -112,6 +260,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      proto: proto || 'mcp',
       data: {
         protocolVersion: '2024-11-05',
         serverInfo: { name: 'Connected Server', version: '1.0.0' },
@@ -150,7 +299,6 @@ async function safeParseBody(
   | { ok: false; error: { success: false; error: string } }
 > {
   try {
-    // assert to unknown so the RHS is not `any`
     const body = (await req.json()) as unknown;
     if (!body || typeof body !== 'object') {
       return { ok: false, error: { success: false, error: 'Missing or invalid body' } };
@@ -173,8 +321,8 @@ function createTransport(url: URL, auth?: AuthCredentials): HeaderCapableTranspo
   if (!auth) return transport;
 
   const hdrs: Record<string, string> = {};
-  if (auth.bearer) hdrs.Authorization = `Bearer ${auth.bearer}`;
-  if (auth.basic) hdrs.Authorization = `Basic ${auth.basic}`;
+  if (auth.bearer) hdrs.Authorization = 'Bearer ' + auth.bearer;
+  if (auth.basic) hdrs.Authorization = 'Basic ' + auth.basic;
   if (auth.apikey) hdrs['x-api-key'] = auth.apikey;
 
   if (Object.keys(hdrs).length === 0) return transport;
@@ -182,7 +330,6 @@ function createTransport(url: URL, auth?: AuthCredentials): HeaderCapableTranspo
   if (typeof transport.setHeaders === 'function') {
     transport.setHeaders(hdrs);
   } else {
-    // clone into a new object → avoids the “useless fallback in spread” warning
     transport.headers = transport.headers ? { ...transport.headers, ...hdrs } : { ...hdrs };
   }
 

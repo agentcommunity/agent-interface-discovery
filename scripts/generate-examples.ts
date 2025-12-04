@@ -45,8 +45,10 @@ function generateTerraformLocals(examples: ExamplesData): string {
   // Flatten all examples into a single map
   Object.entries(examples.examples).forEach(([, categoryExamples]) => {
     Object.entries(categoryExamples).forEach(([name, example]) => {
+      // Extract subdomain from the domain (e.g., "complete.agentcommunity.org" -> "complete")
+      const subdomain = example.domain.split('.')[0];
       allExamples[name] = {
-        name: `_agent.${name}`,
+        name: `_agent.${subdomain}`,
         value: example.record,
       };
     });
@@ -121,6 +123,7 @@ export interface Example {
 
   const basicExamples = allExamples.filter((ex) => ex.category === 'basic');
   const realWorldExamples = allExamples.filter((ex) => ex.category === 'real_world');
+  const protocolExamples = allExamples.filter((ex) => ex.category === 'protocols');
   const otherExamples = allExamples.filter((ex) => ex.category === 'error_cases');
 
   function formatExampleArray(examples: FormattedExample[]): string {
@@ -144,6 +147,10 @@ ${formatExampleArray(basicExamples)}
 
 export const REAL_WORLD_EXAMPLES: Example[] = [
 ${formatExampleArray(realWorldExamples)}
+];
+
+export const PROTOCOL_EXAMPLES: Example[] = [
+${formatExampleArray(protocolExamples)}
 ];
 
 export const OTHER_CHAT_EXAMPLES: Example[] = [
