@@ -72,8 +72,8 @@ export class A2AHandler implements ProtocolHandler {
           nextSteps: [
             'Use an A2A-compatible client to connect',
             'Review the agent card for available skills and auth requirements',
-            agentCard.url ? `Agent URL: ${agentCard.url}` : undefined,
-          ].filter(Boolean),
+            ...(agentCard.url ? [`Agent URL: ${agentCard.url}`] : []),
+          ],
         },
       };
     } catch (error) {
