@@ -64,6 +64,9 @@ export async function runCheck(domain: string, opts: CheckOptions): Promise<Doct
       wellKnownTimeoutMs: opts.wellKnownTimeoutMs,
     });
     // This is the success path now
+    if (!dnsRes.ok) {
+      throw dnsRes.error!;
+    }
     const value = dnsRes.value!;
     const queryName = value.queryName;
     const attempt: ProbeAttempt = {
