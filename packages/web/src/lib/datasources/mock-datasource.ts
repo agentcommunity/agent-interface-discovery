@@ -2,7 +2,7 @@ import type { DiscoveryResult } from '@/hooks/use-discovery';
 import type { HandshakeResult } from '@/hooks/use-connection';
 import { toolManifests } from '@/lib/tool-manifest-data';
 import type { ScenarioManifest } from '@/lib/tool-manifest-types';
-import type { Datasource } from './types';
+import type { Datasource, HandshakeOptions } from './types';
 
 /**
  * Mock datasource reads from tool manifests to provide deterministic responses
@@ -26,7 +26,7 @@ export class MockDatasource implements Datasource {
     return Promise.resolve(manifest.discovery as DiscoveryResult);
   }
 
-  handshake(uri: string): Promise<HandshakeResult> {
+  handshake(uri: string, _options?: HandshakeOptions): Promise<HandshakeResult> {
     const manifest = this.manifest;
     if (typeof manifest.handshake === 'function') {
       return Promise.resolve((manifest.handshake as (uri: string) => HandshakeResult)(uri));

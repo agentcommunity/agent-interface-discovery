@@ -6,6 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   BASIC_EXAMPLES,
   REAL_WORLD_EXAMPLES,
+  PROTOCOL_EXAMPLES,
   OTHER_CHAT_EXAMPLES,
   type Example,
 } from '@/lib/constants';
@@ -51,26 +52,52 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
         <ToggleGroup
           type="single"
           onValueChange={(value) => {
-            const ex = [...BASIC_EXAMPLES, ...REAL_WORLD_EXAMPLES].find((e) => e.content === value);
+            const ex = [...BASIC_EXAMPLES, ...REAL_WORLD_EXAMPLES, ...PROTOCOL_EXAMPLES].find(
+              (e) => e.content === value,
+            );
             if (ex) onSelect(ex);
           }}
-          className="flex flex-col sm:flex-row gap-6 w-full items-start"
+          className="flex flex-col gap-6 w-full items-start"
         >
-          <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
-            <h3 className="text-sm font-semibold">Simple Examples</h3>
-            <div className="flex flex-wrap gap-2 w-full">
-              {BASIC_EXAMPLES.map((ex) => (
-                <ToggleGroupItem key={ex.title} value={ex.content} className="text-sm font-medium text-foreground">
-                  {ex.title}
-                </ToggleGroupItem>
-              ))}
+          <div className="flex flex-col sm:flex-row gap-6 w-full">
+            <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
+              <h3 className="text-sm font-semibold">Simple Examples</h3>
+              <div className="flex flex-wrap gap-2 w-full">
+                {BASIC_EXAMPLES.map((ex) => (
+                  <ToggleGroupItem
+                    key={ex.title}
+                    value={ex.content}
+                    className="text-sm font-medium text-foreground"
+                  >
+                    {ex.title}
+                  </ToggleGroupItem>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
+              <h3 className="text-sm font-semibold">Real World Examples</h3>
+              <div className="flex flex-wrap gap-2 w-full">
+                {REAL_WORLD_EXAMPLES.map((ex) => (
+                  <ToggleGroupItem
+                    key={ex.title}
+                    value={ex.content}
+                    className="flex items-center gap-2 text-sm font-medium !text-foreground"
+                  >
+                    <ExampleItem example={ex} />
+                  </ToggleGroupItem>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="flex flex-col items-start gap-2 w-full sm:w-1/2">
-            <h3 className="text-sm font-semibold">Real World Examples</h3>
+          <div className="flex flex-col items-start gap-2 w-full">
+            <h3 className="text-sm font-semibold">Protocol Showcase (A2A, GraphQL, gRPC)</h3>
             <div className="flex flex-wrap gap-2 w-full">
-              {REAL_WORLD_EXAMPLES.map((ex) => (
-                <ToggleGroupItem key={ex.title} value={ex.content} className="flex items-center gap-2 text-sm font-medium !text-foreground">
+              {PROTOCOL_EXAMPLES.map((ex) => (
+                <ToggleGroupItem
+                  key={ex.title}
+                  value={ex.content}
+                  className="flex items-center gap-2 text-sm font-medium !text-foreground"
+                >
                   <ExampleItem example={ex} />
                 </ToggleGroupItem>
               ))}
@@ -82,7 +109,12 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
   }
 
   // Default to 'buttons' variant for the chat resolver
-  const allChatExamples = [...BASIC_EXAMPLES, ...REAL_WORLD_EXAMPLES, ...OTHER_CHAT_EXAMPLES];
+  const allChatExamples = [
+    ...BASIC_EXAMPLES,
+    ...REAL_WORLD_EXAMPLES,
+    ...PROTOCOL_EXAMPLES,
+    ...OTHER_CHAT_EXAMPLES,
+  ];
 
   return (
     <div className="flex flex-wrap gap-2 mb-2 justify-center">

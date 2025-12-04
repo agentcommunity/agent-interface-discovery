@@ -3,10 +3,34 @@
 import { useState } from 'react';
 import type { Result } from '@/lib/types/result';
 
+/** Guidance for non-MCP protocols that do not support direct connection testing */
+export interface ProtocolGuidance {
+  canConnect: false;
+  title: string;
+  description: string;
+  command?: string;
+  docsUrl?: string;
+  nextSteps: string[];
+}
+
+/** Agent Card structure per A2A specification */
+export interface AgentCard {
+  name: string;
+  description?: string;
+  url: string;
+  provider?: { organization: string; url?: string };
+  skills?: Array<{ id: string; name: string; description?: string }>;
+  authentication?: { schemes: string[]; credentials?: string };
+}
+
 export interface HandshakeSuccessData {
   protocolVersion: string;
   serverInfo: { name: string; version: string };
   capabilities: { id: string; type: 'tool' | 'resource' }[];
+  /** Present for non-MCP protocols - provides user guidance instead of connection */
+  guidance?: ProtocolGuidance;
+  /** Present for A2A protocols - contains the agent card data */
+  agentCard?: AgentCard;
   security?: {
     dnssec?: boolean;
     pka?: { present: boolean; attempted: boolean; verified: boolean | null; kid: string | null };
@@ -26,6 +50,13 @@ export class AuthRequiredError extends Error {
     public readonly compliantAuth?: boolean,
     public readonly metadataUri?: string,
     public readonly metadata?: unknown,
+    public readonly authType?:
+      | 'local_cli'
+      | 'pat'
+      | 'oauth2_device'
+      | 'oauth2_code'
+      | 'compliant'
+      | 'generic',
   ) {
     super(message);
     this.name = 'AuthRequiredError';
@@ -52,9 +83,6 @@ export function useConnection() {
 
   const execute = async (uri: string, options?: ExecuteOptions): Promise<HandshakeResult> => {
     setStatus('running');
-    // ────────────────────────────────────────
-    // Real network request
-    // ────────────────────────────────────────
     try {
       const response = await fetch('/api/handshake', {
         method: 'POST',

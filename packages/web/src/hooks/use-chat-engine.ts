@@ -39,7 +39,6 @@ export type ChatLogMessage =
   | { type: 'tool_event'; id: string; tool: 'discovery' | 'connection'; detail: string }
   | DiscoveryResultMessage
   | ConnectionResultMessage
-  // Legacy variants kept for UI compatibility during migration
   | {
       type: 'tool_call';
       id: string;
@@ -77,12 +76,10 @@ const initialState: EngineState = {
   messages: [],
 };
 
-// External commands consumer can dispatch
 export type EngineCommand =
   | { type: 'SUBMIT_DOMAIN'; payload: string }
   | { type: 'PROVIDE_AUTH'; payload: string };
 
-// Internal reducer actions
 type Action =
   | { type: 'SET_STATUS'; status: EngineState['status'] }
   | { type: 'SET_DOMAIN'; domain: string }
@@ -111,7 +108,7 @@ function reducer(state: EngineState, action: Action): EngineState {
 // 3. Helper utilities
 // -----------------------------------------------------------------------------
 
-const uniqueId = () => `${Date.now()}-${Math.random()}`;
+const uniqueId = () => Date.now() + '-' + Math.random();
 
 const isValidDomain = (domain: string) => {
   const regex = /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/;
@@ -124,7 +121,6 @@ const isValidDomain = (domain: string) => {
 export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) {
   const [state, dispatchInternal] = useReducer(reducer, initialState);
 
-  // Helper wrappers to reduce boilerplate in async logic
   const addMessage = useCallback(
     (msg: ChatLogMessage) => dispatchInternal({ type: 'ADD_MESSAGE', message: msg }),
     [],
@@ -145,13 +141,11 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
 
   const processDomain = useCallback(
     async (domain: string) => {
-      // Select datasource and manifest (if any)
       const scenario: ScenarioManifest | undefined = toolManifests[domain];
       const selectedDs =
         datasource ??
         (scenario && !scenario.live ? new MockDatasource(domain) : new LiveDatasource());
 
-      // Narrative 1 (always)
       await (scenario?.narrative1
         ? sendAssistant(scenario.narrative1.replace('{domain}', domain))
         : sendAssistant('Let me see… Connecting with AID…'));
@@ -162,7 +156,6 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
       setDiscovery(discoveryRes);
 
       if (!isOk(discoveryRes)) {
-        // Discovery failed path
         addMessage({
           type: 'discovery_result',
           id: uniqueId(),
@@ -175,7 +168,9 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
           await sendAssistant(scenario.narrative2.replace('{error}', errMsg));
         } else {
           await sendAssistant(
-            `I couldn’t find an _agent record for ${domain}. If you manage this domain you can create one using our generator tool.`,
+            'I could not find an _agent record for ' +
+              domain +
+              '. If you manage this domain you can create one using our generator tool.',
           );
         }
 
@@ -183,18 +178,15 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         return;
       }
 
-      // --- Discovery succeeded ---
       const { record: discoveryRecord } = discoveryRes.value;
 
-      // Normalize record to canonical shape (future-proof; UI currently unchanged)
       try {
         const adapter = selectAdapter('v1');
         void adapter.normalizeRecord(discoveryRecord);
       } catch {
-        // non-fatal; adapter is best-effort for now
+        // non-fatal
       }
 
-      // Successful discovery narrative2 (now includes security context when available)
       if (scenario?.narrative2 && !scenario.narrative2.includes('{error}')) {
         const formatted = scenario.narrative2
           .replace('{desc}', discoveryRecord.desc ?? '')
@@ -211,20 +203,49 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         domain,
       });
 
-      // 2. Connection phase
+      // 2. Connection phase - pass proto and authHint for protocol-aware handling
       setStatus('connecting');
-      const handshakeRes = await selectedDs.handshake(discoveryRecord.uri);
+      const handshakeRes = await selectedDs.handshake(discoveryRecord.uri, {
+        proto: discoveryRecord.proto,
+        authHint: discoveryRecord.auth as string | undefined,
+      });
       setHandshake(handshakeRes);
 
       if (isOk(handshakeRes)) {
-        // Normalize handshake (not used yet by UI)
         try {
           const adapter = selectAdapter('v1');
           void adapter.normalizeHandshake(handshakeRes.value);
         } catch {
-          // Best-effort normalization; ignore
+          // Best-effort
         }
-        // --- Handshake succeeded ---
+
+        const handshakeData = handshakeRes.value;
+
+        // Check if this is a guidance response (non-MCP protocol)
+        if (handshakeData.guidance) {
+          addMessage({
+            type: 'connection_result',
+            id: uniqueId(),
+            status: 'success',
+            discovery: discoveryRes.value,
+            result: handshakeRes,
+          });
+
+          const proto = discoveryRecord.proto.toUpperCase();
+          await sendAssistant(
+            'AID discovery successful! This agent uses the ' +
+              proto +
+              ' protocol. ' +
+              'Connection testing in the workbench is available for MCP agents. ' +
+              'See the guidance below for how to connect to this ' +
+              proto +
+              ' agent.',
+          );
+          setStatus('connected');
+          return;
+        }
+
+        // MCP Handshake succeeded
         addMessage({
           type: 'connection_result',
           id: uniqueId(),
@@ -233,31 +254,32 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
           result: handshakeRes,
         });
         if (scenario?.narrative3) {
-          const handshakeData = handshakeRes.value;
           const capCount = handshakeData.capabilities.length;
           const pkaStatus = handshakeData.security?.pka?.verified
             ? 'PKA verified'
-            : handshakeData.security?.pka?.present
+            : (handshakeData.security?.pka?.present
               ? 'PKA present'
-              : 'no PKA';
+              : 'no PKA');
           const tlsStatus =
             handshakeData.security?.tls?.valid === true
               ? 'TLS valid'
-              : handshakeData.security?.tls?.valid === false
+              : (handshakeData.security?.tls?.valid === false
                 ? 'TLS invalid'
-                : 'TLS unknown';
+                : 'TLS unknown');
           await sendAssistant(
-            [
-              scenario.narrative3.replace('{capCount}', String(capCount)),
-              `\nSecurity: ${pkaStatus}; ${tlsStatus}.`,
-            ].join(''),
+            scenario.narrative3.replace('{capCount}', String(capCount)) +
+              '\nSecurity: ' +
+              pkaStatus +
+              '; ' +
+              tlsStatus +
+              '.',
           );
         }
         setStatus('connected');
         return;
       }
 
-      // --- Handshake failed ---
+      // Handshake failed
       if (handshakeRes.error instanceof AuthRequiredError) {
         addMessage({
           type: 'connection_result',
@@ -267,14 +289,12 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
           result: handshakeRes,
         });
         setStatus('needs_auth');
-        // Gentle assistant message clarifying AID worked but auth is required
         await sendAssistant(
-          'Ⓧ Connection not established (authentication required). AID worked. I don’t have your private keys - you need to provide a token to continue. (Do not copy your keys here, this is a test environment)',
+          'Connection not established (authentication required). AID worked. I do not have your private keys - you need to provide a token to continue. (Do not copy your keys here, this is a test environment)',
         );
       } else {
-        // De-emphasize failure: acknowledge AID success but connection issue
         const reason = handshakeRes.error.message || 'Unknown reason';
-        await sendAssistant(`Ⓧ Agent connection not established. AID worked. ${reason}`);
+        await sendAssistant('Agent connection not established. AID worked. ' + reason);
         addMessage({
           type: 'connection_result',
           id: uniqueId(),
@@ -293,6 +313,7 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
       if (state.status !== 'needs_auth' || !state.discovery || !isOk(state.discovery)) return;
 
       const uri = state.discovery.value.record.uri;
+      const proto = state.discovery.value.record.proto;
       setStatus('connecting');
       addMessage({ type: 'tool_event', id: uniqueId(), tool: 'connection', detail: 'auth_retry' });
 
@@ -300,22 +321,24 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         datasource ??
         (toolManifests[state.domain!] ? new MockDatasource(state.domain!) : new LiveDatasource());
 
-      const handshakeRes = await selectedDs.handshake(uri, { authBearer: token });
+      const handshakeRes = await selectedDs.handshake(uri, {
+        authBearer: token,
+        proto,
+        authHint: state.discovery.value.record.auth as string | undefined,
+      });
       setHandshake(handshakeRes);
 
       if (isOk(handshakeRes)) {
         setStatus('connected');
         addMessage({ type: 'tool_event', id: uniqueId(), tool: 'connection', detail: 'succeeded' });
-        // Emit a full connection_result so UI updates with tools
         addMessage({
           type: 'connection_result',
           id: uniqueId(),
           status: 'success',
-          discovery: state.discovery.value, // safe due to early return check
+          discovery: state.discovery.value,
           result: handshakeRes,
         });
       } else {
-        // Distinguish needs_auth vs generic error if we want; for now keep 'error'
         setStatus('failed');
         addMessage({ type: 'tool_event', id: uniqueId(), tool: 'connection', detail: 'failed' });
         addMessage({
@@ -330,7 +353,6 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
     [datasource, state.status, state.discovery, state.domain, addMessage],
   );
 
-  // Public dispatcher
   const dispatch = useCallback(
     (cmd: EngineCommand) => {
       if (cmd.type === 'SUBMIT_DOMAIN') {

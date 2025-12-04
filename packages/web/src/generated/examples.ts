@@ -102,7 +102,7 @@ export const REAL_WORLD_EXAMPLES: Example[] = [
     domain: 'firecrawl.agentcommunity.org',
     icon: '🔥',
     content:
-      'v=aid1;u=https://api.firecrawl.dev;p=a2a;k=zIjKlMnOpQrStUvWxYz0123456789AbCdEfGhIjKlM;i=f1;d=https://docs.firecrawl.dev/mcp-server;s=Firecrawl A2A (Mock Service)',
+      'v=aid1;u=npx:firecrawl-mcp;p=local;d=https://docs.firecrawl.dev/mcp-server;s=Firecrawl Web Scraping Agent',
     category: 'real_world',
   },
   {
@@ -113,6 +113,36 @@ export const REAL_WORLD_EXAMPLES: Example[] = [
     content:
       'v=aid1;u=https://api.playwright.dev;p=openapi;k=zMnOpQrStUvWxYz0123456789AbCdEfGhIjKlMnOp;i=p1;d=https://github.com/microsoft/playwright-mcp;s=Playwright OpenAPI (Mock Service)',
     category: 'real_world',
+  },
+];
+
+export const PROTOCOL_EXAMPLES: Example[] = [
+  {
+    title: 'A2a Showcase',
+    label: 'A2a Showcase',
+    domain: 'a2a.agentcommunity.org',
+    icon: '🤝',
+    content:
+      'v=aid1;u=https://a2a.agentcommunity.org/.well-known/agent.json;p=a2a;k=zQrStUvWxYz0123456789AbCdEfGhIjKlMnOpQrStUv;i=a1;d=https://google.github.io/A2A/;s=A2A Protocol Showcase',
+    category: 'protocols',
+  },
+  {
+    title: 'Graphql Showcase',
+    label: 'Graphql Showcase',
+    domain: 'graphql.agentcommunity.org',
+    icon: '◇',
+    content:
+      'v=aid1;u=https://graphql.agentcommunity.org/graphql;p=graphql;d=https://graphql.org/;s=GraphQL Agent Showcase',
+    category: 'protocols',
+  },
+  {
+    title: 'Grpc Showcase',
+    label: 'Grpc Showcase',
+    domain: 'grpc.agentcommunity.org',
+    icon: '⚡',
+    content:
+      'v=aid1;u=grpc://grpc.agentcommunity.org:443;p=grpc;d=https://grpc.io/;s=gRPC Agent Showcase',
+    category: 'protocols',
   },
 ];
 

@@ -68,9 +68,9 @@ examples:
 
     firecrawl:
       domain: 'firecrawl.agentcommunity.org'
-      record: 'v=aid1;u=https://api.firecrawl.dev;p=a2a;k=zIjKlMnOpQrStUvWxYz0123456789AbCdEfGhIjKlM;i=f1;d=https://docs.firecrawl.dev/mcp-server;s=Firecrawl A2A (Mock Service)'
+      record: 'v=aid1;u=npx:firecrawl-mcp;p=local;d=https://docs.firecrawl.dev/mcp-server;s=Firecrawl Web Scraping Agent'
       icon: '🔥'
-      description: 'Firecrawl web scraping service'
+      description: 'Firecrawl web scraping (local)'
       category: 'real_world'
 
     playwright:
@@ -79,6 +79,29 @@ examples:
       icon: '/icons/playwright.svg'
       description: 'Playwright browser automation'
       category: 'real_world'
+
+  # Protocol showcase examples (demonstrate non-MCP protocols)
+  protocols:
+    a2a_showcase:
+      domain: 'a2a.agentcommunity.org'
+      record: 'v=aid1;u=https://a2a.agentcommunity.org/.well-known/agent.json;p=a2a;k=zQrStUvWxYz0123456789AbCdEfGhIjKlMnOpQrStUv;i=a1;d=https://google.github.io/A2A/;s=A2A Protocol Showcase'
+      icon: '🤝'
+      description: 'Agent-to-Agent protocol example'
+      category: 'protocols'
+
+    graphql_showcase:
+      domain: 'graphql.agentcommunity.org'
+      record: 'v=aid1;u=https://graphql.agentcommunity.org/graphql;p=graphql;d=https://graphql.org/;s=GraphQL Agent Showcase'
+      icon: '◇'
+      description: 'GraphQL API protocol example'
+      category: 'protocols'
+
+    grpc_showcase:
+      domain: 'grpc.agentcommunity.org'
+      record: 'v=aid1;u=grpc://grpc.agentcommunity.org:443;p=grpc;d=https://grpc.io/;s=gRPC Agent Showcase'
+      icon: '⚡'
+      description: 'gRPC protocol example'
+      category: 'protocols'
 
   # Error testing cases
   error_cases:

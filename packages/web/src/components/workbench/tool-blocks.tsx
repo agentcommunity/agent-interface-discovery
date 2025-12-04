@@ -1,9 +1,10 @@
 import React from 'react';
-import { Search, Plug } from 'lucide-react';
+import { Search, Plug, ExternalLink, Terminal, BookOpen } from 'lucide-react';
 import { AID_GENERATOR_URL } from '@/lib/constants';
 import { ToolCallBlock } from './tool-call-block';
 import type { DiscoveryResult } from '@/hooks/use-discovery';
-import type { HandshakeResult } from '@/hooks/use-connection';
+import type { HandshakeResult, ProtocolGuidance } from '@/hooks/use-connection';
+import { AuthRequiredError } from '@/hooks/use-connection';
 import { DiscoverySuccessBlock } from './discovery-success-block';
 import { ToolListSummary } from './tool-list-summary';
 import { SecurityBadge } from '@/components/ui/security-badge';
@@ -11,8 +12,8 @@ import { TlsInspector } from '@/components/ui/tls-inspector';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown } from 'lucide-react';
 import type { ChatLogMessage } from '@/hooks/use-chat-engine';
-
-// --- Removed legacy type definitions ---
+import { A2ACardView } from './a2a-card';
+import { AuthPrompts } from './auth-prompts';
 
 type ToolStatus = 'running' | 'success' | 'error' | 'needs_auth';
 
@@ -127,16 +128,16 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
               variant={
                 result.value.metadata.pka.verified === true
                   ? 'success'
-                  : result.value.metadata.pka.present
+                  : (result.value.metadata.pka.present
                     ? 'warning'
-                    : 'info'
+                    : 'info')
               }
             >
               {result.value.metadata.pka.verified === true
                 ? 'PKA verified'
-                : result.value.metadata.pka.present
+                : (result.value.metadata.pka.present
                   ? 'PKA present'
-                  : 'PKA not present'}
+                  : 'PKA not present')}
             </SecurityBadge>
           )}
           {result.value.metadata.tls && (
@@ -187,23 +188,104 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
   );
 }
 
+/** Protocol guidance view for non-MCP protocols */
+function ProtocolGuidanceView({ guidance }: { guidance: ProtocolGuidance }) {
+  return (
+    <div className="mt-3 space-y-3">
+      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start gap-2">
+          <BookOpen className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm text-blue-800 font-medium">{guidance.title}</p>
+            <p className="text-xs text-blue-700 mt-1">{guidance.description}</p>
+          </div>
+        </div>
+      </div>
+
+      {guidance.command && (
+        <div className="p-3 bg-gray-900 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Terminal className="w-3 h-3 text-gray-400" />
+            <span className="text-xs text-gray-400 font-medium">Run this command</span>
+          </div>
+          <code className="text-sm text-green-400 font-mono break-all">{guidance.command}</code>
+        </div>
+      )}
+
+      {guidance.nextSteps.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-gray-700">Next steps:</p>
+          <ul className="space-y-1.5">
+            {guidance.nextSteps.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                <span className="bg-gray-200 text-gray-600 rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-medium">
+                  {i + 1}
+                </span>
+                <span className="break-words">{step}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {guidance.docsUrl && (
+        <a
+          href={guidance.docsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          <ExternalLink className="w-3 h-3" />
+          View protocol documentation
+        </a>
+      )}
+    </div>
+  );
+}
+
 export function ConnectionToolBlock({
   status,
   result,
   discoveryResult,
   onProvideAuth,
 }: ConnectionToolBlockProps) {
+  // Check if this is a guidance response (non-MCP protocol)
+  const hasGuidance = result?.ok && result.value?.guidance;
+  const proto = discoveryResult?.ok ? discoveryResult.value?.record?.proto : 'mcp';
+  const protoUpper = proto?.toUpperCase() || 'MCP';
+
   const getCodeSnippets = () => {
     const uri = (discoveryResult?.ok && discoveryResult.value?.record?.uri) || 'unknown-uri';
+
+    // For non-MCP protocols, show protocol-specific snippet
+    if (hasGuidance) {
+      const guidance = result.value.guidance!;
+      if (guidance.command) {
+        return [
+          {
+            title: protoUpper + ' Command',
+            code: guidance.command,
+          },
+        ];
+      }
+      return [
+        {
+          title: protoUpper + ' Endpoint',
+          code: uri,
+        },
+      ];
+    }
+
+    // MCP handshake request
     const snippets = [
       {
-        title: 'Connection Request',
-        code: `// MCP Handshake Request\nfetch('/api/handshake', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    uri: "${uri}"\n  })\n})`,
+        title: 'Handshake Request',
+        code: `// ${protoUpper} Handshake Request\nfetch('/api/handshake', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    uri: "${uri}",\n    proto: "${proto}"\n  })\n})`,
       },
     ];
 
     if (status === 'success' || status === 'error' || status === 'needs_auth') {
-      if (result?.ok && result.value) {
+      if (result?.ok && result.value && !result.value.guidance) {
         const data = result.value;
         const response = {
           protocolVersion: data.protocolVersion,
@@ -232,6 +314,17 @@ export function ConnectionToolBlock({
   const getStatusText = () => {
     if (!result) return status;
     if (status === 'running') return 'Establishing connection...';
+
+    // A2A agent card response
+    if (result.ok && result.value?.agentCard) {
+      return `A2A Agent Card loaded: ${result.value.agentCard.name}`;
+    }
+
+    // Guidance response - show protocol info
+    if (hasGuidance) {
+      return protoUpper + ' agent discovered (see guidance below)';
+    }
+
     if (result.ok) {
       const capCount = result.value?.capabilities?.length || 0;
       return `Connected (${capCount} capabilities)`;
@@ -239,32 +332,31 @@ export function ConnectionToolBlock({
       return 'Ⓧ Connection not established (authentication required). AID worked.';
     } else {
       const errorMessage = (result.error as AuthError)?.message;
-      return `Ⓧ Agent connection ${
-        discoveryResult?.ok ? discoveryResult.value?.record?.protocol?.toUpperCase() : ''
-      }${errorMessage ? ` – ${errorMessage}` : ''}`;
+      return `Ⓧ Agent connection ${protoUpper}${errorMessage ? ` – ${errorMessage}` : ''}`;
     }
   };
 
-  const defaultExpand = false;
-
-  // Helper: get compliantAuth and metadata from error if present
-  let compliantAuth: boolean | null = null;
-  let metadata: Record<string, unknown> | null = null;
-  if (result && !result.ok && 'compliantAuth' in result.error) {
-    compliantAuth = (result.error as AuthError)?.compliantAuth ?? null;
-    metadata = (result.error as AuthError)?.metadata ?? null;
-  }
+  const defaultExpand = true; // Always expand connection block by default
 
   return (
     <ToolCallBlock
-      title="Agent Connection"
+      title={hasGuidance ? protoUpper + ' Agent' : 'Agent Connection'}
       Icon={Plug}
-      status={status === 'needs_auth' ? 'needs_auth' : status}
+      status={hasGuidance ? 'success' : (status === 'needs_auth' ? 'needs_auth' : status)}
       statusText={getStatusText()}
       codeSnippets={getCodeSnippets()}
       defaultExpanded={defaultExpand}
     >
-      {result?.ok && result.value.security && (
+      {/* A2A Agent Card - show prominently if present */}
+      {result?.ok && result.value?.agentCard && <A2ACardView card={result.value.agentCard} />}
+
+      {/* Protocol Guidance for non-MCP (but not if we have an A2A card) */}
+      {hasGuidance && result.value.guidance && !result.value.agentCard && (
+        <ProtocolGuidanceView guidance={result.value.guidance} />
+      )}
+
+      {/* Security badges for all successful responses */}
+      {result?.ok && result.value.security && !hasGuidance && (
         <div className="flex flex-wrap gap-2 text-xs mb-2">
           {typeof result.value.security.dnssec === 'boolean' && (
             <SecurityBadge variant={result.value.security.dnssec ? 'success' : 'info'}>
@@ -276,16 +368,16 @@ export function ConnectionToolBlock({
               variant={
                 result.value.security.pka.verified === true
                   ? 'success'
-                  : result.value.security.pka.present
+                  : (result.value.security.pka.present
                     ? 'warning'
-                    : 'info'
+                    : 'info')
               }
             >
               {result.value.security.pka.verified === true
                 ? 'PKA verified'
-                : result.value.security.pka.present
+                : (result.value.security.pka.present
                   ? 'PKA present'
-                  : 'PKA not present'}
+                  : 'PKA not present')}
             </SecurityBadge>
           )}
           {result.value.security.tls && (
@@ -296,6 +388,8 @@ export function ConnectionToolBlock({
           )}
         </div>
       )}
+
+      {/* Security details collapsible */}
       {result?.ok && result.value.security && (
         <Collapsible>
           <CollapsibleTrigger className="flex items-center text-xs text-muted-foreground gap-1 hover:text-foreground mt-2">
@@ -307,7 +401,9 @@ export function ConnectionToolBlock({
                 <div className="font-medium">Warnings</div>
                 <ul className="list-disc pl-4">
                   {result.value.security.warnings.map((w, i) => (
-                    <li key={i} className="font-mono break-words">{w.code}: {w.message}</li>
+                    <li key={i} className="font-mono break-words">
+                      {w.code}: {w.message}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -317,7 +413,9 @@ export function ConnectionToolBlock({
                 <div className="font-medium">Errors</div>
                 <ul className="list-disc pl-4">
                   {result.value.security.errors.map((e, i) => (
-                    <li key={i} className="font-mono break-words text-red-700">{e.code}: {e.message}</li>
+                    <li key={i} className="font-mono break-words text-red-700">
+                      {e.code}: {e.message}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -325,27 +423,22 @@ export function ConnectionToolBlock({
           </CollapsibleContent>
         </Collapsible>
       )}
-      {result && <ConnectionDetailsView result={result} />}
+
+      {/* Connection details for MCP */}
+      {result && !hasGuidance && <ConnectionDetailsView result={result} />}
+
+      {/* Auth flows */}
       {status === 'needs_auth' &&
-        (compliantAuth && metadata ? (
-          <MetadataAuthView metadata={metadata} />
-        ) : (compliantAuth === false ? (
-          <LocalSchemeNotice
+        result &&
+        !result.ok &&
+        result.error instanceof AuthRequiredError && (
+          <AuthPrompts
+            error={result.error}
             uri={discoveryResult?.ok ? discoveryResult.value?.record?.uri : undefined}
+            authHint={discoveryResult?.ok ? discoveryResult.value?.record?.auth : undefined}
+            onProvideAuth={onProvideAuth}
           />
-        ) : (
-          <>
-            <LegacyNotice
-              authHint={discoveryResult?.ok ? discoveryResult.value?.record?.auth : undefined}
-            />
-            {onProvideAuth && (
-              <AuthPrompt
-                onSubmit={onProvideAuth}
-                authHint={discoveryResult?.ok ? discoveryResult.value?.record?.auth : undefined}
-              />
-            )}
-          </>
-        )))}
+        )}
     </ToolCallBlock>
   );
 }
@@ -440,83 +533,6 @@ function ConnectionDetailsView({ result }: { result: HandshakeResult }) {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-function AuthPrompt({
-  onSubmit,
-  authHint,
-}: {
-  onSubmit: (token: string) => void;
-  authHint?: string;
-}) {
-  const [token, setToken] = React.useState('');
-
-  const handle = () => {
-    if (token.trim()) {
-      onSubmit(token.trim());
-      setToken('');
-    }
-  };
-
-  const placeholder = authHint ? `${authHint.toUpperCase()} token` : 'Enter token...';
-
-  return (
-    <div className="mt-4 flex items-center gap-2">
-      <input
-        type="password"
-        placeholder={placeholder}
-        value={token}
-        onChange={(e) => setToken(e.target.value)}
-        className="flex-1 border rounded px-2 py-1 text-sm"
-      />
-      <button onClick={handle} className="bg-gray-900 text-white text-sm px-3 py-1 rounded">
-        Retry
-      </button>
-    </div>
-  );
-}
-
-function MetadataAuthView({ metadata }: { metadata: Record<string, unknown> }) {
-  const json = JSON.stringify(metadata, null, 2);
-  return (
-    <div className="mt-4">
-      <div className="text-sm font-medium mb-1">Auth Metadata</div>
-      <pre className="text-xs bg-gray-100 p-2 rounded min-w-0 whitespace-pre-wrap break-words overflow-hidden max-h-64">
-        {json}
-      </pre>
-      <p className="text-xs text-gray-600 mt-1">
-        The server is spec-compliant. Follow the indicated auth flow (e.g. OAuth device, PAT, etc.)
-        and retry once you have a token.
-      </p>
-    </div>
-  );
-}
-
-function LegacyNotice({ authHint }: { authHint?: string }) {
-  return (
-    <p className="text-xs text-yellow-700 mb-2">
-      This server does not implement the latest MCP auth discovery. Provide your{' '}
-      {authHint ?? 'access'} token manually.
-    </p>
-  );
-}
-
-function LocalSchemeNotice({ uri }: { uri?: string }) {
-  return (
-    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
-      <p className="font-medium mb-1">Local CLI required</p>
-      <p>
-        This agent is configured to run via a local command
-        {uri ? (
-          <>
-            : <code className="bg-white border px-1 py-0.5 rounded text-xs break-words">{uri}</code>
-          </>
-        ) : null}
-        . Start the CLI on your machine and make it accessible via an HTTP/WebSocket URL, then
-        re-enter its address or provide a Personal Access Token if the CLI exposes one.
-      </p>
     </div>
   );
 }
