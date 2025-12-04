@@ -16,6 +16,8 @@ export interface HandshakeOptions {
   authBearer?: string;
   /** Protocol token from discovery - determines connection behavior */
   proto?: ProtocolToken;
+  /** Auth hint from discovery record (e.g., 'pat', 'oauth2_device') */
+  authHint?: string;
 }
 
 /**

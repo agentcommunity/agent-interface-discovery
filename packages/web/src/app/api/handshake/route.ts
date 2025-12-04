@@ -1,22 +1,11 @@
 import { NextResponse } from 'next/server';
 import { runCheck } from '@agentcommunity/aid-engine';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { WebSocketClientTransport } from '@modelcontextprotocol/sdk/client/websocket.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import { handleProtocol, isLocalScheme } from '@/lib/protocols';
+import type { ProtocolToken } from '@/lib/protocols';
 
 export const runtime = 'nodejs';
 
 type SupportedScheme = 'http:' | 'https:' | 'ws:' | 'wss:';
-type ProtocolToken =
-  | 'mcp'
-  | 'a2a'
-  | 'openapi'
-  | 'grpc'
-  | 'graphql'
-  | 'websocket'
-  | 'local'
-  | 'zeroconf';
 
 interface AuthCredentials {
   bearer?: string;
@@ -28,108 +17,8 @@ interface HandshakeRequestBody {
   uri: string;
   proto?: ProtocolToken;
   auth?: AuthCredentials;
-}
-
-interface ProtocolGuidance {
-  canConnect: false;
-  title: string;
-  description: string;
-  command?: string;
-  docsUrl?: string;
-  nextSteps: string[];
-}
-
-/** Minimal superset of the SDK's Transport with header helpers */
-export interface HeaderCapableTransport {
-  start: () => Promise<void>;
-  close: () => Promise<void>;
-  send: (...args: unknown[]) => Promise<void>;
-  setHeaders?: (headers: Record<string, string>) => void;
-  headers?: Record<string, string>;
-}
-
-/** Get protocol-specific guidance for non-MCP agents */
-function getProtocolGuidance(proto: ProtocolToken, uri: string): ProtocolGuidance {
-  const guides: Record<Exclude<ProtocolToken, 'mcp'>, ProtocolGuidance> = {
-    a2a: {
-      canConnect: false,
-      title: 'A2A Agent Discovered',
-      description:
-        'This agent uses the Agent-to-Agent (A2A) protocol. Connection testing requires an A2A-compatible client.',
-      docsUrl: 'https://google.github.io/A2A/',
-      nextSteps: [
-        'Use an A2A-compatible client to connect',
-        'Fetch the agent card at ' + uri,
-        'The agent card describes available skills and auth requirements',
-      ],
-    },
-    openapi: {
-      canConnect: false,
-      title: 'OpenAPI Agent Discovered',
-      description: 'This URI points to an OpenAPI specification document describing the agent API.',
-      docsUrl: 'https://swagger.io/specification/',
-      nextSteps: [
-        'Fetch the OpenAPI spec at ' + uri,
-        'Use tools like Swagger UI or Postman to explore the API',
-        'Generate a client using openapi-generator',
-      ],
-    },
-    graphql: {
-      canConnect: false,
-      title: 'GraphQL Agent Discovered',
-      description: 'This agent exposes a GraphQL API endpoint.',
-      docsUrl: 'https://graphql.org/',
-      nextSteps: [
-        'Connect to ' + uri + ' with a GraphQL client',
-        'Run an introspection query to discover the schema',
-        'Use GraphQL Playground or Apollo Studio to explore',
-      ],
-    },
-    grpc: {
-      canConnect: false,
-      title: 'gRPC Agent Discovered',
-      description: 'This agent uses gRPC over HTTP/2. Browser-based connection is limited.',
-      docsUrl: 'https://grpc.io/',
-      nextSteps: [
-        'Use grpcurl or a native gRPC client',
-        'grpcurl -plaintext ' + safeHostFromUri(uri) + ' list',
-        'Check if the server supports gRPC-Web for browser access',
-      ],
-    },
-    websocket: {
-      canConnect: false,
-      title: 'WebSocket Agent Discovered',
-      description: 'This agent communicates over WebSocket (WSS).',
-      nextSteps: [
-        'Connect to ' + uri + ' using a WebSocket client',
-        'Check the agent documentation for message format',
-        'Use browser DevTools or wscat for testing',
-      ],
-    },
-    local: {
-      canConnect: false,
-      title: 'Local Agent Discovered',
-      description: 'This agent runs locally on your machine via Docker, npx, or pip.',
-      command: uri,
-      nextSteps: [
-        'Run: ' + uri.replace(':', ' '),
-        'The agent will start on your local machine',
-        'Connect to it using the appropriate client',
-      ],
-    },
-    zeroconf: {
-      canConnect: false,
-      title: 'Zeroconf Agent Discovered',
-      description: 'This agent is discovered via mDNS/DNS-SD on your local network.',
-      nextSteps: [
-        'Browse for service: ' + uri.replace('zeroconf:', ''),
-        'Use dns-sd or avahi-browse to find local instances',
-        'Connect to the discovered IP:port',
-      ],
-    },
-  };
-
-  return guides[proto as Exclude<ProtocolToken, 'mcp'>];
+  /** Auth hint from discovery record (e.g., 'pat', 'oauth2_device') */
+  authHint?: string;
 }
 
 /** Safely extract host from URI, handling non-URL schemes */
@@ -139,6 +28,79 @@ function safeHostFromUri(uri: string): string {
   } catch {
     return uri.split('/')[0] || uri;
   }
+}
+
+/**
+ * Get security info for a domain using aid-engine
+ */
+async function getSecurityInfo(hostname: string): Promise<Record<string, unknown> | undefined> {
+  try {
+    if (isPrivateHost(hostname)) return undefined;
+    const report = await runCheck(hostname, {
+      timeoutMs: 4000,
+      allowFallback: true,
+      wellKnownTimeoutMs: 1500,
+      showDetails: true,
+    });
+    return {
+      dnssec: report.dnssec.present,
+      pka: report.pka,
+      tls: report.tls,
+      warnings: report.record.warnings,
+      errors: report.record.errors,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Build auth error response with appropriate message based on URI scheme and auth hint
+ */
+function buildAuthError(
+  error: unknown,
+  uri: string,
+  authHint?: string,
+  compliantAuth?: boolean,
+  metadataUri?: string,
+): { body: Record<string, unknown>; status: number } {
+  const msg = error instanceof Error ? error.message : String(error);
+  const isLocal = isLocalScheme(uri);
+
+  const body: Record<string, unknown> = {
+    success: false,
+    error: msg,
+    needsAuth: true,
+    compliantAuth: compliantAuth ?? false,
+  };
+
+  if (metadataUri) {
+    body.metadataUri = metadataUri;
+  }
+
+  // Add auth type hint based on URI scheme and auth field
+  if (isLocal) {
+    body.authType = 'local_cli';
+  } else switch (authHint) {
+ case 'pat': {
+    body.authType = 'pat';
+  
+ break;
+ }
+ case 'oauth2_device': {
+    body.authType = 'oauth2_device';
+  
+ break;
+ }
+ case 'oauth2_code': {
+    body.authType = 'oauth2_code';
+  
+ break;
+ }
+ default: body.authType = compliantAuth ? 'compliant' : 'generic';
+ }
+
+  return { body, status: 401 };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -151,78 +113,54 @@ export async function POST(request: Request) {
     return NextResponse.json(parsed.error, { status: 400 });
   }
 
-  const { uri, proto, auth } = parsed.value;
+  const { uri, proto: protoParam, auth, authHint } = parsed.value;
+  const proto: ProtocolToken = (protoParam || 'mcp');
 
-  // Handle non-MCP protocols with guidance instead of connection attempt
-  if (proto && proto !== 'mcp') {
-    const guidance = getProtocolGuidance(proto, uri);
-
-    // Still try to get security info via aid-engine for non-MCP protocols
-    let security: Record<string, unknown> | undefined;
-    try {
-      const parsedUri = safeHostFromUri(uri);
-      const isSecureScheme = uri.startsWith('https://') || uri.startsWith('wss://');
-      if (parsedUri && isSecureScheme && !isPrivateHost(parsedUri.split(':')[0])) {
-        const report = await runCheck(parsedUri.split(':')[0], {
-          timeoutMs: 4000,
-          allowFallback: true,
-          wellKnownTimeoutMs: 1500,
-          showDetails: true,
-        });
-        security = {
-          dnssec: report.dnssec.present,
-          pka: report.pka,
-          tls: report.tls,
-          warnings: report.record.warnings,
-          errors: report.record.errors,
-        };
-      }
-    } catch {
-      /* best-effort security check */
+  // Guardrails: check for private hosts and unsupported schemes
+  try {
+    const url = new URL(uri);
+    if (isPrivateHost(url.hostname)) {
+      return NextResponse.json(
+        { success: false, error: 'Target host not allowed' },
+        { status: 400 },
+      );
     }
-
-    return NextResponse.json({
-      success: true,
-      proto,
-      guidance,
-      security,
-    });
+    if (!isSupportedScheme(url.protocol as SupportedScheme) && proto === 'mcp') {
+      return NextResponse.json(
+        {
+          success: false,
+          needsAuth: true,
+          compliantAuth: false,
+          authType: isLocalScheme(uri) ? 'local_cli' : 'generic',
+          error:
+            'Unsupported URI scheme: ' +
+            url.protocol +
+            '. Provide a Personal Access Token or run a local proxy.',
+        },
+        { status: 401 },
+      );
+    }
+  } catch {
+    // URI parsing failed - might be a local scheme like npx:, docker:, etc.
+    // Continue to protocol handler
   }
 
-  const url = new URL(uri);
-
-  // Guardrails
-  if (isPrivateHost(url.hostname)) {
-    return NextResponse.json({ success: false, error: 'Target host not allowed' }, { status: 400 });
-  }
-  if (!isSupportedScheme(url.protocol as SupportedScheme)) {
-    return NextResponse.json(
-      {
-        success: false,
-        needsAuth: true,
-        compliantAuth: false,
-        error:
-          'Unsupported URI scheme: ' +
-          url.protocol +
-          '. Provide a Personal Access Token or run a local proxy.',
-      },
-      { status: 401 },
-    );
-  }
-
-  /* ---------- Optional unauthenticated probe for compliant auth ---------- */
+  // Optional unauthenticated probe for compliant auth (MCP only)
   let isCompliantAuth = false;
   let authMetadataUri: string | undefined;
 
-  if (url.protocol.startsWith('http')) {
+  if (proto === 'mcp') {
     try {
-      const head = await fetch(url.toString(), { method: 'HEAD', redirect: 'manual' });
-      if (head.status === 401) {
-        const headerVal = head.headers.get('www-authenticate') ?? undefined;
-        const match = headerVal?.match(/as_uri="([^"]+)"/i);
-        if (match) {
-          isCompliantAuth = true;
-          authMetadataUri = match[1];
+      const url = new URL(uri);
+      if (url.protocol.startsWith('http')) {
+        const head = await fetch(url.toString(), { method: 'HEAD', redirect: 'manual' });
+        if (head.status === 401) {
+          const headerVal = head.headers.get('www-authenticate') ?? undefined;
+          const match = headerVal?.match(/as_uri="([^"]+)"/i);
+          if (match) {
+            isCompliantAuth = true;
+            authMetadataUri = match[1];
+          }
         }
       }
     } catch {
@@ -230,47 +168,93 @@ export async function POST(request: Request) {
     }
   }
 
-  /* ------------------------------ Handshake ------------------------------ */
+  // Use protocol registry to handle the request
   try {
-    const transport = createTransport(url, auth);
-    const client = new Client({ name: 'aid-discovery-web', version: '1.0.0' });
+    const result = await handleProtocol({
+      uri,
+      proto,
+      auth,
+    });
 
-    await client.connect(transport as unknown as Transport);
-    const capabilities = await client.listTools();
-    await client.close();
-
+    // Get security info if we have a hostname
     let security: Record<string, unknown> | undefined;
     try {
-      const report = await runCheck(url.hostname, {
-        timeoutMs: 4000,
-        allowFallback: true,
-        wellKnownTimeoutMs: 1500,
-        showDetails: true,
-      });
-      security = {
-        dnssec: report.dnssec.present,
-        pka: report.pka,
-        tls: report.tls,
-        warnings: report.record.warnings,
-        errors: report.record.errors,
-      };
+      const hostname = safeHostFromUri(uri).split(':')[0];
+      if (hostname && !isPrivateHost(hostname)) {
+        security = await getSecurityInfo(hostname);
+      }
     } catch {
-      /* best-effort; ignore */
+      /* best-effort */
     }
 
-    return NextResponse.json({
-      success: true,
-      proto: proto || 'mcp',
-      data: {
-        protocolVersion: '2024-11-05',
-        serverInfo: { name: 'Connected Server', version: '1.0.0' },
-        capabilities: capabilities.tools ?? [],
+    // Handle successful results
+    if (result.success) {
+      const response: Record<string, unknown> = {
+        success: true,
+        proto: result.proto,
         security,
+      };
+
+      // Add protocol-specific data
+      if (result.data) {
+        response.data = {
+          ...result.data,
+          security: security || result.data.security,
+        };
+      }
+
+      if (result.agentCard) {
+        response.agentCard = result.agentCard;
+      }
+
+      if (result.guidance) {
+        response.guidance = result.guidance;
+      }
+
+      return NextResponse.json(response);
+    }
+
+    // Handle errors
+    if (result.needsAuth) {
+      const { body, status } = buildAuthError(
+        new Error(result.error || 'Authentication required'),
+        uri,
+        authHint,
+        result.compliantAuth ?? isCompliantAuth,
+        result.metadataUri || authMetadataUri,
+      );
+      return NextResponse.json(body, { status });
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: result.error || 'Protocol handling failed',
       },
-    });
+      { status: 500 },
+    );
   } catch (error: unknown) {
-    const { body, status } = buildError(error, isCompliantAuth, authMetadataUri);
-    return NextResponse.json(body, { status });
+    const msg = error instanceof Error ? error.message : String(error);
+    const needsAuth = /401|403|unauthori[sz]ed/i.test(msg);
+
+    if (needsAuth) {
+      const { body, status } = buildAuthError(
+        error,
+        uri,
+        authHint,
+        isCompliantAuth,
+        authMetadataUri,
+      );
+      return NextResponse.json(body, { status });
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: msg,
+      },
+      { status: 500 },
+    );
   }
 }
 
@@ -311,39 +295,4 @@ async function safeParseBody(
   } catch {
     return { ok: false, error: { success: false, error: 'Invalid JSON body' } };
   }
-}
-
-function createTransport(url: URL, auth?: AuthCredentials): HeaderCapableTransport {
-  const transport: HeaderCapableTransport = url.protocol.startsWith('ws')
-    ? (new WebSocketClientTransport(url) as unknown as HeaderCapableTransport)
-    : (new StreamableHTTPClientTransport(url) as unknown as HeaderCapableTransport);
-
-  if (!auth) return transport;
-
-  const hdrs: Record<string, string> = {};
-  if (auth.bearer) hdrs.Authorization = 'Bearer ' + auth.bearer;
-  if (auth.basic) hdrs.Authorization = 'Basic ' + auth.basic;
-  if (auth.apikey) hdrs['x-api-key'] = auth.apikey;
-
-  if (Object.keys(hdrs).length === 0) return transport;
-
-  if (typeof transport.setHeaders === 'function') {
-    transport.setHeaders(hdrs);
-  } else {
-    transport.headers = transport.headers ? { ...transport.headers, ...hdrs } : { ...hdrs };
-  }
-
-  return transport;
-}
-
-function buildError(error: unknown, compliant: boolean, metaUri?: string) {
-  const msg = error instanceof Error ? error.message : String(error);
-  const needsAuth = /401|403|unauthori[sz]ed/i.test(msg);
-  const body: Record<string, unknown> = { success: false, error: msg };
-  if (needsAuth) {
-    body.needsAuth = true;
-    body.compliantAuth = compliant;
-    if (metaUri) body.metadataUri = metaUri;
-  }
-  return { status: needsAuth ? 401 : 500, body };
 }

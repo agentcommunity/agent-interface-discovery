@@ -203,10 +203,11 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         domain,
       });
 
-      // 2. Connection phase - pass proto for protocol-aware handling
+      // 2. Connection phase - pass proto and authHint for protocol-aware handling
       setStatus('connecting');
       const handshakeRes = await selectedDs.handshake(discoveryRecord.uri, {
         proto: discoveryRecord.proto,
+        authHint: discoveryRecord.auth as string | undefined,
       });
       setHandshake(handshakeRes);
 
@@ -320,7 +321,11 @@ export function useChatEngine({ datasource }: { datasource?: Datasource } = {}) 
         datasource ??
         (toolManifests[state.domain!] ? new MockDatasource(state.domain!) : new LiveDatasource());
 
-      const handshakeRes = await selectedDs.handshake(uri, { authBearer: token, proto });
+      const handshakeRes = await selectedDs.handshake(uri, {
+        authBearer: token,
+        proto,
+        authHint: state.discovery.value.record.auth as string | undefined,
+      });
       setHandshake(handshakeRes);
 
       if (isOk(handshakeRes)) {

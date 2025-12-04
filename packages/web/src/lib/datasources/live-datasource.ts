@@ -46,7 +46,7 @@ export class LiveDatasource implements Datasource {
   }
 
   async handshake(uri: string, options: HandshakeOptions = {}): Promise<HandshakeResult> {
-    const { authBearer, proto } = options;
+    const { authBearer, proto, authHint } = options;
     try {
       const response = await fetch('/api/handshake', {
         method: 'POST',
@@ -55,6 +55,7 @@ export class LiveDatasource implements Datasource {
           uri,
           ...(proto ? { proto } : {}),
           ...(authBearer ? { auth: { bearer: authBearer } } : {}),
+          ...(authHint ? { authHint } : {}),
         }),
       });
 
@@ -66,7 +67,16 @@ export class LiveDatasource implements Datasource {
         compliantAuth?: boolean;
         metadataUri?: string;
         metadata?: unknown;
+        authType?: string;
         data?: HandshakeSuccessData;
+        agentCard?: {
+          name: string;
+          description?: string;
+          url: string;
+          provider?: { organization: string; url?: string };
+          skills?: Array<{ id: string; name: string; description?: string }>;
+          authentication?: { schemes: string[]; credentials?: string };
+        };
         guidance?: {
           canConnect: false;
           title: string;
@@ -88,6 +98,7 @@ export class LiveDatasource implements Datasource {
             serverInfo: { name: raw.guidance.title, version: '1.0.0' },
             capabilities: [],
             guidance: raw.guidance,
+            agentCard: raw.agentCard,
             security: raw.security as HandshakeSuccessData['security'],
           },
         };
@@ -106,6 +117,14 @@ export class LiveDatasource implements Datasource {
             raw.compliantAuth,
             raw.metadataUri,
             raw.metadata,
+            raw.authType as
+              | 'local_cli'
+              | 'pat'
+              | 'oauth2_device'
+              | 'oauth2_code'
+              | 'compliant'
+              | 'generic'
+              | undefined,
           ),
         } as HandshakeResult;
       }
