@@ -13,9 +13,6 @@ const DOMAINS: readonly string[] = [
   'local-docker.agentcommunity.org',
   'messy.agentcommunity.org',
   'multi-string.agentcommunity.org',
-  'supabase.agentcommunity.org',
-  'auth0.agentcommunity.org',
-  'openai.agentcommunity.org',
 ] as const;
 
 const TIMEOUT_MS = 15_000;
