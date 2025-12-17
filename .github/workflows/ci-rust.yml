@@ -3,8 +3,16 @@ on:
   workflow_dispatch:
   push:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-rs/**'
+      - 'protocol/**'
+      - '.github/workflows/ci-rust.yml'
   pull_request:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid-rs/**'
+      - 'protocol/**'
+      - '.github/workflows/ci-rust.yml'
 
 jobs:
   rust:

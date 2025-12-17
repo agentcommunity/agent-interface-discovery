@@ -24,14 +24,14 @@ export interface Example {
   category: string;
 }
 
-export const BASIC_EXAMPLES: Example[] = [
+export const TUTORIAL_EXAMPLES: Example[] = [
   {
     title: 'Simple',
     label: 'Simple',
     domain: 'simple.agentcommunity.org',
     icon: '🤖',
     content: 'v=aid1;u=https://api.example.com/mcp;p=mcp;a=pat;s=Basic MCP Example',
-    category: 'basic',
+    category: 'tutorials',
   },
   {
     title: 'Local Docker',
@@ -39,7 +39,7 @@ export const BASIC_EXAMPLES: Example[] = [
     domain: 'local-docker.agentcommunity.org',
     icon: '🐳',
     content: 'v=aid1;u=docker:myimage;p=local;s=Local Docker Agent',
-    category: 'basic',
+    category: 'tutorials',
   },
   {
     title: 'Messy',
@@ -47,7 +47,7 @@ export const BASIC_EXAMPLES: Example[] = [
     domain: 'messy.agentcommunity.org',
     icon: '🧹',
     content: ' v=aid1 ; u=https://api.example.com/mcp ; p=mcp ; extra=ignored ',
-    category: 'basic',
+    category: 'tutorials',
   },
   {
     title: 'Multi String',
@@ -55,7 +55,7 @@ export const BASIC_EXAMPLES: Example[] = [
     domain: 'multi-string.agentcommunity.org',
     icon: '📄',
     content: 'v=aid1;u=https://api.example.com/mcp;p=mcp;s=Multi string part 1',
-    category: 'basic',
+    category: 'tutorials',
   },
   {
     title: 'Pka Basic',
@@ -64,8 +64,11 @@ export const BASIC_EXAMPLES: Example[] = [
     icon: '🔐',
     content:
       'v=aid1;p=mcp;u=https://api.example.com/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=p1;s=Basic PKA Example',
-    category: 'basic',
+    category: 'tutorials',
   },
+];
+
+export const REFERENCE_EXAMPLES: Example[] = [
   {
     title: 'Complete V1 1',
     label: 'Complete V1 1',
@@ -73,7 +76,16 @@ export const BASIC_EXAMPLES: Example[] = [
     icon: '✨',
     content:
       'v=aid1;p=mcp;u=https://api.complete.agentcommunity.org/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/complete;e=2026-12-31T23:59:59Z;s=Complete v1.1 with all features',
-    category: 'basic',
+    category: 'reference',
+  },
+  {
+    title: 'Secure',
+    label: 'Secure',
+    domain: 'secure.agentcommunity.org',
+    icon: '🔒',
+    content:
+      'v=aid1;u=https://api.secure.agentcommunity.org/mcp;p=mcp;a=pat;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/secure;s=Secure MCP with PKA',
+    category: 'reference',
   },
 ];
 
@@ -162,15 +174,6 @@ export const OTHER_CHAT_EXAMPLES: Example[] = [
     icon: '⚠️',
     content:
       'v=aid1;u=https://api.deprecated.agentcommunity.org/mcp;p=mcp;a=pat;e=2025-12-31T23:59:59Z;d=https://docs.agentcommunity.org/migration;s=Deprecated - migrate soon',
-    category: 'error_cases',
-  },
-  {
-    title: 'Secure',
-    label: 'Secure',
-    domain: 'secure.agentcommunity.org',
-    icon: '🔒',
-    content:
-      'v=aid1;u=https://api.secure.agentcommunity.org/mcp;p=mcp;a=pat;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/secure;s=Secure MCP with PKA',
     category: 'error_cases',
   },
 ];

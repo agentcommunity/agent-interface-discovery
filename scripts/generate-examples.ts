@@ -121,7 +121,8 @@ export interface Example {
     })),
   );
 
-  const basicExamples = allExamples.filter((ex) => ex.category === 'basic');
+  const tutorialExamples = allExamples.filter((ex) => ex.category === 'tutorials');
+  const referenceExamples = allExamples.filter((ex) => ex.category === 'reference');
   const realWorldExamples = allExamples.filter((ex) => ex.category === 'real_world');
   const protocolExamples = allExamples.filter((ex) => ex.category === 'protocols');
   const otherExamples = allExamples.filter((ex) => ex.category === 'error_cases');
@@ -141,8 +142,12 @@ export interface Example {
       .join(',\n');
   }
 
-  const combinedExports = `export const BASIC_EXAMPLES: Example[] = [
-${formatExampleArray(basicExamples)}
+  const combinedExports = `export const TUTORIAL_EXAMPLES: Example[] = [
+${formatExampleArray(tutorialExamples)}
+];
+
+export const REFERENCE_EXAMPLES: Example[] = [
+${formatExampleArray(referenceExamples)}
 ];
 
 export const REAL_WORLD_EXAMPLES: Example[] = [

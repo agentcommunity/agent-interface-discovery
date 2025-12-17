@@ -5,8 +5,22 @@ on:
     - cron: '0 2 * * *'
   push:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/**'
+      - 'protocol/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/security.yml'
+      - '.github/codeql-config.yml'
   pull_request:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/**'
+      - 'protocol/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/security.yml'
+      - '.github/codeql-config.yml'
 
 permissions:
   contents: read

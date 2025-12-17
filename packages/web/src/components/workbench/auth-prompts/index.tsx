@@ -61,9 +61,7 @@ function LegacyNotice({ authHint }: { authHint?: string }) {
   );
 }
 
-
-
-export {AuthPrompt} from './auth-prompt';
-export {PatPrompt} from './pat-prompt';
-export {OAuthPrompt} from './oauth-prompt';
-export {LocalCliNotice} from './local-cli-notice';
+export { AuthPrompt } from './auth-prompt';
+export { PatPrompt } from './pat-prompt';
+export { OAuthPrompt } from './oauth-prompt';
+export { LocalCliNotice } from './local-cli-notice';

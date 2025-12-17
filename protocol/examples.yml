@@ -6,49 +6,58 @@
 # Run 'pnpm gen' to regenerate after changes
 
 examples:
-  # Basic educational examples
-  basic:
+  # Educational/Simple examples
+  tutorials:
     simple:
       domain: 'simple.agentcommunity.org'
       record: 'v=aid1;u=https://api.example.com/mcp;p=mcp;a=pat;s=Basic MCP Example'
       icon: '🤖'
       description: 'Simple MCP server example'
-      category: 'basic'
+      category: 'tutorials'
 
     local_docker:
       domain: 'local-docker.agentcommunity.org'
       record: 'v=aid1;u=docker:myimage;p=local;s=Local Docker Agent'
       icon: '🐳'
       description: 'Local agent via Docker'
-      category: 'basic'
+      category: 'tutorials'
 
     messy:
       domain: 'messy.agentcommunity.org'
       record: ' v=aid1 ; u=https://api.example.com/mcp ; p=mcp ; extra=ignored '
       icon: '🧹'
       description: 'Messy formatting with extra fields'
-      category: 'basic'
+      category: 'tutorials'
 
     multi_string:
       domain: 'multi-string.agentcommunity.org'
       record: 'v=aid1;u=https://api.example.com/mcp;p=mcp;s=Multi string part 1'
       icon: '📄'
       description: 'Multi-string DNS record example'
-      category: 'basic'
+      category: 'tutorials'
 
     pka_basic:
       domain: 'pka-basic.agentcommunity.org'
       record: 'v=aid1;p=mcp;u=https://api.example.com/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=p1;s=Basic PKA Example'
       icon: '🔐'
       description: 'MCP with PKA authentication'
-      category: 'basic'
+      category: 'tutorials'
 
+  # Feature complete & Reference examples
+  reference:
     complete_v1_1:
       domain: 'complete.agentcommunity.org'
       record: 'v=aid1;p=mcp;u=https://api.complete.agentcommunity.org/mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/complete;e=2026-12-31T23:59:59Z;s=Complete v1.1 with all features'
       icon: '✨'
       description: 'Complete v1.1 example with all features'
-      category: 'basic'
+      category: 'reference'
+
+    secure:
+      domain: 'secure.agentcommunity.org'
+      record: 'v=aid1;u=https://api.secure.agentcommunity.org/mcp;p=mcp;a=pat;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/secure;s=Secure MCP with PKA'
+      icon: '🔒'
+      description: 'Secure service with PKA'
+      category: 'reference'
 
   # Real-world service examples (with PKA)
   real_world:
@@ -117,11 +126,4 @@ examples:
       record: 'v=aid1;u=https://api.deprecated.agentcommunity.org/mcp;p=mcp;a=pat;e=2025-12-31T23:59:59Z;d=https://docs.agentcommunity.org/migration;s=Deprecated - migrate soon'
       icon: '⚠️'
       description: 'Deprecated service example'
-      category: 'error_cases'
-
-    secure:
-      domain: 'secure.agentcommunity.org'
-      record: 'v=aid1;u=https://api.secure.agentcommunity.org/mcp;p=mcp;a=pat;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1;d=https://docs.agentcommunity.org/secure;s=Secure MCP with PKA'
-      icon: '🔒'
-      description: 'Secure service with PKA'
       category: 'error_cases'
