@@ -3,8 +3,34 @@ on:
   workflow_dispatch:
   push:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/aid-engine/**'
+      - 'packages/web/**'
+      - 'packages/e2e-tests/**'
+      - 'protocol/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'turbo.json'
+      - '.github/workflows/ci-typescript.yml'
   pull_request:
     branches: [main, feat/aid1.1-spec]
+    paths:
+      - 'packages/aid/**'
+      - 'packages/aid-conformance/**'
+      - 'packages/aid-doctor/**'
+      - 'packages/aid-engine/**'
+      - 'packages/web/**'
+      - 'packages/e2e-tests/**'
+      - 'protocol/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'turbo.json'
+      - '.github/workflows/ci-typescript.yml'
 
 jobs:
   build:
