@@ -1,7 +1,8 @@
 // Re-export examples from generated file
 export type { Example, ExampleIcon } from '../generated/examples';
 export {
-  BASIC_EXAMPLES,
+  TUTORIAL_EXAMPLES,
+  REFERENCE_EXAMPLES,
   REAL_WORLD_EXAMPLES,
   PROTOCOL_EXAMPLES,
   OTHER_CHAT_EXAMPLES,
