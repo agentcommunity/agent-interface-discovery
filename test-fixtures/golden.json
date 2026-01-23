@@ -21,13 +21,13 @@
     },
     {
       "name": "v1.1-with-docs-dep",
-      "raw": "v=aid1;uri=https://api.example.com/mcp;p=mcp;d=https://docs.example.com/agent;e=2026-01-01T00:00:00Z",
+      "raw": "v=aid1;uri=https://api.example.com/mcp;p=mcp;d=https://docs.example.com/agent;e=2099-01-01T00:00:00Z",
       "expected": {
         "v": "aid1",
         "uri": "https://api.example.com/mcp",
         "proto": "mcp",
         "docs": "https://docs.example.com/agent",
-        "dep": "2026-01-01T00:00:00Z"
+        "dep": "2099-01-01T00:00:00Z"
       }
     },
     {

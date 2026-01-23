@@ -79,7 +79,7 @@ export function Header() {
   ];
 
   const centeredLink = {
-    name: 'Secure your .agent domain',
+    name: 'Pre-register for a .agent domain',
     href: 'https://agentcommunity.org',
     external: true,
   };

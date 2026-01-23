@@ -118,3 +118,6 @@ __pycache__/
 .gradle/
 /.gradle/
 /build/
+
+# cursor
+.cursor/
