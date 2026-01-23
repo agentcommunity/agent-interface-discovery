@@ -86,14 +86,6 @@ export function Hero() {
             </Button>
           </div>
 
-          <div className="flex justify-center">
-            <Button variant="ghost" asChild className="text-sm">
-              <Link href="https://docs.agentcommunity.org/aid/Reference/identity_pka">
-                Learn Agent Identity
-              </Link>
-            </Button>
-          </div>
-
           {/* Animated Stats Badge */}
           <div className="mb-12 animate-fade-in">
             <div className="inline-flex items-center gap-3 rounded-full bg-muted/50 px-6 py-3 text-sm border border-border/30 shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105 group">
