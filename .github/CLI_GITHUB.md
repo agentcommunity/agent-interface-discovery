@@ -1,6 +1,6 @@
-# CI Optimization Strategy
+# CI Setup Notes
 
-We have optimized our GitHub Actions workflows to significantly reduce build times and prevent unnecessary resource usage.
+This document explains how CI is configured and why certain checks always run.
 
 ## The Problem
 
@@ -10,25 +10,27 @@ Previously, every `push` or `pull_request` triggered all CI workflows (TypeScrip
 - Wasted GitHub Actions minutes.
 - Delayed feedback for simple changes.
 
-## The Solution: Path Filters
+## Current Setup (Required Checks)
 
-We have applied specific `paths` filters to all workflows. Now, a workflow only runs if the commit touches files relevant to that specific subsystem.
+Branch protection requires the language CI jobs to report on every PR. As a result, the language workflows run on all PRs and pushes, even for web-only changes.
+
+Secret scanning uses diff mode on PRs and pushes to avoid base and head being the same commit. Scheduled and manual runs scan the full repository.
 
 ### Optimization Matrix
 
-| Workflow            | Triggers Only On Changes To...                                                                 |
-| ------------------- | ---------------------------------------------------------------------------------------------- |
-| **CI (TypeScript)** | `packages/aid*`, `packages/web`, `packages/e2e-tests`, `scripts/`, `protocol/`, `package.json` |
-| **CI (Go)**         | `packages/aid-go/**`, `protocol/**`                                                            |
-| **CI (Java)**       | `packages/aid-java/**`, `protocol/**`                                                          |
-| **CI (Python)**     | `packages/aid-py/**`, `protocol/**`                                                            |
-| **CI (Rust)**       | `packages/aid-rs/**`, `protocol/**`                                                            |
-| **CI (.NET)**       | `packages/aid-dotnet/**`, `protocol/**`                                                        |
-| **Parity Check**    | Any `packages/**` or `protocol/**` (to ensure cross-language consistency)                      |
-| **Security Scan**   | Source code, protocol definitions, or lockfiles                                                |
+| Workflow            | Trigger Behavior                                                          |
+| ------------------- | ------------------------------------------------------------------------- |
+| **CI (TypeScript)** | Runs on all PRs and pushes (required)                                     |
+| **CI (Go)**         | Runs on all PRs and pushes (required)                                     |
+| **CI (Java)**       | Runs on all PRs and pushes (required)                                     |
+| **CI (Python)**     | Runs on all PRs and pushes (required)                                     |
+| **CI (Rust)**       | Runs on all PRs and pushes (required)                                     |
+| **CI (.NET)**       | Runs on all PRs and pushes (required)                                     |
+| **Parity Check**    | Any `packages/**` or `protocol/**` (to ensure cross-language consistency) |
+| **Security Scan**   | Diff scan on PRs and pushes. Full scan on schedule or manual runs.        |
 
 ## Result
 
-- **Frontend changes** (e.g., `packages/web`) no longer trigger Go/Rust/Java builds.
-- **SDK-specific changes** only trigger that SDK's CI + the general parity check.
-- **Protocol changes** correctly trigger everything to ensure conformity.
+- **Frontend changes** now trigger all language CI jobs due to required checks.
+- **SDK-specific changes** still run their native CI plus parity and security scans.
+- **Protocol changes** continue to trigger everything for conformity.

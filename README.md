@@ -276,6 +276,11 @@ Thanks to Turborepo's intelligent caching, commands only rebuild what changed.
 | `pnpm gen`      | Regenerate constant files from the YAML contract.                |
 | `pnpm clean`    | Remove all build artifacts (`dist`, `.turbo`, etc.).             |
 
+### CI Notes
+
+- Language CI workflows run on every PR and push because they are required checks.
+- Security Scan uses diff mode on PRs and pushes. Scheduled or manual runs scan the full repo.
+
 ### The Contract-First Workflow
 
 The single source of truth for all protocol constants is `protocol/constants.yml`. To update them across all language packages, follow this process:
