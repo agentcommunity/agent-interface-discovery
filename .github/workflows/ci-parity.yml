@@ -3,16 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main, feat/aid1.1-spec]
-    paths:
-      - 'packages/**'
-      - 'protocol/**'
-      - '.github/workflows/ci-parity.yml'
   pull_request:
     branches: [main, feat/aid1.1-spec]
-    paths:
-      - 'packages/**'
-      - 'protocol/**'
-      - '.github/workflows/ci-parity.yml'
 
 permissions:
   contents: read
