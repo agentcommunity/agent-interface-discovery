@@ -148,3 +148,7 @@ For complete CLI documentation, see the [aid-doctor CLI Reference](packages/docs
 * Add a Changeset for user visible changes
 * PRs must pass `turbo run build test lint`, include tests, and update docs
 * Update `tracking/PHASE_X.md` if applicable
+
+## Extending the Spec
+
+When adding new protocol features (tokens, fields, rules), follow `tracking/SPEC_EXTENSION_PROCESS.md`.
