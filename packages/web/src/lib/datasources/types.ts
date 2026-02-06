@@ -9,7 +9,8 @@ export type ProtocolToken =
   | 'graphql'
   | 'websocket'
   | 'local'
-  | 'zeroconf';
+  | 'zeroconf'
+  | 'ucp';
 
 export interface HandshakeOptions {
   /** Bearer token for authenticated handshake */

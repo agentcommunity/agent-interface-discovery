@@ -17,6 +17,7 @@ protocolTokens:
   websocket: 'WebSocket transport'
   local: 'The agent runs locally on the client machine'
   zeroconf: 'mDNS/DNS-SD service discovery'
+  ucp: 'Universal Commerce Protocol'
 
 # Authentication scheme tokens (auth field)
 authTokens:

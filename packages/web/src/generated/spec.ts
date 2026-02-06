@@ -13,6 +13,7 @@ export const PROTO_GRPC = 'grpc' as const;
 export const PROTO_LOCAL = 'local' as const;
 export const PROTO_MCP = 'mcp' as const;
 export const PROTO_OPENAPI = 'openapi' as const;
+export const PROTO_UCP = 'ucp' as const;
 export const PROTO_WEBSOCKET = 'websocket' as const;
 export const PROTO_ZEROCONF = 'zeroconf' as const;
 export const AUTH_APIKEY = 'apikey' as const;
@@ -31,6 +32,7 @@ export const PROTOCOL_TOKENS = {
   local: 'local',
   mcp: 'mcp',
   openapi: 'openapi',
+  ucp: 'ucp',
   websocket: 'websocket',
   zeroconf: 'zeroconf',
 } as const;

@@ -18,6 +18,7 @@ const (
 	ProtoLocal     = "local"
 	ProtoMcp       = "mcp"
 	ProtoOpenapi   = "openapi"
+	ProtoUcp       = "ucp"
 	ProtoWebsocket = "websocket"
 	ProtoZeroconf  = "zeroconf"
 )
@@ -30,6 +31,7 @@ var ProtocolTokens = map[string]string{
 	"local":     "local",
 	"mcp":       "mcp",
 	"openapi":   "openapi",
+	"ucp":       "ucp",
 	"websocket": "websocket",
 	"zeroconf":  "zeroconf",
 }

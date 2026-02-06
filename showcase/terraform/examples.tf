@@ -89,6 +89,11 @@ locals {
     value = "v=aid1;u=https://api.supabase.com/mcp;p=mcp;a=pat;k=zAbCdEfGhIjKlMnOpQrStUvWxYz0123456789AbCdEf;i=s1;d=https://supabase.com/docs/guides/getting-started/mcp;s=Supabase MCP (Mock Service)"
   }
 
+  ucp_showcase = {
+    name  = "_agent.ucp"
+    value = "v=aid1;u=https://ucp.agentcommunity.org/ucp;p=ucp;d=https://www.universalcommerce.io/;s=UCP Commerce Showcase"
+  }
+
   // Combined map of all examples for easy reference
   all_examples = {
     a2a_showcase = local.a2a_showcase
@@ -107,5 +112,6 @@ locals {
     secure = local.secure
     simple = local.simple
     supabase = local.supabase
+    ucp_showcase = local.ucp_showcase
   }
 }

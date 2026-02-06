@@ -10,6 +10,7 @@ public final class Constants {
   public static final String PROTO_LOCAL = "local";
   public static final String PROTO_MCP = "mcp";
   public static final String PROTO_OPENAPI = "openapi";
+  public static final String PROTO_UCP = "ucp";
   public static final String PROTO_WEBSOCKET = "websocket";
   public static final String PROTO_ZEROCONF = "zeroconf";
   public static final String AUTH_APIKEY = "apikey";

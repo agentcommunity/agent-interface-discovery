@@ -98,6 +98,13 @@ examples:
       description: 'Agent-to-Agent protocol example'
       category: 'protocols'
 
+    ucp_showcase:
+      domain: 'ucp.agentcommunity.org'
+      record: 'v=aid1;u=https://ucp.agentcommunity.org/ucp;p=ucp;d=https://www.universalcommerce.io/;s=UCP Commerce Showcase'
+      icon: '🛒'
+      description: 'Universal Commerce Protocol example'
+      category: 'protocols'
+
     graphql_showcase:
       domain: 'graphql.agentcommunity.org'
       record: 'v=aid1;u=https://graphql.agentcommunity.org/graphql;p=graphql;d=https://graphql.org/;s=GraphQL Agent Showcase'

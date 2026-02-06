@@ -23,6 +23,7 @@ PROTO_GRPC: Final[str] = "grpc"
 PROTO_LOCAL: Final[str] = "local"
 PROTO_MCP: Final[str] = "mcp"
 PROTO_OPENAPI: Final[str] = "openapi"
+PROTO_UCP: Final[str] = "ucp"
 PROTO_WEBSOCKET: Final[str] = "websocket"
 PROTO_ZEROCONF: Final[str] = "zeroconf"
 
@@ -33,6 +34,7 @@ PROTOCOL_TOKENS: Final[Dict[str, str]] = {
     "local": "local",
     "mcp": "mcp",
     "openapi": "openapi",
+    "ucp": "ucp",
     "websocket": "websocket",
     "zeroconf": "zeroconf",
 }

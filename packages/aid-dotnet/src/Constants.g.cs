@@ -11,6 +11,7 @@ namespace AidDiscovery {
     public const string PROTO_LOCAL = "local";
     public const string PROTO_MCP = "mcp";
     public const string PROTO_OPENAPI = "openapi";
+    public const string PROTO_UCP = "ucp";
     public const string PROTO_WEBSOCKET = "websocket";
     public const string PROTO_ZEROCONF = "zeroconf";
     public const string AUTH_APIKEY = "apikey";
