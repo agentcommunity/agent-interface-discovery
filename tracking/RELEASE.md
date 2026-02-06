@@ -17,13 +17,25 @@ Below is a **slow-step, no-surprises checklist** for a staged v1.0.0 release.
 
 | Token                             | What it’s for                                                                            | Where to create it                                                                | Where to store it                       |
 | :-------------------------------- | :--------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- | :-------------------------------------- |
-| **`NPM_TOKEN`**                   | Lets the GitHub Action run `npm publish` on your behalf.                                 | npmjs.com → _Access Tokens_ → _Automation_                                        | GitHub → _Settings → Secrets → Actions_ |
+| **`NPM_TOKEN`**                   | Lets the GitHub Action run `npm publish` on your behalf.                                 | npmjs.com → _Access Tokens_ → _Granular_ (Max 90 days)                            | GitHub → _Settings → Secrets → Actions_ |
 | **`PYPI_TOKEN` (DEFERRED)**       | Lets the Action upload wheels/sdists to PyPI with `twine upload`. **Set up in Phase 2.** | pypi.org → _Account Settings_ → _API tokens_                                      | Same GitHub Secrets panel               |
 | _(optional)_ **`GH_RELEASE_PAT`** | Only if you want the Action to draft GitHub releases automatically.                      | GitHub → _Developer settings → Personal access tokens (classic)_ (scopes: `repo`) | GitHub Secrets                          |
 
 - [x] NPM_TOKEN in GitHub Secrets
 - [ ] PYPI_TOKEN (deferred)
 - [x] GH_RELEASE_PAT (in progress)
+
+> **⚠️ CRITICAL: NPM TOKEN EXPIRATION**
+> npm no longer supports non-expiring "Automation" tokens. You must use **Granular Access Tokens** which have a hard limit of **90 days**.
+>
+> **Rotation Procedure (Every ~85 days):**
+> 1. Go to [npm tokens](https://www.npmjs.com/settings/nembal/tokens).
+> 2. Create a new Granular Token:
+>    - **Expiration:** Custom -> 90 days (max).
+>    - **Permissions:** Read and write.
+>    - **Scope:** `@agentcommunity`.
+> 3. Update `NPM_TOKEN` in GitHub Secrets.
+> 4. Set a calendar reminder for 85 days from now.
 
 ---
 
