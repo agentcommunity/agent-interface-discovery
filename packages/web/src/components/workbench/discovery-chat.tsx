@@ -8,7 +8,6 @@ import { Loader2, Send } from 'lucide-react';
 import { useChatEngine, type ChatLogMessage } from '@/hooks/use-chat-engine';
 import { ToolListSummary } from '@/components/workbench/tool-list-summary';
 import { Typewriter } from '@/components/ui/typewriter';
-import { AID_GENERATOR_URL } from '@/lib/constants';
 import { TitleSection } from '@/components/workbench/title-section';
 import { ExamplePicker } from './example-picker';
 import { DiscoverySuccessBlock } from './discovery-success-block';
@@ -20,9 +19,11 @@ import type { DiscoveryResult } from '@/hooks/use-discovery';
 function Message({
   message,
   onProvideAuth,
+  onPrefillGenerator,
 }: {
   message: ChatLogMessage;
   onProvideAuth?: (token: string) => void;
+  onPrefillGenerator?: () => void;
 }) {
   const isUser = message.type === 'user';
 
@@ -32,15 +33,13 @@ function Message({
         return <div className="text-sm">{message.content}</div>;
       case 'assistant': {
         if (message.content.includes('generator tool')) {
-          // Render with clickable link, skip typewriter for simplicity
           const parts = message.content.split('generator tool');
           return (
             <p className="text-foreground">
               {parts[0]}
               <a
-                href={AID_GENERATOR_URL}
-                target="_self"
-                rel="noopener noreferrer"
+                href="#generator"
+                onClick={onPrefillGenerator}
                 className="underline hover:text-muted-foreground"
               >
                 generator tool
@@ -155,6 +154,16 @@ export function DiscoveryChat() {
     dispatch({ type: 'SUBMIT_DOMAIN', payload: domain });
   };
 
+  const handlePrefillGenerator = () => {
+    try {
+      if (state.domain) {
+        sessionStorage.setItem('aid-generator-prefill', state.domain);
+      }
+    } catch {
+      /* no-op */
+    }
+  };
+
   // Use layout effect to handle scroll after DOM updates and content expansion
   useLayoutEffect(() => {
     const scrollToEnd = () => {
@@ -193,6 +202,7 @@ export function DiscoveryChat() {
                   ? (token: string) => dispatch({ type: 'PROVIDE_AUTH', payload: token })
                   : undefined
               }
+              onPrefillGenerator={handlePrefillGenerator}
             />
           ))}
           <div ref={messagesEndRef} />

@@ -129,14 +129,15 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
     );
   }
 
-  // Default to 'buttons' variant for the chat resolver
+  // Curated subset for the resolver chat — keep it focused
   const allChatExamples = [
-    ...TUTORIAL_EXAMPLES,
-    ...REFERENCE_EXAMPLES,
-    ...REAL_WORLD_EXAMPLES,
-    ...PROTOCOL_EXAMPLES,
-    ...OTHER_CHAT_EXAMPLES,
-  ];
+    TUTORIAL_EXAMPLES[0], // Simple (basic MCP)
+    TUTORIAL_EXAMPLES[1], // Local Docker
+    REAL_WORLD_EXAMPLES[0], // Supabase
+    PROTOCOL_EXAMPLES[0], // A2A Showcase
+    REFERENCE_EXAMPLES[1], // Secure (auth-required)
+    OTHER_CHAT_EXAMPLES[0], // No Server (error case)
+  ].filter(Boolean);
 
   return (
     <div className="flex flex-wrap gap-2 mb-2 justify-center">

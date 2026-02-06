@@ -38,8 +38,38 @@ const defaultFormData: GeneratorFormData = {
 };
 
 export function useGeneratorForm() {
-  const [formData, setFormData] = useState<GeneratorFormData>(defaultFormData);
+  const [formData, setFormData] = useState<GeneratorFormData>(() => {
+    // Check for a domain pre-fill from the resolver (e.g. failed discovery → "create record")
+    try {
+      const prefill = globalThis.sessionStorage?.getItem('aid-generator-prefill');
+      if (prefill) {
+        globalThis.sessionStorage.removeItem('aid-generator-prefill');
+        return { ...defaultFormData, domain: prefill };
+      }
+    } catch {
+      /* SSR or storage unavailable */
+    }
+    return defaultFormData;
+  });
   const [serverResult, setServerResult] = useState<ServerValidationResult | null>(null);
+
+  // Pick up pre-fill from resolver when switching to #generator
+  useEffect(() => {
+    const checkPrefill = () => {
+      if (globalThis.location?.hash !== '#generator') return;
+      try {
+        const prefill = sessionStorage.getItem('aid-generator-prefill');
+        if (prefill) {
+          sessionStorage.removeItem('aid-generator-prefill');
+          setFormData((prev: GeneratorFormData) => ({ ...prev, domain: prefill }));
+        }
+      } catch {
+        /* no-op */
+      }
+    };
+    globalThis.addEventListener('hashchange', checkPrefill);
+    return () => globalThis.removeEventListener('hashchange', checkPrefill);
+  }, []);
 
   const txtRecordString = useMemo(
     () => buildTxtV11(formData, { useAliases: formData.useAliases }),
