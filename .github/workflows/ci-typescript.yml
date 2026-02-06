@@ -41,9 +41,23 @@ jobs:
       - name: Self-hosted standalone smoke (web)
         run: |
           pnpm -C packages/web build
-          PORT=4010 HOSTNAME=127.0.0.1 node packages/web/.next/standalone/server.js &
+          if [ -f packages/web/.next/standalone/server.js ]; then
+            server_entry="packages/web/.next/standalone/server.js"
+          elif [ -f packages/web/.next/standalone/packages/web/server.js ]; then
+            server_entry="packages/web/.next/standalone/packages/web/server.js"
+          else
+            echo "Could not find standalone server entry"
+            find packages/web/.next/standalone -maxdepth 4 -type f -name 'server.js'
+            exit 1
+          fi
+          PORT=4010 HOSTNAME=127.0.0.1 node "${server_entry}" &
           server_pid=$!
-          trap "kill ${server_pid}" EXIT
+          cleanup() {
+            if kill -0 "${server_pid}" 2>/dev/null; then
+              kill "${server_pid}"
+            fi
+          }
+          trap cleanup EXIT
           sleep 5
           curl -fsS http://127.0.0.1:4010/ > /dev/null
 
