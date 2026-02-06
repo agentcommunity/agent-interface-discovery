@@ -36,7 +36,7 @@ const WorkbenchPage = () => {
   }, []);
 
   return (
-    <div className="h-full">
+    <div className="h-full overflow-hidden">
       {/* Main content area - takes up remaining space */}
       <div className="relative h-full">
         {/* Resolver Panel */}

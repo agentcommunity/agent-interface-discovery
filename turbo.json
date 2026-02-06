@@ -9,6 +9,12 @@
       "outputs": ["dist/**", ".next/**"],
       "inputs": [
         "src/**",
+        "app/**",
+        "pages/**",
+        "public/**",
+        "next.config.{js,mjs,cjs,ts}",
+        "postcss.config.{js,mjs,cjs,ts}",
+        "tailwind.config.{js,mjs,cjs,ts}",
         "tsup.config.ts",
         "tsconfig.json",
         "package.json",

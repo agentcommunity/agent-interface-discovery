@@ -11,13 +11,13 @@
   },
   "description": "Web interface for Agent Interface Discovery",
   "engines": {
-    "node": ">=18.17"
+    "node": ">=20.10"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "pnpm -w exec eslint --max-warnings 0 packages/web/src packages/web/next.config.js packages/web/postcss.config.js packages/web/tailwind.config.js packages/web/vitest.config.ts",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -45,16 +45,16 @@
     "cmdk": "^1.0.0",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.1.5",
-    "framer-motion": "^10.16.0",
+    "framer-motion": "^12.33.0",
     "geist": "^1.3.0",
-    "lucide-react": "^0.395.0",
+    "lucide-react": "^0.563.0",
     "nanoid": "^5.0.7",
-    "next": "14.2.35",
-    "next-themes": "^0.3.0",
-    "react": "^18.2.0",
+    "next": "16.1.6",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.4",
     "react-confetti": "^6.4.0",
     "react-day-picker": "^9.9.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "^19.2.4",
     "react-use": "^17.6.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.2.0",
@@ -62,17 +62,17 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.4",
-    "@types/react": "^18.2.45",
-    "@types/react-dom": "^18.2.18",
+    "@types/node": "^24.10.11",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
     "@vitest/ui": "^3.2.4",
     "autoprefixer": "^10.4.19",
-    "eslint": "^8.55.0",
-    "eslint-config-next": "^14.0.4",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.6",
     "jsdom": "^26.1.0",
     "postcss": "^8.4.38",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.3.3",
-    "vitest": "^2.0.0"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }

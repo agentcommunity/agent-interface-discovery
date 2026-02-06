@@ -11,8 +11,8 @@
     "url": "https://github.com/agentcommunity/agent-interface-discovery.git"
   },
   "engines": {
-    "node": ">=18.17",
-    "pnpm": ">=8.0.0"
+    "node": ">=20.10",
+    "pnpm": ">=8.15.0"
   },
   "pnpm": {
     "overrides": {
@@ -37,7 +37,9 @@
     "one-shot": "eslint --cache --max-warnings 0 .",
     "format": "prettier --write .",
     "gen": "tsx scripts/generate-constants.ts && tsx scripts/generate-examples.ts",
-    "docs:sync": "turbo run sync:docs",
+    "docs:check": "node scripts/docs-check.mjs",
+    "docs:export": "node scripts/docs-export.mjs",
+    "docs:verify": "pnpm docs:check && pnpm docs:export && git diff --exit-code packages/docs/export-manifest.json packages/docs/export-manifest.sha256",
     "e2e": "turbo run e2e",
     "changeset": "changeset",
     "version-packages": "changeset version",

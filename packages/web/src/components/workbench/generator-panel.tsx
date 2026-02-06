@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-//
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Toggle } from '@/components/ui/toggle';
-//
 import { Codeblock } from '@/components/ui/codeblock';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ExamplePicker } from './example-picker';
@@ -18,44 +16,30 @@ import {
   Key,
 } from 'lucide-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-
-
-
-import { buildTxtRecord as buildTxtV11, buildWellKnownJson, computeBytes, suggestAliases, validate as validateV11, parseRecordString } from '@/lib/generator/core';
+import {
+  buildTxtRecord as buildTxtV11,
+  buildWellKnownJson,
+  computeBytes,
+  suggestAliases,
+  validate as validateV11,
+  parseRecordString,
+} from '@/lib/generator/core';
 import type { AidGeneratorFormData } from '@/lib/generator/types';
 import { CoreFields } from './v11-fields/core-fields';
 import { MetadataFields } from './v11-fields/metadata-fields';
 import { SecurityFields } from './v11-fields/security-fields';
-
-
-import type { ProtocolToken, AuthToken } from '@agentcommunity/aid';
-
 type FormData = AidGeneratorFormData & { useAliases: boolean };
-
 type FormPatch = Partial<FormData>;
 
-const PROTOCOL_ORDER: ProtocolToken[] = ['mcp', 'a2a', 'ucp', 'openapi', 'local'];
-
-function parseExample(example: string): Partial<FormData> {
-  const parts = new Map(
-    example.split(';').map((p) => {
-      const [key, ...value] = p.split('=');
-      return [key, value.join('=')];
-    }),
-  );
-
-  const parsedData: Partial<FormData> = {};
-  if (parts.has('uri')) parsedData.uri = parts.get('uri');
-  if (parts.has('proto') || parts.has('p')) {
-    parsedData.proto = (parts.get('proto') || parts.get('p') || '') as ProtocolToken;
-  }
-  if (parts.has('auth')) {
-    parsedData.auth = (parts.get('auth') || '') as AuthToken;
-  }
-  if (parts.has('desc')) parsedData.desc = parts.get('desc');
-
-  return parsedData;
-}
+type ServerValidationResult = {
+  txt: string;
+  json: Record<string, unknown>;
+  bytes: { txt: number; desc: number };
+  errors: Array<{ code: string; message: string }>;
+  warnings: Array<{ code: string; message: string }>;
+  success: boolean;
+  suggestAliases?: boolean;
+};
 
 export function GeneratorPanel() {
   const [formData, setFormData] = useState<FormData>({
@@ -71,36 +55,36 @@ export function GeneratorPanel() {
     useAliases: true,
   });
 
-  const txtRecordString = useMemo(() => buildTxtV11(formData, { useAliases: formData.useAliases }), [formData]);
-  const { txtBytes, descBytes } = useMemo(() => computeBytes(txtRecordString, formData.desc), [txtRecordString, formData.desc]);
+  const txtRecordString = useMemo(
+    () => buildTxtV11(formData, { useAliases: formData.useAliases }),
+    [formData],
+  );
+  const { txtBytes, descBytes } = useMemo(
+    () => computeBytes(txtRecordString, formData.desc),
+    [txtRecordString, formData.desc],
+  );
   const specValidation = useMemo(() => validateV11(formData), [formData]);
-  const [serverResult, setServerResult] = useState<{
-    txt: string;
-    json: Record<string, unknown>;
-    bytes: { txt: number; desc: number };
-    errors: Array<{ code: string; message: string }>;
-    warnings: Array<{ code: string; message: string }>;
-    success: boolean;
-    suggestAliases?: boolean;
-  } | null>(null);
+  const [serverResult, setServerResult] = useState<ServerValidationResult | null>(null);
 
   // Debounced server validation
-  useMemo(() => {
+  useEffect(() => {
     const controller = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch('/api/generator/validate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-          signal: controller.signal,
-        });
-        if (!res.ok) return;
-        const json = (await res.json()) as typeof serverResult;
-        setServerResult(json as any);
-      } catch {
-        /* no-op */
-      }
+    const t = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch('/api/generator/validate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+            signal: controller.signal,
+          });
+          if (!res.ok) return;
+          const json = (await res.json()) as ServerValidationResult;
+          setServerResult(json);
+        } catch {
+          /* no-op */
+        }
+      })();
     }, 250);
     return () => {
       controller.abort();
@@ -109,6 +93,13 @@ export function GeneratorPanel() {
   }, [formData]);
 
   const dnsHost = `_agent.${formData.domain}`;
+  const previewValid = serverResult?.success ?? specValidation.isValid;
+  let previewErrors: Array<{ code: string; message: string }> = [];
+  if (serverResult && serverResult.success === false) {
+    previewErrors = serverResult.errors;
+  } else if (specValidation.isValid === false) {
+    previewErrors = specValidation.errors;
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -165,36 +156,29 @@ export function GeneratorPanel() {
                       </span>
                     )}
                   </div>
-                  {(serverResult?.success ?? specValidation.isValid) ? (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <CheckCircle2 className="w-4 h-4" />
-                    Valid
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-destructive">
-                    <XCircle className="w-4 h-4" />
-                    Invalid
-                  </div>
-                )}
+                  {previewValid && (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Valid
+                    </div>
+                  )}
+                  {previewValid === false && (
+                    <div className="flex items-center gap-1 text-destructive">
+                      <XCircle className="w-4 h-4" />
+                      Invalid
+                    </div>
+                  )}
                 </div>
               </div>
-              {serverResult && !serverResult.success ? (
+              {previewErrors.length > 0 && (
                 <ul className="text-sm text-destructive space-y-1">
-                  {serverResult.errors.map((e) => (
+                  {previewErrors.map((e) => (
                     <li key={e.code} className="flex items-start gap-1">
                       <AlertCircle className="h-3 w-3 mt-0.5" /> {e.message}
                     </li>
                   ))}
                 </ul>
-              ) : !specValidation.isValid ? (
-                <ul className="text-sm text-destructive space-y-1">
-                  {specValidation.errors.map((e) => (
-                    <li key={e.code} className="flex items-start gap-1">
-                      <AlertCircle className="h-3 w-3 mt-0.5" /> {e.message}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-sm space-y-2">
@@ -216,7 +200,11 @@ export function GeneratorPanel() {
                     content={serverResult?.txt || txtRecordString}
                     variant="inline"
                   />
-                  <div className={`text-xs ${(serverResult?.bytes.txt ?? txtBytes) > 255 ? 'text-destructive' : 'text-muted-foreground'}`}>{serverResult?.bytes.txt ?? txtBytes} bytes</div>
+                  <div
+                    className={`text-xs ${(serverResult?.bytes.txt ?? txtBytes) > 255 ? 'text-destructive' : 'text-muted-foreground'}`}
+                  >
+                    {serverResult?.bytes.txt ?? txtBytes} bytes
+                  </div>
                 </div>
               </div>
 
@@ -225,7 +213,12 @@ export function GeneratorPanel() {
                 <Codeblock
                   title="/\.well-known/agent"
                   icon={<Globe className="w-4 h-4" />}
-                  content={JSON.stringify(serverResult?.json || buildWellKnownJson(formData, { useAliases: formData.useAliases }), null, 2)}
+                  content={JSON.stringify(
+                    serverResult?.json ||
+                      buildWellKnownJson(formData, { useAliases: formData.useAliases }),
+                    null,
+                    2,
+                  )}
                 />
               </div>
 
@@ -279,10 +272,9 @@ export function GeneratorPanel() {
           <div className="space-y-2">
             <ExamplePicker
               variant="toggle"
-              onSelect={async (ex) => {
-                // Load example TXT into form (and set domain)
+              onSelect={(ex) => {
                 const parsed = parseRecordString(ex.content);
-                const aliasesSuggested = await suggestAliases({
+                const aliasesSuggested = suggestAliases({
                   domain: ex.domain,
                   uri: parsed.uri ?? '',
                   proto: parsed.proto ?? 'mcp',
@@ -293,17 +285,18 @@ export function GeneratorPanel() {
                   pka: parsed.pka,
                   kid: parsed.kid,
                 });
-                setFormData((prev) => ({
-                  ...prev,
+
+                setFormData((previous) => ({
+                  ...previous,
                   domain: ex.domain,
-                  uri: parsed.uri ?? prev.uri,
-                  proto: parsed.proto ?? prev.proto,
-                  auth: parsed.auth ?? prev.auth,
-                  desc: parsed.desc ?? prev.desc,
-                  docs: parsed.docs ?? prev.docs,
-                  dep: parsed.dep ?? prev.dep,
-                  pka: parsed.pka ?? prev.pka,
-                  kid: parsed.kid ?? prev.kid,
+                  uri: parsed.uri ?? previous.uri,
+                  proto: parsed.proto ?? previous.proto,
+                  auth: parsed.auth ?? previous.auth,
+                  desc: parsed.desc ?? previous.desc,
+                  docs: parsed.docs ?? previous.docs,
+                  dep: parsed.dep ?? previous.dep,
+                  pka: parsed.pka ?? previous.pka,
+                  kid: parsed.kid ?? previous.kid,
                   useAliases: aliasesSuggested,
                 }));
               }}

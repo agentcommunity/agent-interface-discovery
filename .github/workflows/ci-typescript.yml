@@ -2,9 +2,9 @@ name: CI (TypeScript)
 on:
   workflow_dispatch:
   push:
-    branches: [main, feat/aid1.1-spec]
+    branches: [main, feat/aid1.1-spec, feat/next16-react19-modernization]
   pull_request:
-    branches: [main, feat/aid1.1-spec]
+    branches: [main, feat/aid1.1-spec, feat/next16-react19-modernization]
 
 jobs:
   build:
@@ -15,10 +15,16 @@ jobs:
       TURBO_TEAM: ${{ secrets.VERCEL_TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
       - name: Check generated files are up-to-date
         run: |
-          corepack enable
           pnpm install --frozen-lockfile
           pnpm gen
           git diff --exit-code
@@ -31,6 +37,29 @@ jobs:
             --filter=@agentcommunity/aid-doctor \
             --filter=@agentcommunity/aid-web \
             --filter=@agentcommunity/e2e-tests
+
+      - name: Self-hosted standalone smoke (web)
+        run: |
+          pnpm -C packages/web build
+          if [ -f packages/web/.next/standalone/server.js ]; then
+            server_entry="packages/web/.next/standalone/server.js"
+          elif [ -f packages/web/.next/standalone/packages/web/server.js ]; then
+            server_entry="packages/web/.next/standalone/packages/web/server.js"
+          else
+            echo "Could not find standalone server entry"
+            find packages/web/.next/standalone -maxdepth 4 -type f -name 'server.js'
+            exit 1
+          fi
+          PORT=4010 HOSTNAME=127.0.0.1 node "${server_entry}" &
+          server_pid=$!
+          cleanup() {
+            if kill -0 "${server_pid}" 2>/dev/null; then
+              kill "${server_pid}"
+            fi
+          }
+          trap cleanup EXIT
+          sleep 5
+          curl -fsS http://127.0.0.1:4010/ > /dev/null
 
       # ---- Static Checks (Phase 2: Linting) -----------------------------
       # Now that all packages are built, the linter can find the type
@@ -63,9 +92,15 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
 
       - name: Build aid and aid-doctor
         run: |
-          corepack enable
           pnpm install --frozen-lockfile
           pnpm exec turbo run build --filter="@agentcommunity/aid" --filter="@agentcommunity/aid-doctor"
