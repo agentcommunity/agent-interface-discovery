@@ -1,5 +1,16 @@
 # @agentcommunity/aid-conformance
 
+## 1.2.0
+
+### Minor Changes
+
+- Align with the v1.2.0 release line.
+
+### Patch Changes
+
+- Updated dependencies
+  - @agentcommunity/aid@1.2.0
+
 ## 1.1.0
 
 ### Minor Changes
