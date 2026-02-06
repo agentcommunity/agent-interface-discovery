@@ -17,8 +17,8 @@ const solutions: Array<{
     title: 'One DNS TXT Record',
     description:
       'Add a single _agent.example.com TXT record. That&apos;s it. No registries, no APIs, no complexity.',
-    iconColor: 'text-primary',
-    iconBg: 'bg-primary/10',
+    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-50',
     links: [
       { label: 'Quick Start', href: 'https://docs.agentcommunity.org/aid/quickstart/index' },
       { label: 'Specification', href: 'https://docs.agentcommunity.org/aid/specification' },
@@ -30,8 +30,8 @@ const solutions: Array<{
     title: 'Instant Discovery',
     description:
       'Any tool can find your agent by looking up the _agent subdomain. Falls back to .well-known/agent when DNS is restricted.',
-    iconColor: 'text-accent-foreground',
-    iconBg: 'bg-accent/20',
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50',
     links: [
       {
         label: 'Discovery API',
@@ -49,8 +49,8 @@ const solutions: Array<{
     title: 'Protocol-Agnostic',
     description: 'Works with any agent protocol — just change the p= token in your record.',
     badges: ['mcp', 'a2a', 'openapi', 'grpc', 'graphql', 'websocket', 'ucp'],
-    iconColor: 'text-primary',
-    iconBg: 'bg-muted',
+    iconColor: 'text-purple-600',
+    iconBg: 'bg-purple-50',
     links: [
       { label: 'MCP Guide', href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_mcp' },
       { label: 'A2A Guide', href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_a2a' },
@@ -67,8 +67,8 @@ const solutions: Array<{
     title: 'Agent Identity',
     description:
       'Publish a public key (PKA) and let clients verify your endpoint using HTTP Message Signatures (Ed25519).',
-    iconColor: 'text-primary',
-    iconBg: 'bg-primary/10',
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50',
     links: [
       {
         label: 'Identity & PKA',

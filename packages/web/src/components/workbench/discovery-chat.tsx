@@ -9,6 +9,7 @@ import { useChatEngine, type ChatLogMessage } from '@/hooks/use-chat-engine';
 import { ToolListSummary } from '@/components/workbench/tool-list-summary';
 import { Typewriter } from '@/components/ui/typewriter';
 import { TitleSection } from '@/components/workbench/title-section';
+import { CollapsibleResult } from './collapsible-result';
 import { ExamplePicker } from './example-picker';
 import { DiscoverySuccessBlock } from './discovery-success-block';
 import { DiscoveryToolBlock } from '@/components/workbench/tool-blocks';
@@ -35,7 +36,7 @@ function Message({
         if (message.content.includes('generator tool')) {
           const parts = message.content.split('generator tool');
           return (
-            <p className="text-foreground">
+            <p className="text-sm text-foreground">
               {parts[0]}
               <a
                 href="#generator"
@@ -54,26 +55,49 @@ function Message({
       }
       case 'discovery_result':
         return message.result.ok ? (
-          <DiscoverySuccessBlock result={message.result} />
+          <CollapsibleResult
+            status="success"
+            title={`Discovery successful — ${message.domain}`}
+            defaultOpen
+          >
+            <DiscoverySuccessBlock result={message.result} />
+          </CollapsibleResult>
         ) : (
-          <DiscoveryToolBlock status="error" result={message.result} domain={message.domain} />
+          <CollapsibleResult
+            status="error"
+            title={`Discovery failed — ${message.domain}`}
+            defaultOpen
+          >
+            <DiscoveryToolBlock status="error" result={message.result} domain={message.domain} />
+          </CollapsibleResult>
         );
-      case 'connection_result':
+      case 'connection_result': {
+        const proto = String(message.discovery.record.proto ?? 'mcp');
+        let connTitle = 'Connection failed';
+        if (message.status === 'success') connTitle = `Connected via ${proto}`;
+        else if (message.status === 'needs_auth') connTitle = 'Authentication required';
         return (
-          <ConnectionToolBlock
-            status={message.status}
-            result={message.result}
-            discoveryResult={{ ok: true, value: message.discovery } as DiscoveryResult}
-            onProvideAuth={onProvideAuth}
-          />
+          <CollapsibleResult
+            status={message.status === 'success' ? 'success' : 'error'}
+            title={connTitle}
+            defaultOpen={message.status !== 'success'}
+          >
+            <ConnectionToolBlock
+              status={message.status}
+              result={message.result}
+              discoveryResult={{ ok: true, value: message.discovery } as DiscoveryResult}
+              onProvideAuth={onProvideAuth}
+            />
+          </CollapsibleResult>
         );
+      }
       case 'summary':
-        // Cast via unknown first to satisfy @typescript-eslint/no-unsafe-assignment
-        // without using an `any` escape hatch.
         return (
-          <ToolListSummary
-            handshakeResult={message.handshakeResult as unknown as HandshakeResult}
-          />
+          <CollapsibleResult status="info" title="Agent capabilities">
+            <ToolListSummary
+              handshakeResult={message.handshakeResult as unknown as HandshakeResult}
+            />
+          </CollapsibleResult>
         );
       case 'error_message':
         return <Typewriter key={message.id} text={message.content} speed={10} />;

@@ -24,8 +24,8 @@ export function Identity() {
           <Card className="card-feature shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 animate-fade-in">
             <CardHeader className="pb-4">
               <CardTitle className="text-xl flex items-center gap-3">
-                <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                  <ShieldCheck className="h-6 w-6 text-primary" />
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50">
+                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
                 </span>
                 How it works
               </CardTitle>

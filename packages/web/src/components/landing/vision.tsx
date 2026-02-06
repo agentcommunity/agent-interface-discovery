@@ -6,6 +6,9 @@ import { Rocket, Network, ExternalLink } from 'lucide-react';
 const visionFeatures = [
   {
     icon: Network,
+    iconColor: 'text-indigo-600',
+    iconBg: 'bg-indigo-50',
+    dotColor: 'bg-indigo-500',
     title: 'Universal Agent Ecosystem',
     description:
       'Imagine a world where every AI service is instantly discoverable. No more hunting through documentation, no more custom integration code. Just type a domain and connect to any agent, anywhere.',
@@ -18,6 +21,9 @@ const visionFeatures = [
   },
   {
     icon: Rocket,
+    iconColor: 'text-orange-600',
+    iconBg: 'bg-orange-50',
+    dotColor: 'bg-orange-500',
     title: 'Open-Source Agent Infrastructure',
     description:
       'We’re building a vendor-neutral stack for hosting, scaling and observing agents. Curious? Get involved at agentcommunity.org.',
@@ -52,8 +58,12 @@ export function Vision() {
               >
                 <CardHeader className="pb-6">
                   <CardTitle className="text-2xl flex items-center gap-3 transition-colors duration-300 group-hover:text-foreground">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shadow-soft-xs transition-all duration-300 group-hover:scale-110 group-hover:shadow-soft-md">
-                      <feature.icon className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110" />
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-lg ${feature.iconBg} shadow-soft-xs transition-all duration-300 group-hover:scale-110 group-hover:shadow-soft-md`}
+                    >
+                      <feature.icon
+                        className={`h-6 w-6 ${feature.iconColor} transition-transform duration-300 group-hover:scale-110`}
+                      />
                     </div>
                     {feature.title}
                   </CardTitle>
@@ -68,7 +78,9 @@ export function Vision() {
                         key={highlightIndex}
                         className="flex items-center gap-3 text-sm transition-colors duration-300 group-hover:text-muted-foreground/90"
                       >
-                        <div className="h-2 w-2 rounded-full bg-primary shadow-soft-xs transition-all duration-300 group-hover:scale-125 group-hover:shadow-soft-md" />
+                        <div
+                          className={`h-2 w-2 rounded-full ${feature.dotColor} shadow-soft-xs transition-all duration-300 group-hover:scale-125 group-hover:shadow-soft-md`}
+                        />
                         <span>{highlight}</span>
                       </li>
                     ))}
