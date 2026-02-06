@@ -87,6 +87,8 @@ graph TD
 | **Command-Line Tool**      | `npm install -g @agentcommunity/aid-doctor`                            | The quickest way to check, validate, generate, and save AID records. Built on @agentcommunity/aid-engine with draft saving, PKA key generation, and comprehensive diagnostics. |
 | **Examples Guide**         | **[EXAMPLES.md](./EXAMPLES.md)**                                       | Complete guide to the examples system: how examples are defined, generated, and used across DNS, UI, and testing.                                                              |
 
+> Documentation authority: `/packages/docs` in this repository is the canonical source. `docs.agentcommunity.org` is a downstream rendered consumer of these files.
+
 **GitHub Repository**: [github.com/agentcommunity/agent-interface-discovery](https://github.com/agentcommunity/agent-interface-discovery) - Source code, issues, and community discussions.
 
 ### Using the Libraries

@@ -1,4 +1,4 @@
-name: CI • Parity
+name: CI (Docs Authority)
 on:
   workflow_dispatch:
   push:
@@ -8,17 +8,13 @@ on:
 
 permissions:
   contents: read
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  parity:
+  docs-authority:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 8.15.0
@@ -26,18 +22,7 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.22'
-
-      - name: Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Run parity
-        run: pnpm test:parity
+      - name: Verify docs authority and export freshness
+        run: pnpm docs:verify

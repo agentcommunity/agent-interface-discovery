@@ -4,9 +4,9 @@ on:
   schedule:
     - cron: '0 2 * * *'
   push:
-    branches: [main, feat/aid1.1-spec]
+    branches: [main, feat/aid1.1-spec, feat/next16-react19-modernization]
   pull_request:
-    branches: [main, feat/aid1.1-spec]
+    branches: [main, feat/aid1.1-spec, feat/next16-react19-modernization]
 
 permissions:
   contents: read
@@ -28,9 +28,9 @@ jobs:
           fetch-depth: 0
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: 8.15.0
 
       - name: Setup Node
         uses: actions/setup-node@v4

@@ -199,7 +199,7 @@ export function DiscoveryChat() {
         </div>
       </div>
 
-      <div className="flex-shrink-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4 pb-4">
+      <div className="shrink-0 bg-gradient-to-t from-gray-50 via-gray-50 to-transparent pt-4 pb-4 max-h-[60%] overflow-y-auto">
         <div className="max-w-3xl mx-auto px-4 space-y-4">
           <ExamplePicker
             variant="buttons"

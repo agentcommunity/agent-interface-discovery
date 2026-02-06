@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { GeistMono } from 'geist/font/mono';
+import { GeistSans } from 'geist/font/sans';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/layout/header';
 import './globals.css';
-import Head from 'next/head';
 
-const inter = Inter({ subsets: ['latin'] });
+const geistSans = GeistSans;
+const geistMono = GeistMono;
 
 export const metadata: Metadata = {
   title: 'Agent Identity & Discovery — DNS for Agents',
@@ -52,9 +53,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@agentcommunity_',
     creator: '@agentcommunity_',
-    title: 'Agent Identity & Discovery - the DNS forAgents',
+    title: 'Agent Identity & Discovery - DNS for Agents',
     description: 'DNS for Agents. - Identity for the Agentic Web.',
-    images: ['https://aid.agentcommunity.org/og-card.png'], // absolute URL
+    images: ['https://aid.agentcommunity.org/og-card.png'],
   },
   robots: {
     index: true,
@@ -74,9 +75,9 @@ export const metadata: Metadata = {
   other: {
     'twitter:site': '@agentcommunity_',
     'twitter:creator': '@agentcommunity_',
-    'twitter:title': 'Agent Identity & Discovery - the DNS forAgents',
+    'twitter:title': 'Agent Identity & Discovery - DNS for Agents',
     'twitter:description': 'DNS for Agents. - Identity for the Agentic Web.',
-    'twitter:image': 'https://aid.agentcommunity.org/og-card.png', // absolute URL
+    'twitter:image': 'https://aid.agentcommunity.org/og-card.png',
     'twitter:image:alt': 'Agent Identity & Discovery',
   },
 };
@@ -90,20 +91,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <Head>
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@agentcommunity_" />
-        <meta name="twitter:creator" content="@agentcommunity_" />
-        <meta name="twitter:title" content="Agent Identity & Discovery - the DNS forAgents" />
-        <meta
-          name="twitter:description"
-          content="DNS for Agents. - Identity for the Agentic Web."
-        />
-        <meta name="twitter:image" content="https://aid.agentcommunity.org/og-card.png" />
-        <meta name="twitter:image:alt" content="Agent Identity & Discovery" />
-      </Head>
-      <body className={inter.className}>
-        <div className="flex h-dvh flex-col">
+      <body
+        className={`${geistSans.className} ${geistMono.variable} min-h-dvh bg-background text-foreground antialiased`}
+      >
+        <div className="flex h-dvh flex-col overflow-hidden">
           <Header />
           <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
         </div>

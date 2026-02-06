@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "source": "packages/docs",
+  "files": [
+    {
+      "path": "index.md",
+      "bytes": 4985,
+      "sha256": "5d802cf78dbc488b4de85fbda5945a09424c9f314ca209a9dc0692bad6c940c0"
+    },
+    {
+      "path": "quickstart/index.md",
+      "bytes": 10499,
+      "sha256": "ac97376adbe4d040e1fc1a388ae5ef6dbddd4d0a7f64f45df4e64393587ecfff"
+    },
+    {
+      "path": "quickstart/quickstart_a2a.md",
+      "bytes": 3944,
+      "sha256": "3a3ecffbd1cf2fa2fc0162aa0fc9b6208f23a133e4911d5b58f00c6efdab8442"
+    },
+    {
+      "path": "quickstart/quickstart_browser.md",
+      "bytes": 1460,
+      "sha256": "6d81ff1fc2fb3672f0d047c285fec185706fa1d781837262d12267e1416aac1e"
+    },
+    {
+      "path": "quickstart/quickstart_dotnet.md",
+      "bytes": 1835,
+      "sha256": "ab1ed178861678fb84919c65bb9990f8cd908676a3851f910936b09f5e303194"
+    },
+    {
+      "path": "quickstart/quickstart_go.md",
+      "bytes": 1860,
+      "sha256": "a8b9c70361f0697b712fd1d9775e8a7dac868225133950dbc0d27bee7eca240d"
+    },
+    {
+      "path": "quickstart/quickstart_java.md",
+      "bytes": 1953,
+      "sha256": "c4ed3a96a094413577d7502039dd8bbf947b155633f814f3d779ff5a05f43e50"
+    },
+    {
+      "path": "quickstart/quickstart_mcp.md",
+      "bytes": 3754,
+      "sha256": "4aaec2079710bdbe72a4961cd6d4b20a985bf2018aeb3657e729365a07f2466b"
+    },
+    {
+      "path": "quickstart/quickstart_openapi.md",
+      "bytes": 4244,
+      "sha256": "9a839c9c3fbb0b58832cadcb08283e8fa1e13b4e1cdf69382fdce888c6d284c4"
+    },
+    {
+      "path": "quickstart/quickstart_python.md",
+      "bytes": 1665,
+      "sha256": "bd1541e084dff6f88133a349af33e9363d4e37e0818c8c379f6c9228887cd4ee"
+    },
+    {
+      "path": "quickstart/quickstart_rust.md",
+      "bytes": 2266,
+      "sha256": "616394ea884bac3a23807eb7091a7e4c33cb2fff8ce0cd537418d8fcdd2fb2b4"
+    },
+    {
+      "path": "quickstart/quickstart_ts.md",
+      "bytes": 2456,
+      "sha256": "ea5a1acbb1688e53fddfdc770c8c37b14d492b61ab9f7babfdff85e6d19389ec"
+    },
+    {
+      "path": "rationale.md",
+      "bytes": 14142,
+      "sha256": "1a53a8375ade6f5db9659aec55a752414f04578a5f4345f0108001b9411439a8"
+    },
+    {
+      "path": "Reference/discovery_api.md",
+      "bytes": 2908,
+      "sha256": "fbb1735e12c882d6ebfa7521ca42ad5a677550a363afa2d0cccd1995efa978df"
+    },
+    {
+      "path": "Reference/identity_pka.md",
+      "bytes": 6039,
+      "sha256": "dfd6172093832e400eb62f1c99745038f6ed8ff9934228d81dda97738eaa3f41"
+    },
+    {
+      "path": "Reference/protocols.md",
+      "bytes": 1569,
+      "sha256": "47453cda067eb1b92ac95fb9cb602b9e206e84054b438052efbbc8a455126050"
+    },
+    {
+      "path": "Reference/troubleshooting.md",
+      "bytes": 2143,
+      "sha256": "972eda21fea36969dee8983f6be36c9b598a60e8453da3a764769a9caddde719"
+    },
+    {
+      "path": "Reference/well_known_json.md",
+      "bytes": 1763,
+      "sha256": "f515493dec9a03b9e23757cd43c7a66fa12b9b74faa98f7f0a9defb0820f1846"
+    },
+    {
+      "path": "Reference/whats_new.md",
+      "bytes": 515,
+      "sha256": "7d83ee5ba12b246e0f8c33f4f29bf35c084fa0b2ab498727842e64b08c9db546"
+    },
+    {
+      "path": "security.md",
+      "bytes": 1766,
+      "sha256": "ea4b4dff1eefb47a16a613a836569f16873c54c928e47e1c3e3d1f2543f00202"
+    },
+    {
+      "path": "specification.md",
+      "bytes": 16917,
+      "sha256": "512835123f09f1b0cbcb73bf1cd996a4eb485bcd87eafc6ec53cb8240c989256"
+    },
+    {
+      "path": "Tooling/aid_doctor.md",
+      "bytes": 6316,
+      "sha256": "53168ac068e4e3622a0e0e432c9c035403572b385193b1e15c2c2e055fcf342b"
+    },
+    {
+      "path": "Tooling/aid_engine.md",
+      "bytes": 5453,
+      "sha256": "8b3466fc7e43ea98e989343ad5036a1974774b49db427f0751ed0178d7ef3dc1"
+    },
+    {
+      "path": "Tooling/conformance.md",
+      "bytes": 1074,
+      "sha256": "e1f1895d141411c8cb49c0fe5c742772e3d570e90843f1dd99d9f61f7406bfe4"
+    },
+    {
+      "path": "versioning.md",
+      "bytes": 2871,
+      "sha256": "b40c3ead25ddea2e536e51bfd367d5367be0c606550db76ea8c363df5a39d0ff"
+    }
+  ],
+  "aggregateSha256": "33f0e7348b848c951e9d0c38b64a67fc399ecf2707e0752b2f3495a14bd4e7b2"
+}

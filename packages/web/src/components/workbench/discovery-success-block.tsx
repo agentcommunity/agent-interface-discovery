@@ -3,7 +3,18 @@
 import React from 'react';
 import useWindowSize from 'react-use/lib/useWindowSize';
 import Confetti from 'react-confetti';
-import { CheckCircle2, Globe, Key, Tag, Info, Link as LinkIcon, Server, BookOpen, Calendar, Shield } from 'lucide-react';
+import {
+  CheckCircle2,
+  Globe,
+  Key,
+  Tag,
+  Info,
+  Link as LinkIcon,
+  Server,
+  BookOpen,
+  Calendar,
+  Shield,
+} from 'lucide-react';
 import { type DiscoveryResult } from '@/hooks/use-discovery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { isOk } from '@/lib/types/result';
@@ -19,22 +30,32 @@ interface DetailRowProps {
 const DetailRow: React.FC<DetailRowProps> = ({ Icon, label, value, isCode, isLink }) => {
   if (!value) return null;
 
+  let detail: React.ReactNode = <p className="text-sm text-muted-foreground">{value}</p>;
+  if (isCode) {
+    detail = (
+      <code className="text-xs text-muted-foreground bg-background border rounded px-1 py-0.5">
+        {value}
+      </code>
+    );
+  } else if (isLink) {
+    detail = (
+      <a
+        href={String(value)}
+        target="_blank"
+        rel="noreferrer"
+        className="text-sm underline break-all"
+      >
+        {value}
+      </a>
+    );
+  }
+
   return (
     <div className="flex items-start gap-3">
       <Icon className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0" />
       <div className="flex-1">
         <p className="text-sm font-medium text-foreground">{label}</p>
-        {isCode ? (
-          <code className="text-xs text-muted-foreground bg-background border rounded px-1 py-0.5">
-            {value}
-          </code>
-        ) : isLink ? (
-          <a href={String(value)} target="_blank" rel="noreferrer" className="text-sm underline break-all">
-            {value}
-          </a>
-        ) : (
-          <p className="text-sm text-muted-foreground">{value}</p>
-        )}
+        {detail}
       </div>
     </div>
   );

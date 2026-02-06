@@ -352,4 +352,9 @@
 /* Focus-visible polyfill for better accessibility */
 .js-focus-visible :focus:not(.focus-visible) {
   outline: none;
-} 
+}
+
+/* Next.js 16 dev tools portal — prevent layout interference (GH #76734) */
+nextjs-portal {
+  display: none !important;
+}

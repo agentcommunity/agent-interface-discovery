@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import {
   ContextMenu,
@@ -20,14 +20,14 @@ interface LogoProps {
 export function Logo({ className, asLink }: LogoProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const letterVariants = {
+  const letterVariants: Variants = {
     initial: { opacity: 0 },
     hover: (i: number) => ({
       opacity: 1,
       transition: {
         delay: i * 0.1,
         duration: 0.3,
-        ease: 'easeOut',
+        ease: [0.16, 1, 0.3, 1],
       },
     }),
   };

@@ -1,15 +1,15 @@
-'use client'
+'use client';
 
-import { Input } from '@/components/ui/input'
-import { PkaKeyGenerator } from '@/components/ui/pka-key-generator'
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
-import { Button } from '@/components/ui/button'
-import { ChevronDown } from 'lucide-react'
+import { Input } from '@/components/ui/input';
+import { PkaKeyGenerator } from '@/components/ui/pka-key-generator';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 
 export interface SecurityFieldsProps {
-  pka?: string
-  kid?: string
-  onChange: (patch: Partial<{ pka?: string; kid?: string }>) => void
+  pka?: string;
+  kid?: string;
+  onChange: (patch: Partial<{ pka?: string; kid?: string }>) => void;
 }
 
 export function SecurityFields({ pka, kid, onChange }: SecurityFieldsProps) {
@@ -18,17 +18,32 @@ export function SecurityFields({ pka, kid, onChange }: SecurityFieldsProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label className="text-sm font-medium">Public Key for Agents (PKA)</label>
-          <Input value={pka || ''} onChange={(e) => onChange({ pka: e.target.value })} placeholder="z…" />
+          <Input
+            value={pka || ''}
+            onChange={(e) => onChange({ pka: e.target.value })}
+            placeholder="z…"
+          />
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium">Key ID (rotation)</label>
-          <Input value={kid || ''} onChange={(e) => onChange({ kid: e.target.value })} placeholder="g1" />
+          <Input
+            value={kid || ''}
+            onChange={(e) => onChange({ kid: e.target.value })}
+            placeholder="g1"
+          />
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
         Learn more about PKA in{' '}
-        <a href="https://docs.agentcommunity.org/aid/Tools/identity_pka" target="_blank" rel="noreferrer" className="underline">the docs</a>.
-        Private key is generated locally and not saved by the app.
+        <a
+          href="https://docs.agentcommunity.org/aid/Reference/identity_pka"
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          the docs
+        </a>
+        . Private key is generated locally and not saved by the app.
       </p>
       <Collapsible>
         <CollapsibleTrigger asChild>
@@ -37,11 +52,11 @@ export function SecurityFields({ pka, kid, onChange }: SecurityFieldsProps) {
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
-          <PkaKeyGenerator onPublicKey={(k) => onChange({ pka: k, kid: (kid && kid.length > 0 ? kid : 'g1') })} />
+          <PkaKeyGenerator
+            onPublicKey={(k) => onChange({ pka: k, kid: kid && kid.length > 0 ? kid : 'g1' })}
+          />
         </CollapsibleContent>
       </Collapsible>
     </div>
-  )
+  );
 }
-
-
