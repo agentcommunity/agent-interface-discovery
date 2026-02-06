@@ -220,6 +220,7 @@ public final class Parser {
         || Constants.PROTO_LOCAL.equals(token)
         || Constants.PROTO_GRPC.equals(token)
         || Constants.PROTO_GRAPHQL.equals(token)
+        || Constants.PROTO_UCP.equals(token)
         || Constants.PROTO_WEBSOCKET.equals(token)
         || Constants.PROTO_ZEROCONF.equals(token);
   }
