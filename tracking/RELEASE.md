@@ -2,6 +2,19 @@ Below is a **slow-step, no-surprises checklist** for a staged v1.0.0 release.
 
 ---
 
+## Status Update (2026-02-06)
+
+- npm publishing now uses **GitHub OIDC Trusted Publishing** (no `NPM_TOKEN` required).
+- PyPI publishing already uses OIDC pending publisher flow.
+- `NPM_TOKEN` references below are legacy fallback notes only.
+- npm Trusted Publisher entries required in npm UI:
+  - `@agentcommunity/aid`
+  - `@agentcommunity/aid-conformance`
+  - `@agentcommunity/aid-doctor`
+  - `@agentcommunity/aid-engine`
+
+---
+
 ## Staged Release Plan: npm First, PyPI After Approval
 
 **Constraint:** The `agent-community` project name on PyPI is pending approval. We cannot publish the Python package yet.
@@ -17,11 +30,11 @@ Below is a **slow-step, no-surprises checklist** for a staged v1.0.0 release.
 
 | Token                             | What it’s for                                                                            | Where to create it                                                                | Where to store it                       |
 | :-------------------------------- | :--------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- | :-------------------------------------- |
-| **`NPM_TOKEN`**                   | Lets the GitHub Action run `npm publish` on your behalf.                                 | npmjs.com → _Access Tokens_ → _Automation_                                        | GitHub → _Settings → Secrets → Actions_ |
+| **`NPM_TOKEN` (legacy fallback)** | Token-based npm publish path. Prefer OIDC trusted publishing instead.                    | npmjs.com → _Access Tokens_ → _Granular_                                          | GitHub secrets (only if not using OIDC) |
 | **`PYPI_TOKEN` (DEFERRED)**       | Lets the Action upload wheels/sdists to PyPI with `twine upload`. **Set up in Phase 2.** | pypi.org → _Account Settings_ → _API tokens_                                      | Same GitHub Secrets panel               |
 | _(optional)_ **`GH_RELEASE_PAT`** | Only if you want the Action to draft GitHub releases automatically.                      | GitHub → _Developer settings → Personal access tokens (classic)_ (scopes: `repo`) | GitHub Secrets                          |
 
-- [x] NPM_TOKEN in GitHub Secrets
+- [ ] NPM_TOKEN in GitHub Secrets (legacy fallback only)
 - [ ] PYPI_TOKEN (deferred)
 - [x] GH_RELEASE_PAT (in progress)
 
@@ -50,12 +63,12 @@ _This is now complete for all packages, including Python._
 
 ## 3 . Registry access
 
-### **Phase 1: npm (Done)**
+### **Phase 1: npm (OIDC active)**
 
 - [x] `npm login` locally → verify you’re in the **@agentcommunity** org.
 - [x] `npm whoami` – sanity check user.
-- [x] Create **Automation token** (done, see above).
-- [x] Put it in GH Secrets as **`NPM_TOKEN`**.
+- [x] Configure npm **Trusted Publisher** for each package/workflow in npm UI.
+- [x] Release workflow uses OIDC (`id-token: write`) for npm publish.
 
 ### **Phase 2: PyPI (OIDC active)**
 
@@ -65,7 +78,7 @@ _Publishing currently uses PyPI Pending Publisher via OIDC; no API token require
 
 ## 4 . GitHub Actions files
 
-- [x] The release workflow contains a `changeset publish` step with `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` env set.
+- [x] The release workflow contains `changeset publish` using npm OIDC trusted publishing.
 - [x] **The Python publish job/step is temporarily disabled.**
 - [x] Matrix builds pass under `pnpm install --frozen-lockfile`.
 - [x] Workflow that builds `packages/web` uses **Node 20** (Next 14’s recommend).
@@ -167,14 +180,14 @@ CI runs again on the branch; should still be green.
   1. Builds
   2. Runs `pnpm changeset publish` (publishes **npm** packages only, because the Python step is disabled)
 
-The action needs:
+Legacy token path needed:
 
 ```yaml
 env:
   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-_(already present)._
+_(only if you intentionally disable OIDC trusted publishing)._
 
 ---
 
