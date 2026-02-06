@@ -11,7 +11,7 @@ export interface CoreFieldsProps {
   onChange: (patch: Partial<{ proto: string; auth: string; uri: string; domain: string }>) => void
 }
 
-const PROTOCOLS = ['mcp', 'a2a', 'openapi', 'grpc', 'graphql', 'websocket', 'local', 'zeroconf']
+const PROTOCOLS = ['mcp', 'a2a', 'ucp', 'openapi', 'grpc', 'graphql', 'websocket', 'local', 'zeroconf']
 
 export function CoreFields({ proto, auth, uri, domain, onChange }: CoreFieldsProps) {
   return (
