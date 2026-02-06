@@ -1,5 +1,17 @@
 # @agentcommunity/aid-doctor
 
+## 1.2.0
+
+### Minor Changes
+
+- Align with the v1.2.0 release line.
+
+### Patch Changes
+
+- Updated dependencies
+  - @agentcommunity/aid@1.2.0
+  - @agentcommunity/aid-engine@0.2.2
+
 ## 1.1.1
 
 ### Patch Changes
