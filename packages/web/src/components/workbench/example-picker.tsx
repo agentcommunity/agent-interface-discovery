@@ -134,7 +134,7 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
     TUTORIAL_EXAMPLES[0], // Simple (basic MCP)
     TUTORIAL_EXAMPLES[1], // Local Docker
     REAL_WORLD_EXAMPLES[0], // Supabase
-    PROTOCOL_EXAMPLES[0], // A2A Showcase
+    PROTOCOL_EXAMPLES[1], // UCP Showcase
     REFERENCE_EXAMPLES[1], // Secure (auth-required)
     OTHER_CHAT_EXAMPLES[0], // No Server (error case)
   ].filter(Boolean);
