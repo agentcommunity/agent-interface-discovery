@@ -7,7 +7,7 @@ import { Codeblock } from '@/components/ui/codeblock';
 import { ShieldCheck } from 'lucide-react';
 
 const TXT_PKA_SNIPPET = `_agent.example.com. 300 IN TXT \
-  "v=aid1;\\\n  u=https://api.example.com/mcp;\\\n  p=mcp;\\\n  k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;\\\n  i=g1"`;
+  "v=aid1;\\\n  uri=https://api.example.com/mcp;\\\n  p=mcp;\\\n  k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;\\\n  i=g1"`;
 
 export function Identity() {
   return (
@@ -39,7 +39,9 @@ export function Identity() {
                 <div className="space-y-3 text-sm leading-relaxed">
                   <p className="text-muted-foreground">
                     In short: DNS tells clients where to connect; Identity (PKA) lets clients verify
-                    who is on the other end.
+                    who is on the other end. All keys have single-letter aliases for byte efficiency
+                    (e.g. <code>u</code> for <code>uri</code>, <code>p</code> for <code>proto</code>
+                    ).
                   </p>
                   <ul className="space-y-2 list-disc pl-5">
                     <li>Publish `k` (public key) and `i` (key id) in your TXT record</li>

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Compass, Rocket, Package } from 'lucide-react';
+import { Compass, Rocket, ShieldCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Codeblock } from '@/components/ui/codeblock';
 
@@ -52,33 +52,32 @@ Console.WriteLine($"{result.Record.Proto} at {result.Record.Uri}");`,
 };
 
 const DNS_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;uri=https://api.example.com/mcp;p=mcp"`;
-const DNS_PKA_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;u=https://api.example.com/mcp;p=mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1"`;
+const DNS_PKA_SNIPPET = `_agent.example.com. 300 IN TXT "v=aid1;uri=https://api.example.com/mcp;p=mcp;k=z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ;i=g1"`;
 const TERRAFORM_SNIPPET = `resource "cloudflare_record" "aid" {
   zone_id = var.zone_id
   name    = "_agent"
   type    = "TXT"
-  value   = "v=aid1;uri=https://api.example.com/mcp;p=mcp"
+  value   = "v=aid1;uri=https://api.example.com/openapi.json;p=openapi"
 }`;
 
-const ENGINE_INSTALL = `# Install engine (core business logic)
-pnpm add @agentcommunity/aid-engine
-# or
-npm i @agentcommunity/aid-engine`;
+const VALIDATE_SNIPPET = `# Validate your record from the CLI
+npx @agentcommunity/aid-doctor check example.com`;
 
 // ---------------------------------------------------------------------------
 
 export function QuickStart() {
-  const [step, setStep] = useState<'discover' | 'publish' | 'engine'>('discover');
+  const [step, setStep] = useState<'discover' | 'publish' | 'validate'>('discover');
   const [lang, setLang] = useState<'typescript' | 'python' | 'go' | 'rust' | 'java' | 'dotnet'>(
     'typescript',
   );
   const [publishTab, setPublishTab] = useState<'dns' | 'terraform' | 'dns+identity'>('dns');
 
-  const STEPS: Array<{ id: 'discover' | 'publish' | 'engine'; label: string; Icon: LucideIcon }> = [
-    { id: 'discover', label: 'Discover', Icon: Compass },
-    { id: 'publish', label: 'Publish', Icon: Rocket },
-    { id: 'engine', label: 'Install Engine', Icon: Package },
-  ];
+  const STEPS: Array<{ id: 'discover' | 'publish' | 'validate'; label: string; Icon: LucideIcon }> =
+    [
+      { id: 'discover', label: 'Discover', Icon: Compass },
+      { id: 'publish', label: 'Publish', Icon: Rocket },
+      { id: 'validate', label: 'Validate', Icon: ShieldCheck },
+    ];
 
   return (
     <section className="section-padding bg-muted/30">
@@ -215,22 +214,14 @@ export function QuickStart() {
                 </div>
               )}
 
-              {step === 'engine' && (
+              {step === 'validate' && (
                 <div className="space-y-4">
-                  <Codeblock title="install" content={ENGINE_INSTALL} />
+                  <Codeblock title="terminal" content={VALIDATE_SNIPPET} />
                   <div className="text-sm text-muted-foreground">
-                    Use the engine for discovery, validation, and identity.
+                    Lint your record, verify DNS resolution, and test PKA identity — all from one
+                    command.
                   </div>
                   <div className="flex flex-wrap gap-2 justify-center">
-                    <Button variant="ghost" asChild className="text-sm">
-                      <a
-                        href="https://docs.agentcommunity.org/aid/Tooling/aid_engine"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Engine Docs
-                      </a>
-                    </Button>
                     <Button variant="ghost" asChild className="text-sm">
                       <a
                         href="https://docs.agentcommunity.org/aid/Tooling/aid_doctor"
@@ -238,6 +229,15 @@ export function QuickStart() {
                         rel="noopener noreferrer"
                       >
                         aid-doctor CLI
+                      </a>
+                    </Button>
+                    <Button variant="ghost" asChild className="text-sm">
+                      <a
+                        href="https://docs.agentcommunity.org/aid/Tooling/aid_engine"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Engine Docs
                       </a>
                     </Button>
                     <Button variant="ghost" asChild className="text-sm">

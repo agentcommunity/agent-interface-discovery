@@ -1,7 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, Zap, Layers, ShieldCheck } from 'lucide-react';
 
-const solutions = [
+const solutions: Array<{
+  number: string;
+  icon: typeof Globe;
+  title: string;
+  description: string;
+  iconColor: string;
+  iconBg: string;
+  links: Array<{ label: string; href: string }>;
+  badges?: string[];
+}> = [
   {
     number: '1',
     icon: Globe,
@@ -20,7 +29,7 @@ const solutions = [
     icon: Zap,
     title: 'Instant Discovery',
     description:
-      'Any tool can instantly find your agent by looking up the _agent subdomain. Zero manual configuration.',
+      'Any tool can find your agent by looking up the _agent subdomain. Falls back to .well-known/agent when DNS is restricted.',
     iconColor: 'text-accent-foreground',
     iconBg: 'bg-accent/20',
     links: [
@@ -38,8 +47,8 @@ const solutions = [
     number: '3',
     icon: Layers,
     title: 'Protocol-Agnostic',
-    description:
-      'The same DNS record works for MCP, A2A, OpenAPI, local packages and any custom protocol.',
+    description: 'Works with any agent protocol — just change the p= token in your record.',
+    badges: ['mcp', 'a2a', 'openapi', 'grpc', 'graphql', 'websocket', 'ucp'],
     iconColor: 'text-primary',
     iconBg: 'bg-muted',
     links: [
@@ -107,6 +116,18 @@ export function Solution() {
                   <CardDescription className="text-base leading-relaxed transition-colors duration-300 group-hover:text-muted-foreground/80">
                     {solution.description}
                   </CardDescription>
+                  {solution.badges && solution.badges.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {solution.badges.map((b) => (
+                        <span
+                          key={b}
+                          className="inline-block text-xs font-mono bg-muted px-2 py-0.5 rounded-md border border-border/50"
+                        >
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {solution.links && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {solution.links.map((link, linkIndex) => (

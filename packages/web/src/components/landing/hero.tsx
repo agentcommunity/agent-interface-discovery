@@ -4,42 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, PlayCircle, Sparkles } from 'lucide-react';
+import { ExternalLink, PlayCircle } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copybutton';
 import { getAidVersion, fetchAidVersion } from '@/lib/utils';
 
 export function Hero() {
-  const [tokenCount, setTokenCount] = useState(0);
-  const [engineerHours, setEngineerHours] = useState(0);
   const [aidVersion, setAidVersion] = useState(getAidVersion());
-  const targetTokens = 12_345_678;
-  const HUMAN_TOKENS_PER_HOUR = 12_000;
 
   useEffect(() => {
     fetchAidVersion()
       .then(setAidVersion)
       .catch(() => {});
-
-    const duration = 2000;
-    const steps = 60;
-    const increment = targetTokens / steps;
-    const stepDuration = duration / steps;
-
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= targetTokens) {
-        setTokenCount(targetTokens);
-        setEngineerHours(Math.floor(targetTokens / HUMAN_TOKENS_PER_HOUR));
-        clearInterval(timer);
-      } else {
-        const tokens = Math.floor(current);
-        setTokenCount(tokens);
-        setEngineerHours(Math.floor(tokens / HUMAN_TOKENS_PER_HOUR));
-      }
-    }, stepDuration);
-
-    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -86,20 +61,14 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* Animated Stats Badge */}
+          {/* Key Facts */}
           <div className="mb-12 animate-fade-in">
-            <div className="inline-flex items-center gap-3 rounded-full bg-muted/50 px-6 py-3 text-sm border border-border/30 shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105 group">
-              <Sparkles className="h-4 w-4 text-amber-500 transition-transform duration-300 group-hover:scale-110" />
-              <span className="text-muted-foreground">
-                <span className="font-mono tabular-nums font-semibold text-foreground animate-count-up">
-                  {tokenCount.toLocaleString()}
-                </span>{' '}
-                input-tokens and{' '}
-                <span className="font-mono tabular-nums font-semibold text-foreground animate-count-up">
-                  {engineerHours.toLocaleString()}
-                </span>{' '}
-                engineering hours saved
-              </span>
+            <div className="inline-flex items-center gap-3 rounded-full bg-muted/50 px-6 py-3 text-sm border border-border/30 shadow-soft-md">
+              <span className="font-medium text-foreground">9 protocols</span>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="font-medium text-foreground">6 SDKs</span>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="font-medium text-foreground">MIT licensed</span>
             </div>
           </div>
 
