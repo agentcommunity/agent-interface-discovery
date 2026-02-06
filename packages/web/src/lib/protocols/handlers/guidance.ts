@@ -75,6 +75,17 @@ function getProtocolGuidance(proto: ProtocolToken, uri: string): ProtocolResult[
         'Connect to the discovered IP:port',
       ],
     },
+    ucp: {
+      canConnect: false,
+      title: 'UCP Agent Discovered',
+      description: 'This agent supports the Universal Commerce Protocol for agent-driven commerce.',
+      docsUrl: 'https://www.universalcommerce.io/',
+      nextSteps: [
+        'Connect to ' + uri + ' using a UCP client',
+        'Discover available commerce capabilities',
+        'Check the agent documentation for supported transaction types',
+      ],
+    },
   };
 
   return guides[proto as Exclude<ProtocolToken, 'mcp' | 'a2a'>];

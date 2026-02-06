@@ -34,7 +34,7 @@ type FormData = AidGeneratorFormData & { useAliases: boolean };
 
 type FormPatch = Partial<FormData>;
 
-const PROTOCOL_ORDER: ProtocolToken[] = ['mcp', 'a2a', 'openapi', 'local'];
+const PROTOCOL_ORDER: ProtocolToken[] = ['mcp', 'a2a', 'ucp', 'openapi', 'local'];
 
 function parseExample(example: string): Partial<FormData> {
   const parts = new Map(

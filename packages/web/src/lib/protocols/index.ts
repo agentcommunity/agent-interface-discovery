@@ -20,6 +20,7 @@ const handlers = new Map<ProtocolToken, ProtocolHandler>([
   ['websocket', new GuidanceHandler('websocket')],
   ['local', new GuidanceHandler('local')],
   ['zeroconf', new GuidanceHandler('zeroconf')],
+  ['ucp', new GuidanceHandler('ucp')],
 ]);
 
 /**

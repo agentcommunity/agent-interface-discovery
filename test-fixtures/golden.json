@@ -40,6 +40,15 @@
         "pka": "z7rW8rTq8o4mM6vVf7w1k3m4uQn9p2YxCAbcDeFgHiJ",
         "kid": "g1"
       }
+    },
+    {
+      "name": "ucp-simple",
+      "raw": "v=aid1;p=ucp;u=https://shop.example.com/ucp",
+      "expected": {
+        "v": "aid1",
+        "uri": "https://shop.example.com/ucp",
+        "proto": "ucp"
+      }
     }
   ]
   ,

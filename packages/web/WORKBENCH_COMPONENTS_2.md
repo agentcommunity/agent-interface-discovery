@@ -110,12 +110,13 @@ interface ProtocolHandler {
 
 ## Protocol-Aware Connection Handling
 
-The workbench supports all 8 AID protocol tokens:
+The workbench supports all 9 AID protocol tokens:
 
 | Protocol    | Connection Behavior                                | Handler           |
 | ----------- | -------------------------------------------------- | ----------------- |
 | `mcp`       | Full MCP SDK handshake, shows capabilities         | `MCPHandler`      |
 | `a2a`       | Fetches Agent Card, shows skills/auth requirements | `A2AHandler`      |
+| `ucp`       | Shows UCP guidance (commerce capabilities)         | `GuidanceHandler` |
 | `openapi`   | Shows OpenAPI guidance (spec URL, tools)           | `GuidanceHandler` |
 | `graphql`   | Shows GraphQL guidance (introspection, clients)    | `GuidanceHandler` |
 | `grpc`      | Shows gRPC guidance (grpcurl commands)             | `GuidanceHandler` |

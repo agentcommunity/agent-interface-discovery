@@ -65,6 +65,7 @@ export function validate(data: AidGeneratorFormData): ValidationResult {
     openapi: ['https://'],
     grpc: ['https://'],
     graphql: ['https://'],
+    ucp: ['https://'],
     websocket: ['wss://'],
     local: ['docker:', 'npx:', 'pip:'],
     zeroconf: ['zeroconf:'],

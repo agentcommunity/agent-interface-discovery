@@ -54,6 +54,22 @@ Regardless of the specific changes being made, all spec extensions must:
   - .NET: `packages/aid-dotnet/src/Constants.g.cs` (if present)
   - Java: `packages/aid-java/src/main/java/org/agentcommunity/aid/Constants.java` (if present)
 - **Post-Generation Validation**: Verify all languages can import and use new constants without compilation errors
+- **IMPORTANT — Hardcoded lists that `pnpm gen` does NOT update**:
+  Generation only updates `constants`/`spec`/`examples` files. Several parsers and web components
+  maintain **hardcoded protocol/auth token lists** that must be updated manually when adding tokens:
+  - **Rust parser**: `packages/aid-rs/src/parser.rs` — `is_supported_proto()` match list and import
+  - **Java parser**: `packages/aid-java/.../Parser.java` — `isValidProto()` equals chain
+  - **Web generator validation**: `packages/web/src/lib/generator/core.ts` — `allowed` URI-scheme map
+  - **Web core fields UI**: `packages/web/src/components/workbench/v11-fields/core-fields.tsx` — `PROTOCOLS` array
+  - **Web validate route**: `packages/web/src/app/api/generator/validate/route.ts` — type cast union
+  - **Web datasource types**: `packages/web/src/lib/datasources/types.ts` — `ProtocolToken` union type
+  - **Web protocol handlers**: `packages/web/src/lib/protocols/index.ts` — handler registry map
+  - **Web protocol guidance**: `packages/web/src/lib/protocols/handlers/guidance.ts` — guidance record
+  - **Web generator panel**: `packages/web/src/components/workbench/generator-panel.tsx` — `PROTOCOL_ORDER`
+  - (.NET parser uses reflection on `PROTO_*` constants so it picks up new tokens automatically)
+
+  **Tip**: After generation, grep for the existing tokens (e.g. `zeroconf`) across the repo to find
+  any hardcoded lists that need the new token added.
 
 ## 5) Multi-language implementation
 - **TypeScript First (Reference Implementation)**:
@@ -183,6 +199,7 @@ If a spec change causes issues after release:
 - [ ] Proposal issue with rationale, examples, and security analysis
 - [ ] `protocol/constants.yml` updated and `pnpm gen` executed
 - [ ] All generated constants committed (TS, Py, Go, Web, Rust/.NET/Java if present)
+- [ ] Hardcoded token lists updated (Rust/Java parsers, web generator, UI components — see step 4)
 - [ ] Security review completed for changes with security implications
 - [ ] Multi-language implementations updated (TS first, then Py/Go mirrors)
 - [ ] All language test suites pass (including parity tests)

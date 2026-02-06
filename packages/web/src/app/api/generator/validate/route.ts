@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     domain: data.domain,
     uri: data.uri,
     // Narrow proto to the engine type
-    proto: data.proto as 'mcp' | 'a2a' | 'openapi' | 'grpc' | 'graphql' | 'websocket' | 'local' | 'zeroconf',
+    proto: data.proto as 'mcp' | 'a2a' | 'ucp' | 'openapi' | 'grpc' | 'graphql' | 'websocket' | 'local' | 'zeroconf',
     auth: authValue,
     desc: data.desc || '',
     docs: data.docs || undefined,

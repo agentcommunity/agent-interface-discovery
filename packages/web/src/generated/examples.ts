@@ -139,6 +139,15 @@ export const PROTOCOL_EXAMPLES: Example[] = [
     category: 'protocols',
   },
   {
+    title: 'Ucp Showcase',
+    label: 'Ucp Showcase',
+    domain: 'ucp.agentcommunity.org',
+    icon: '🛒',
+    content:
+      'v=aid1;u=https://ucp.agentcommunity.org/ucp;p=ucp;d=https://www.universalcommerce.io/;s=UCP Commerce Showcase',
+    category: 'protocols',
+  },
+  {
     title: 'Graphql Showcase',
     label: 'Graphql Showcase',
     domain: 'graphql.agentcommunity.org',

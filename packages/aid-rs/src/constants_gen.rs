@@ -12,6 +12,7 @@ pub const PROTO_GRPC: &str = "grpc";
 pub const PROTO_LOCAL: &str = "local";
 pub const PROTO_MCP: &str = "mcp";
 pub const PROTO_OPENAPI: &str = "openapi";
+pub const PROTO_UCP: &str = "ucp";
 pub const PROTO_WEBSOCKET: &str = "websocket";
 pub const PROTO_ZEROCONF: &str = "zeroconf";
 

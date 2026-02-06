@@ -216,6 +216,7 @@ _All protocol tokens are case-sensitive and defined in lowercase ASCII._
 | `websocket` | WebSocket transport                             | `wss://`                  |
 | `local`     | The agent runs locally on the client machine    | `docker:`, `npx:`, `pip:` |
 | `zeroconf`  | mDNS/DNS-SD service discovery                   | `zeroconf:<service_type>` |
+| `ucp`       | Universal Commerce Protocol                     | `https://`                |
 
 ## **Appendix C: Client Error Constants**
 
