@@ -173,7 +173,7 @@ export function DiscoveryChat() {
 
   return (
     <div className="h-full bg-gray-50 flex flex-col">
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+      <div data-scroll-region className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {state.messages.length === 0 && (
           <>
             <TitleSection mode="resolver" />
