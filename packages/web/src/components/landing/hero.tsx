@@ -1,65 +1,112 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, PlayCircle, Sparkles } from 'lucide-react';
+import { ExternalLink, PlayCircle } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copybutton';
 import { getAidVersion, fetchAidVersion } from '@/lib/utils';
 
-export function Hero() {
-  const [tokenCount, setTokenCount] = useState(0);
-  const [engineerHours, setEngineerHours] = useState(0);
-  const [aidVersion, setAidVersion] = useState(getAidVersion());
-  const targetTokens = 12_345_678;
-  const HUMAN_TOKENS_PER_HOUR = 12_000;
+/* ---------- cycling domain text ---------- */
+const DOMAINS = [
+  'magic.agent',
+  'solo.agent',
+  'assist.agent',
+  'ops.agent',
+  'relay.agent',
+  'scout.agent',
+];
 
-  useEffect(() => {
+function useCyclingText(items: string[], intervalMs = 2400) {
+  const [index, setIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const ref = useCallback(
+    (node: HTMLElement | null) => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      if (!node) return;
+
+      timerRef.current = setInterval(() => {
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setIndex((prev) => (prev + 1) % items.length);
+          setIsTransitioning(false);
+        }, 300);
+      }, intervalMs);
+    },
+    [items.length, intervalMs],
+  );
+
+  return { ref, value: items[index], isTransitioning };
+}
+
+/* ---------- animated stat counter ---------- */
+function AnimatedStat({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="font-medium text-foreground group-stat">
+      <span className="tabular-nums">{value}</span> {label}
+    </span>
+  );
+}
+
+/* ---------- main Hero component ---------- */
+export function Hero() {
+  const [aidVersion, setAidVersion] = useState(getAidVersion());
+  const domain = useCyclingText(DOMAINS);
+
+  // Fire-and-forget fetch on mount via ref callback
+  const fetchedRef = useRef(false);
+  const mountRef = useCallback((node: HTMLElement | null) => {
+    if (!node || fetchedRef.current) return;
+    fetchedRef.current = true;
     fetchAidVersion()
       .then(setAidVersion)
       .catch(() => {});
-
-    const duration = 2000;
-    const steps = 60;
-    const increment = targetTokens / steps;
-    const stepDuration = duration / steps;
-
-    let current = 0;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= targetTokens) {
-        setTokenCount(targetTokens);
-        setEngineerHours(Math.floor(targetTokens / HUMAN_TOKENS_PER_HOUR));
-        clearInterval(timer);
-      } else {
-        const tokens = Math.floor(current);
-        setTokenCount(tokens);
-        setEngineerHours(Math.floor(tokens / HUMAN_TOKENS_PER_HOUR));
-      }
-    }, stepDuration);
-
-    return () => clearInterval(timer);
   }, []);
 
   return (
-    <section className="relative w-full section-padding">
+    <section ref={mountRef} className="relative w-full section-padding overflow-hidden">
+      {/* ---- subtle grid background ---- */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.04)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.04)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      </div>
+
       <div className="container mx-auto container-padding text-center">
         <div className="mx-auto max-w-5xl">
           <Badge
             variant="secondary"
             className="mb-6 animate-fade-in shadow-soft-xs hover:shadow-soft-md transition-all duration-200"
           >
-            v{aidVersion} • DNS-based Agent Identity & Discovery
+            v{aidVersion} &bull; DNS-based Agent Identity &amp; Discovery
           </Badge>
 
           <h1 className="mb-8 text-6xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-balance animate-fade-in-up">
-            _agent Identity<span className=" text-muted-foreground"> & Discovery</span>
+            _agent Identity
+            <span className="text-muted-foreground"> &amp; Discovery</span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
+          <p className="mx-auto mb-4 max-w-4xl text-xl md:text-2xl leading-relaxed text-muted-foreground animate-fade-in-up">
             DNS for agents. Discover endpoints and verify identity.
           </p>
+
+          {/* cycling domain */}
+          <div
+            ref={domain.ref}
+            className="mx-auto mb-10 inline-flex items-center gap-2 font-mono text-sm md:text-base text-muted-foreground/70 animate-fade-in-up"
+          >
+            <span className="select-none">_agent.</span>
+            <span
+              className={`inline-block min-w-[8ch] transition-all duration-300 ${domain.isTransitioning ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0'} text-foreground font-semibold`}
+            >
+              {domain.value}
+            </span>
+            <span className="select-none text-muted-foreground/40">TXT &rarr;</span>
+          </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-center mb-12 animate-fade-in-up">
             <Button
@@ -86,20 +133,14 @@ export function Hero() {
             </Button>
           </div>
 
-          {/* Animated Stats Badge */}
+          {/* Key Facts */}
           <div className="mb-12 animate-fade-in">
-            <div className="inline-flex items-center gap-3 rounded-full bg-muted/50 px-6 py-3 text-sm border border-border/30 shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105 group">
-              <Sparkles className="h-4 w-4 text-amber-500 transition-transform duration-300 group-hover:scale-110" />
-              <span className="text-muted-foreground">
-                <span className="font-mono tabular-nums font-semibold text-foreground animate-count-up">
-                  {tokenCount.toLocaleString()}
-                </span>{' '}
-                input-tokens and{' '}
-                <span className="font-mono tabular-nums font-semibold text-foreground animate-count-up">
-                  {engineerHours.toLocaleString()}
-                </span>{' '}
-                engineering hours saved
-              </span>
+            <div className="inline-flex items-center gap-3 rounded-full bg-muted/50 px-6 py-3 text-sm border border-border/30 shadow-soft-md">
+              <AnimatedStat value="9" label="protocols" />
+              <span className="text-muted-foreground/40">&bull;</span>
+              <AnimatedStat value="6" label="SDKs" />
+              <span className="text-muted-foreground/40">&bull;</span>
+              <span className="font-medium text-foreground">MIT licensed</span>
             </div>
           </div>
 

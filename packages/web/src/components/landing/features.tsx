@@ -1,26 +1,37 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, Puzzle, Clock, Settings } from 'lucide-react';
+import { Reveal, RevealStagger } from './reveal';
 
 const problems = [
   {
     icon: AlertTriangle,
     title: 'Manual Integration Hell',
     description: 'Each agent needs bespoke code, doc digging and manual config.',
+    iconColor: 'text-red-500',
+    iconBg: 'bg-red-50 dark:bg-red-950/30',
   },
   {
     icon: Puzzle,
     title: 'Protocol Fragmentation',
-    description: 'Agents speak MCP, A2A, OpenAPI and more—auth flows vary wildly.',
+    description: 'Agents speak MCP, A2A, OpenAPI and more — auth flows vary wildly.',
+    iconColor: 'text-orange-500',
+    iconBg: 'bg-orange-50 dark:bg-orange-950/30',
   },
   {
     icon: Clock,
     title: 'Wasted Development Time',
     description: 'Teams lose weeks wiring basic discovery and connection logic.',
+    iconColor: 'text-amber-500',
+    iconBg: 'bg-amber-50 dark:bg-amber-950/30',
   },
   {
     icon: Settings,
     title: 'No Discovery & Identity Standard',
     description: 'No universal way to discover agents and verify who runs them.',
+    iconColor: 'text-rose-500',
+    iconBg: 'bg-rose-50 dark:bg-rose-950/30',
   },
 ];
 
@@ -29,16 +40,16 @@ export function Problem() {
     <section className="section-padding bg-muted/30">
       <div className="container mx-auto container-padding">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center animate-fade-in">
+          <Reveal direction="up" className="mb-12 text-center">
             <h2 className="mb-4 text-4xl md:text-5xl font-bold tracking-tight">
               The Agent/Tooling Integration Problem
             </h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
               Connecting to AI agents shouldn&apos;t require a PhD in API archaeology
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <RevealStagger direction="up" staggerMs={100} className="grid gap-6 md:grid-cols-2">
             {problems.map((problem, index) => (
               <Card
                 key={index}
@@ -46,8 +57,12 @@ export function Problem() {
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted/50 border border-border/30 shadow-soft-xs transition-all duration-300 group-hover:scale-110 group-hover:shadow-soft-md">
-                      <problem.icon className="h-6 w-6 text-foreground transition-transform duration-300 group-hover:scale-110" />
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-lg ${problem.iconBg} border border-border/30 shadow-soft-xs transition-all duration-300 group-hover:scale-110 group-hover:shadow-soft-md`}
+                    >
+                      <problem.icon
+                        className={`h-6 w-6 ${problem.iconColor} transition-transform duration-300 group-hover:scale-110`}
+                      />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-lg transition-colors duration-300 group-hover:text-foreground">
@@ -63,7 +78,7 @@ export function Problem() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </RevealStagger>
         </div>
       </div>
     </section>

@@ -1,15 +1,27 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, Zap, Layers, ShieldCheck } from 'lucide-react';
+import { Reveal, RevealStagger } from './reveal';
 
-const solutions = [
+const solutions: Array<{
+  number: string;
+  icon: typeof Globe;
+  title: string;
+  description: string;
+  iconColor: string;
+  iconBg: string;
+  links: Array<{ label: string; href: string }>;
+  badges?: string[];
+}> = [
   {
     number: '1',
     icon: Globe,
     title: 'One DNS TXT Record',
     description:
-      'Add a single _agent.example.com TXT record. That&apos;s it. No registries, no APIs, no complexity.',
-    iconColor: 'text-primary',
-    iconBg: 'bg-primary/10',
+      "Add a single _agent.example.com TXT record. That's it. No registries, no APIs, no complexity.",
+    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-50 dark:bg-blue-950/30',
     links: [
       { label: 'Quick Start', href: 'https://docs.agentcommunity.org/aid/quickstart/index' },
       { label: 'Specification', href: 'https://docs.agentcommunity.org/aid/specification' },
@@ -20,9 +32,9 @@ const solutions = [
     icon: Zap,
     title: 'Instant Discovery',
     description:
-      'Any tool can instantly find your agent by looking up the _agent subdomain. Zero manual configuration.',
-    iconColor: 'text-accent-foreground',
-    iconBg: 'bg-accent/20',
+      'Any tool can find your agent by looking up the _agent subdomain. Falls back to .well-known/agent when DNS is restricted.',
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50 dark:bg-amber-950/30',
     links: [
       {
         label: 'Discovery API',
@@ -38,10 +50,10 @@ const solutions = [
     number: '3',
     icon: Layers,
     title: 'Protocol-Agnostic',
-    description:
-      'The same DNS record works for MCP, A2A, OpenAPI, local packages and any custom protocol.',
-    iconColor: 'text-primary',
-    iconBg: 'bg-muted',
+    description: 'Works with any agent protocol — just change the p= token in your record.',
+    badges: ['mcp', 'a2a', 'openapi', 'grpc', 'graphql', 'websocket', 'ucp'],
+    iconColor: 'text-purple-600',
+    iconBg: 'bg-purple-50 dark:bg-purple-950/30',
     links: [
       { label: 'MCP Guide', href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_mcp' },
       { label: 'A2A Guide', href: 'https://docs.agentcommunity.org/aid/quickstart/quickstart_a2a' },
@@ -58,8 +70,8 @@ const solutions = [
     title: 'Agent Identity',
     description:
       'Publish a public key (PKA) and let clients verify your endpoint using HTTP Message Signatures (Ed25519).',
-    iconColor: 'text-primary',
-    iconBg: 'bg-primary/10',
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50 dark:bg-emerald-950/30',
     links: [
       {
         label: 'Identity & PKA',
@@ -75,22 +87,26 @@ export function Solution() {
     <section className="section-padding">
       <div className="container mx-auto container-padding">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center animate-fade-in">
+          <Reveal direction="up" className="mb-12 text-center">
             <h2 className="mb-4 text-4xl md:text-5xl font-bold tracking-tight">
               How <span className="text-gradient">Agent Discovery</span> Solves This
             </h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
               Three simple principles that eliminate integration complexity
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <RevealStagger
+            direction="up"
+            staggerMs={120}
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-4"
+          >
             {solutions.map((solution, index) => (
               <Card
                 key={index}
                 className="card-feature relative overflow-hidden shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 hover:-translate-y-2 group"
               >
-                <div className="absolute top-4 right-4 text-8xl font-bold text-muted-foreground/10 select-none transition-all duration-300 group-hover:text-muted-foreground/20">
+                <div className="absolute top-4 right-4 text-8xl font-bold text-muted-foreground/10 select-none transition-all duration-300 group-hover:text-muted-foreground/20 group-hover:scale-110">
                   {solution.number}
                 </div>
                 <CardHeader className="pb-4 relative z-10">
@@ -107,6 +123,18 @@ export function Solution() {
                   <CardDescription className="text-base leading-relaxed transition-colors duration-300 group-hover:text-muted-foreground/80">
                     {solution.description}
                   </CardDescription>
+                  {solution.badges && solution.badges.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {solution.badges.map((b) => (
+                        <span
+                          key={b}
+                          className="inline-block text-xs font-mono bg-muted px-2 py-0.5 rounded-md border border-border/50 transition-colors duration-200 group-hover:bg-muted/80"
+                        >
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {solution.links && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {solution.links.map((link, linkIndex) => (
@@ -125,7 +153,7 @@ export function Solution() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </RevealStagger>
         </div>
       </div>
     </section>

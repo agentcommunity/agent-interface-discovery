@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { ChevronDown } from 'lucide-react';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   TUTORIAL_EXAMPLES,
@@ -129,28 +131,67 @@ export function ExamplePicker({ variant, onSelect, disabled }: ExamplePickerProp
     );
   }
 
-  // Default to 'buttons' variant for the chat resolver
-  const allChatExamples = [
-    ...TUTORIAL_EXAMPLES,
-    ...REFERENCE_EXAMPLES,
-    ...REAL_WORLD_EXAMPLES,
-    ...PROTOCOL_EXAMPLES,
-    ...OTHER_CHAT_EXAMPLES,
+  // Curated subset for the resolver chat — keep it focused
+  const [expanded, setExpanded] = useState(false);
+
+  const curated = [
+    TUTORIAL_EXAMPLES[0], // Simple (basic MCP)
+    TUTORIAL_EXAMPLES[1], // Local Docker
+    REAL_WORLD_EXAMPLES[0], // Supabase
+    PROTOCOL_EXAMPLES[1], // UCP Showcase
+    REFERENCE_EXAMPLES[1], // Secure (auth-required)
+    OTHER_CHAT_EXAMPLES[0], // No Server (error case)
+  ].filter(Boolean);
+
+  const allGroups: Array<{ label: string; examples: Example[] }> = [
+    { label: 'Tutorials', examples: TUTORIAL_EXAMPLES },
+    { label: 'Real World', examples: REAL_WORLD_EXAMPLES },
+    { label: 'Protocols', examples: PROTOCOL_EXAMPLES },
+    { label: 'Reference', examples: REFERENCE_EXAMPLES },
+    { label: 'Edge Cases', examples: OTHER_CHAT_EXAMPLES },
   ];
 
+  const renderButton = (ex: Example) => (
+    <Button
+      key={ex.title}
+      variant="outline"
+      className="text-sm px-3 py-1 h-auto"
+      onClick={() => onSelect(ex)}
+      disabled={disabled}
+    >
+      <ExampleItem example={ex} />
+    </Button>
+  );
+
   return (
-    <div className="flex flex-wrap gap-2 mb-2 justify-center">
-      {allChatExamples.map((ex) => (
-        <Button
-          key={ex.title}
-          variant="outline"
-          className="text-sm px-3 py-1 h-auto"
-          onClick={() => onSelect(ex)}
+    <div className="mb-2 space-y-2">
+      <div className="flex flex-wrap gap-2 justify-center">
+        {expanded
+          ? allGroups.map((group) => (
+              <div key={group.label} className="w-full">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1.5 text-center">
+                  {group.label}
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center mb-2">
+                  {group.examples.map((ex) => renderButton(ex))}
+                </div>
+              </div>
+            ))
+          : curated.map((ex) => renderButton(ex))}
+      </div>
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={() => setExpanded(!expanded)}
           disabled={disabled}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
         >
-          <ExampleItem example={ex} />
-        </Button>
-      ))}
+          {expanded ? 'Show less' : 'Show all 17 examples'}
+          <ChevronDown
+            className={`w-3 h-3 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          />
+        </button>
+      </div>
     </div>
   );
 }

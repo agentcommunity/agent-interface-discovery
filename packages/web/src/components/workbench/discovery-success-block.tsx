@@ -18,6 +18,7 @@ import {
 import { type DiscoveryResult } from '@/hooks/use-discovery';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { isOk } from '@/lib/types/result';
+import { ConnectSnippet } from './connect-snippet';
 
 interface DetailRowProps {
   Icon: React.ElementType;
@@ -104,6 +105,8 @@ export const DiscoverySuccessBlock: React.FC<{ result: DiscoveryResult }> = ({ r
           <DetailRow Icon={Calendar} label="Deprecation" value={dep} />
           <DetailRow Icon={Shield} label="PKA" value={pka} isCode />
           <DetailRow Icon={Shield} label="Key ID" value={kid} isCode />
+          <hr className="my-2 border-green-200" />
+          <ConnectSnippet domain={metadata.dnsQuery.replace(/^_agent\./, '')} />
           <hr className="my-2 border-green-200" />
           <DetailRow Icon={Globe} label="DNS Query" value={metadata?.dnsQuery} isCode />
           <DetailRow Icon={Key} label="Full TXT Record" value={metadata?.txtRecord} isCode />
