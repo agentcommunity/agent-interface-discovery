@@ -5,37 +5,37 @@ import type { HandshakeResult } from '@/hooks/use-connection';
 // Chat message modelling
 // ---------------------------------------------------------------------------
 
-export interface DiscoveryResultMessage {
-  type: 'discovery_result';
-  id: string;
-  domain: string;
-  result: DiscoveryResult;
+export type SignalStage = 'input' | 'discovery' | 'connection' | 'auth';
+export type SignalStatus = 'running' | 'success' | 'error' | 'needs_auth' | 'info';
+
+export interface SignalDetail {
+  label: string;
+  value: string;
+  tone?: 'default' | 'success' | 'warning' | 'error';
 }
 
-export interface ConnectionResultMessage {
-  type: 'connection_result';
+export interface StatusSignalMessage {
+  type: 'status_signal';
   id: string;
-  status: 'success' | 'error' | 'needs_auth';
-  discovery: { record: DiscoveryData; metadata: DiscoveryMetadata };
-  result: HandshakeResult;
+  stage: SignalStage;
+  status: SignalStatus;
+  title: string;
+  summary?: string;
+  domain?: string;
+  errorCode?: string;
+  details?: SignalDetail[];
+  hints?: string[];
+  discoveryResult?: DiscoveryResult;
+  connectionResult?: {
+    discovery: { record: DiscoveryData; metadata: DiscoveryMetadata };
+    result: HandshakeResult;
+  };
 }
 
 export type ChatLogMessage =
   | { type: 'user'; id: string; content: string }
   | { type: 'assistant'; id: string; content: string; onComplete?: () => void }
-  | { type: 'tool_event'; id: string; tool: 'discovery' | 'connection'; detail: string }
-  | DiscoveryResultMessage
-  | ConnectionResultMessage
-  | {
-      type: 'tool_call';
-      id: string;
-      toolId: 'discovery' | 'connection';
-      status?: 'running' | 'success' | 'error' | 'needs_auth';
-      domain?: string;
-      result?: unknown;
-      discoveryResult?: unknown;
-    }
-  | { type: 'summary'; id: string; handshakeResult: HandshakeResult }
+  | StatusSignalMessage
   | { type: 'error_message'; id: string; content: string };
 
 // ---------------------------------------------------------------------------
@@ -66,4 +66,5 @@ export type Action =
   | { type: 'SET_DOMAIN'; domain: string }
   | { type: 'SET_DISCOVERY'; result: DiscoveryResult }
   | { type: 'SET_HANDSHAKE'; result: HandshakeResult }
+  | { type: 'REPLACE_MESSAGE'; id: string; message: ChatLogMessage }
   | { type: 'ADD_MESSAGE'; message: ChatLogMessage };

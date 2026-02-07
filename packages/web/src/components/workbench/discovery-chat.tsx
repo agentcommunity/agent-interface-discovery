@@ -6,25 +6,66 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Bot, Loader2, Send } from 'lucide-react';
 import { useChatEngine, type ChatLogMessage } from '@/hooks/use-chat-engine';
-import { ToolListSummary } from '@/components/workbench/tool-list-summary';
 import { Typewriter } from '@/components/ui/typewriter';
 import { TitleSection } from '@/components/workbench/title-section';
 import { CollapsibleResult } from './collapsible-result';
 import { ExamplePicker } from './example-picker';
-import { DiscoverySuccessBlock } from './discovery-success-block';
-import { DiscoveryToolBlock } from '@/components/workbench/tool-blocks';
-import { ConnectionToolBlock } from '@/components/workbench/tool-blocks';
-import type { HandshakeResult } from '@/hooks/use-connection';
-import type { DiscoveryResult } from '@/hooks/use-discovery';
+import { DiscoveryToolBlock } from '@/components/workbench/blocks/discovery-block';
+import { ConnectionToolBlock } from '@/components/workbench/blocks/connection-block';
+
+const signalCardStatus = (status: 'running' | 'success' | 'error' | 'needs_auth' | 'info') => {
+  switch (status) {
+    case 'success':
+      return 'success';
+    case 'running':
+      return 'loading';
+    case 'needs_auth':
+      return 'warning';
+    case 'info':
+      return 'info';
+    default:
+      return 'error';
+  }
+};
+
+const signalToolStatus = (status: 'running' | 'success' | 'error' | 'needs_auth' | 'info') => {
+  switch (status) {
+    case 'running':
+      return 'running';
+    case 'needs_auth':
+      return 'needs_auth';
+    case 'success':
+      return 'success';
+    default:
+      return 'error';
+  }
+};
+
+const detailToneClassName = (tone: 'default' | 'success' | 'warning' | 'error' | undefined) => {
+  switch (tone) {
+    case 'error':
+      return 'text-red-700';
+    case 'warning':
+      return 'text-amber-700';
+    case 'success':
+      return 'text-emerald-700';
+    default:
+      return 'text-foreground';
+  }
+};
 
 function Message({
   message,
   onProvideAuth,
   onPrefillGenerator,
+  chainPrev = false,
+  chainNext = false,
 }: {
   message: ChatLogMessage;
   onProvideAuth?: (token: string) => void;
   onPrefillGenerator?: () => void;
+  chainPrev?: boolean;
+  chainNext?: boolean;
 }) {
   const isUser = message.type === 'user';
 
@@ -32,6 +73,64 @@ function Message({
     switch (message.type) {
       case 'user':
         return <div className="text-sm">{message.content}</div>;
+      case 'status_signal': {
+        const cardStatus = signalCardStatus(message.status);
+        const toolStatus = signalToolStatus(message.status);
+
+        return (
+          <CollapsibleResult status={cardStatus} title={message.title}>
+            <div className="space-y-3">
+              {message.summary && <p className="text-sm text-foreground">{message.summary}</p>}
+              {message.errorCode && (
+                <p className="text-xs font-mono text-muted-foreground">Code: {message.errorCode}</p>
+              )}
+
+              {message.details && message.details.length > 0 && (
+                <div className="space-y-1.5 text-xs">
+                  {message.details.map((detail, index) => (
+                    <div key={`${detail.label}-${index}`} className="flex gap-2">
+                      <span className="font-medium text-muted-foreground shrink-0">
+                        {detail.label}:
+                      </span>
+                      <span className={detailToneClassName(detail.tone)}>{detail.value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {message.hints && message.hints.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Next checks</p>
+                  <ul className="space-y-1">
+                    {message.hints.map((hint, index) => (
+                      <li key={`${hint}-${index}`} className="text-xs text-muted-foreground">
+                        • {hint}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {message.discoveryResult && message.domain && (
+                <DiscoveryToolBlock
+                  status={toolStatus}
+                  result={message.discoveryResult}
+                  domain={message.domain}
+                />
+              )}
+
+              {message.connectionResult && (
+                <ConnectionToolBlock
+                  status={toolStatus}
+                  result={message.connectionResult.result}
+                  discoveryResult={{ ok: true, value: message.connectionResult.discovery }}
+                  onProvideAuth={onProvideAuth}
+                />
+              )}
+            </div>
+          </CollapsibleResult>
+        );
+      }
       case 'assistant': {
         if (message.content.includes('generator tool')) {
           const parts = message.content.split('generator tool');
@@ -53,56 +152,8 @@ function Message({
           <Typewriter key={message.id} text={message.content} onComplete={message.onComplete} />
         );
       }
-      case 'discovery_result':
-        return message.result.ok ? (
-          <CollapsibleResult
-            status="success"
-            title={`Discovery successful — ${message.domain}`}
-            defaultOpen
-          >
-            <DiscoverySuccessBlock result={message.result} />
-          </CollapsibleResult>
-        ) : (
-          <CollapsibleResult
-            status="error"
-            title={`Discovery failed — ${message.domain}`}
-            defaultOpen
-          >
-            <DiscoveryToolBlock status="error" result={message.result} domain={message.domain} />
-          </CollapsibleResult>
-        );
-      case 'connection_result': {
-        const proto = String(message.discovery.record.proto ?? 'mcp');
-        let connTitle = 'Connection failed';
-        if (message.status === 'success') connTitle = `Connected via ${proto}`;
-        else if (message.status === 'needs_auth') connTitle = 'Authentication required';
-        return (
-          <CollapsibleResult
-            status={message.status === 'success' ? 'success' : 'error'}
-            title={connTitle}
-            defaultOpen={message.status !== 'success'}
-          >
-            <ConnectionToolBlock
-              status={message.status}
-              result={message.result}
-              discoveryResult={{ ok: true, value: message.discovery } as DiscoveryResult}
-              onProvideAuth={onProvideAuth}
-            />
-          </CollapsibleResult>
-        );
-      }
-      case 'summary':
-        return (
-          <CollapsibleResult status="info" title="Agent capabilities">
-            <ToolListSummary
-              handshakeResult={message.handshakeResult as unknown as HandshakeResult}
-            />
-          </CollapsibleResult>
-        );
       case 'error_message':
         return <Typewriter key={message.id} text={message.content} speed={10} />;
-      case 'tool_event':
-        return null; // hide instrumentation messages
       default:
         return null;
     }
@@ -129,6 +180,17 @@ function Message({
           <Bot className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0 text-foreground">{renderContent()}</div>
+      </div>
+    );
+  }
+
+  if (message.type === 'status_signal') {
+    return (
+      <div className="relative mb-3 pl-7">
+        {chainPrev && <span className="absolute left-3 top-0 h-1/2 w-px bg-border/70" />}
+        {chainNext && <span className="absolute left-3 top-1/2 h-1/2 w-px bg-border/70" />}
+        <span className="absolute left-[10px] top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-border" />
+        {renderContent()}
       </div>
     );
   }
@@ -163,7 +225,7 @@ function ChatInput({
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Enter a domain name..."
+          placeholder="Enter a domain or URL..."
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={isLoading}
@@ -231,18 +293,28 @@ export function DiscoveryChat() {
         )}
 
         <div className="max-w-3xl mx-auto w-full">
-          {state.messages.map((msg) => (
-            <Message
-              key={msg.id}
-              message={msg}
-              onProvideAuth={
-                msg.type === 'connection_result'
-                  ? (token: string) => dispatch({ type: 'PROVIDE_AUTH', payload: token })
-                  : undefined
-              }
-              onPrefillGenerator={handlePrefillGenerator}
-            />
-          ))}
+          {state.messages.map((msg, index) => {
+            const previous = state.messages[index - 1];
+            const next = state.messages[index + 1];
+            const isSignal = msg.type === 'status_signal';
+            const chainPrev = isSignal && previous?.type === 'status_signal';
+            const chainNext = isSignal && next?.type === 'status_signal';
+
+            return (
+              <Message
+                key={msg.id}
+                message={msg}
+                chainPrev={chainPrev}
+                chainNext={chainNext}
+                onProvideAuth={
+                  msg.type === 'status_signal' && msg.status === 'needs_auth'
+                    ? (token: string) => dispatch({ type: 'PROVIDE_AUTH', payload: token })
+                    : undefined
+                }
+                onPrefillGenerator={handlePrefillGenerator}
+              />
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
       </div>

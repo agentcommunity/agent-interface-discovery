@@ -3,41 +3,60 @@ import { GeistMono } from 'geist/font/mono';
 import { GeistSans } from 'geist/font/sans';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/layout/header';
+import {
+  getMetadataBase,
+  getSiteUrl,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_X_HANDLE,
+} from '@/lib/seo';
 import './globals.css';
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
+const siteUrl = getSiteUrl();
+const metadataBase = getMetadataBase();
 
 export const metadata: Metadata = {
-  title: 'Agent Identity & Discovery — DNS for Agents',
-  description: 'DNS-first agent discovery and identity for the agentic web.',
-  metadataBase: new URL('https://aid.agentcommunity.org'),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  metadataBase,
+  alternates: {
+    canonical: '/',
+  },
   keywords: [
-    'agent domain',
-    '.agent',
-    'identity',
     'agent identity',
     'agent discovery',
     'agent discovery protocol',
     'agent discovery standard',
-    'endpoint identity',
-    'agent standard',
-    'agent community',
+    'dns agent discovery',
+    'dns txt records',
+    'agent endpoints',
     'AI agents',
-    'DNS',
-    'discovery',
-    'domain registration',
-    'agent community',
     'AID',
     'MCP',
     'A2A',
   ],
   authors: [{ name: 'Agent Community' }],
+  creator: 'Agent Community',
+  publisher: 'Agent Community',
+  category: 'technology',
+  referrer: 'origin-when-cross-origin',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    title: 'Agent Identity & Discovery — DNS for Agents',
-    description: 'DNS-first agent discovery and identity for the agentic web.',
-    url: 'https://aid.agentcommunity.org',
-    siteName: '_agent Identity & Discovery',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: '/',
+    siteName: SITE_NAME,
     images: [
       {
         url: '/og-card.png',
@@ -51,11 +70,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@agentcommunity_',
-    creator: '@agentcommunity_',
-    title: 'Agent Identity & Discovery - DNS for Agents',
-    description: 'DNS for Agents. - Identity for the Agentic Web.',
-    images: ['https://aid.agentcommunity.org/og-card.png'],
+    site: SITE_X_HANDLE,
+    creator: SITE_X_HANDLE,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ['/og-card.png'],
   },
   robots: {
     index: true,
@@ -70,22 +89,31 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: '/favicon.png',
-    apple: '/apple-touch-icon.png',
-  },
-  other: {
-    'twitter:site': '@agentcommunity_',
-    'twitter:creator': '@agentcommunity_',
-    'twitter:title': 'Agent Identity & Discovery - DNS for Agents',
-    'twitter:description': 'DNS for Agents. - Identity for the Agentic Web.',
-    'twitter:image': 'https://aid.agentcommunity.org/og-card.png',
-    'twitter:image:alt': 'Agent Identity & Discovery',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
   },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+};
+
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: SITE_NAME,
+  url: siteUrl,
+  logo: `${siteUrl}/logo/agent.png`,
+};
+
+const websiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: siteUrl,
+  description: SITE_DESCRIPTION,
+  inLanguage: 'en-US',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -94,6 +122,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${geistSans.className} ${geistMono.variable} min-h-dvh bg-background text-foreground antialiased`}
       >
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <div className="flex h-dvh flex-col overflow-hidden">
           <Header />
           <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>

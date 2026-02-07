@@ -16,9 +16,10 @@ interface DiscoveryToolBlockProps {
 
 function DiscoveryDetailsView({ result }: { result: DiscoveryResult }) {
   if (!result) return null;
+  const queryName = result.ok ? result.value?.metadata?.dnsQuery : '';
   const steps = [
     {
-      text: `Querying DNS for _agent.${result.ok ? result.value?.metadata?.dnsQuery : ''}...`,
+      text: queryName ? `Querying DNS for ${queryName}...` : 'Querying DNS...',
       completed: true,
     },
     {
@@ -56,10 +57,11 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
 
       if (result?.ok && result.value?.record) {
         const data = result.value.record;
+        const proto = String(data.proto ?? data.protocol ?? 'unknown');
         const parsedRecord = [
           `Version: ${data.v}`,
           `URI: ${data.uri}`,
-          `Protocol: ${data.protocol}`,
+          `Protocol: ${proto}`,
           `Host: ${data.host}:${data.port}`,
           data.desc ? `Description: ${data.desc}` : null,
           data.auth ? `Auth: ${data.auth}` : null,
@@ -159,13 +161,13 @@ export function DiscoveryToolBlock({ status, result, domain }: DiscoveryToolBloc
       {result && !result.ok && (
         <>
           <DiscoveryDetailsView result={result} />
-          <p className="mt-3 text-xs text-gray-600">
+          <p className="mt-3 text-xs text-muted-foreground">
             If you manage this domain, you can{' '}
             <a
               href={AID_GENERATOR_URL}
               target="_self"
               rel="noopener noreferrer"
-              className="text-blue-600 underline"
+              className="text-primary underline"
             >
               create an AID record
             </a>{' '}

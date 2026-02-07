@@ -7,6 +7,10 @@ import { Home, ArrowLeft, Search } from 'lucide-react';
 export const metadata: Metadata = {
   title: 'Page Not Found — Agent Identity & Discovery',
   description: 'This page does not exist. Open the Workbench to try discovery and identity.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function NotFoundPage() {

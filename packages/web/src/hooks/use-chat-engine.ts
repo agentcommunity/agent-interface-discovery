@@ -5,8 +5,7 @@
 export { useChatEngine } from './chat-engine/hook';
 export type {
   ChatLogMessage,
-  DiscoveryResultMessage,
-  ConnectionResultMessage,
+  StatusSignalMessage,
   EngineState,
   EngineCommand,
 } from './chat-engine/types';
