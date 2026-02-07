@@ -342,6 +342,18 @@
   }
 }
 
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb,
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-slide-up,
+  .animate-scale-in {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* Focus-visible polyfill for better accessibility */
 .js-focus-visible :focus:not(.focus-visible) {
   outline: none;

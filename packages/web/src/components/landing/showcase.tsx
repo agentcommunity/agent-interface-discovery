@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, ExternalLink, Languages, Hammer } from 'lucide-react';
+import { Reveal, RevealStagger } from './reveal';
 
 const toolkitPackages = [
   // Tools first
@@ -123,16 +124,20 @@ export function Toolkit() {
     <section className="section-padding bg-muted/30">
       <div className="container mx-auto container-padding">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center animate-fade-in">
+          <Reveal direction="up" className="mb-12 text-center">
             <h2 className="mb-4 text-4xl md:text-5xl font-bold tracking-tight">
               Complete Developer Toolkit
             </h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
               Everything you need to build AID-powered applications
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <RevealStagger
+            direction="up"
+            staggerMs={60}
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+          >
             {toolkitPackages.map((pkg, index) => (
               <Card
                 key={index}
@@ -143,7 +148,7 @@ export function Toolkit() {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        className={`text-xs flex items-center gap-1 border ${pkg.kind === 'Language' ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-amber-100 text-amber-800 border-amber-200'}`}
+                        className={`text-xs flex items-center gap-1 border ${pkg.kind === 'Language' ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800' : 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'}`}
                       >
                         {pkg.kind === 'Language' ? (
                           <Languages className="h-3.5 w-3.5" />
@@ -206,7 +211,7 @@ export function Toolkit() {
                     {pkg.docsHref && (
                       <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
                         <a href={pkg.docsHref} target="_blank" rel="noopener noreferrer">
-                          📚 Documentation
+                          Documentation
                           <ExternalLink className="ml-1 h-3 w-3" />
                         </a>
                       </Button>
@@ -215,9 +220,9 @@ export function Toolkit() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </RevealStagger>
 
-          <div className="mt-12 text-center animate-fade-in">
+          <Reveal direction="up" delay={200} className="mt-12 text-center">
             <Button
               size="lg"
               asChild
@@ -228,7 +233,7 @@ export function Toolkit() {
                 View All on GitHub
               </Link>
             </Button>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

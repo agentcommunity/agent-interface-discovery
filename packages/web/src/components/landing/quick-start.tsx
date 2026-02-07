@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Compass, Rocket, ShieldCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Codeblock } from '@/components/ui/codeblock';
+import { Reveal } from './reveal';
 
 // --- Code snippets identical to README / docs ------------------------------
 const DISCOVER_SNIPPETS: Record<string, string> = {
@@ -84,15 +85,15 @@ export function QuickStart() {
       <div className="container mx-auto container-padding">
         <div className="mx-auto max-w-4xl">
           {/* Heading */}
-          <div className="mb-12 text-center animate-fade-in">
+          <Reveal direction="up" className="mb-12 text-center">
             <h2 className="mb-4 text-4xl md:text-5xl font-bold tracking-tight">Quick Start</h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
               Discover, publish and validate in minutes
             </p>
-          </div>
+          </Reveal>
 
           {/* Hero Card */}
-          <Card className="card-feature shadow-soft-lg hover:shadow-soft-xl transition-all duration-300 animate-fade-in">
+          <Card className="card-feature shadow-soft-lg hover:shadow-soft-xl transition-all duration-300">
             <CardHeader className="pb-6">
               {/* Step toggle group (iconic, theme-aligned) */}
               <div className="flex justify-center gap-3">

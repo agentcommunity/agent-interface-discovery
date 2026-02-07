@@ -1,13 +1,16 @@
+'use client';
+
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Rocket, Network, ExternalLink } from 'lucide-react';
+import { Reveal, RevealStagger } from './reveal';
 
 const visionFeatures = [
   {
     icon: Network,
     iconColor: 'text-indigo-600',
-    iconBg: 'bg-indigo-50',
+    iconBg: 'bg-indigo-50 dark:bg-indigo-950/30',
     dotColor: 'bg-indigo-500',
     title: 'Universal Agent Ecosystem',
     description:
@@ -22,11 +25,11 @@ const visionFeatures = [
   {
     icon: Rocket,
     iconColor: 'text-orange-600',
-    iconBg: 'bg-orange-50',
+    iconBg: 'bg-orange-50 dark:bg-orange-950/30',
     dotColor: 'bg-orange-500',
     title: 'Open-Source Agent Infrastructure',
     description:
-      'We’re building a vendor-neutral stack for hosting, scaling and observing agents. Curious? Get involved at agentcommunity.org.',
+      "We're building a vendor-neutral stack for hosting, scaling and observing agents. Curious? Get involved at agentcommunity.org.",
     highlights: [
       'MIT-licensed core',
       'Self-host or cloud',
@@ -41,16 +44,16 @@ export function Vision() {
     <section className="section-padding bg-muted/30">
       <div className="container mx-auto container-padding">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center animate-fade-in">
+          <Reveal direction="up" className="mb-12 text-center">
             <h2 className="mb-4 text-4xl md:text-5xl font-bold tracking-tight">
               The Future of AI Integration
             </h2>
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground">
               Building the infrastructure for the next generation of AI applications
             </p>
-          </div>
+          </Reveal>
 
-          <div className="grid gap-8 md:grid-cols-2">
+          <RevealStagger direction="up" staggerMs={150} className="grid gap-8 md:grid-cols-2">
             {visionFeatures.map((feature, index) => (
               <Card
                 key={index}
@@ -88,9 +91,9 @@ export function Vision() {
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </RevealStagger>
 
-          <div className="mt-12 text-center animate-fade-in">
+          <Reveal direction="up" delay={200} className="mt-12 text-center">
             <Button
               variant="outline"
               size="lg"
@@ -105,7 +108,7 @@ export function Vision() {
                 <ExternalLink className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
             </Button>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>

@@ -142,7 +142,7 @@ export function Header() {
             {isWorkbench ? null : ( // <Button disabled className="shadow-soft-md">Workbench</Button> // as the switcher already indicates the page. You can re-enable if desired. // This button is now hidden on the workbench page to reduce clutter,
               <Button
                 asChild
-                className="bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105"
+                className="bg-primary text-primary-foreground hover:text-primary-foreground hover:bg-primary-hover shadow-soft-md hover:shadow-soft-lg transition-all duration-300 hover:scale-105"
               >
                 <Link href="/workbench">Try the Workbench</Link>
               </Button>
@@ -206,7 +206,7 @@ export function Header() {
             {!isWorkbench && (
               <Button
                 asChild
-                className="w-full bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft-md"
+                className="w-full bg-primary text-primary-foreground hover:text-primary-foreground hover:bg-primary-hover shadow-soft-md"
                 onClick={() => setIsMenuOpen(false)} // Close menu on click
               >
                 <Link href="/workbench">Try the Workbench</Link>
