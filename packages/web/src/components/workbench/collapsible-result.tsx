@@ -1,12 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, XCircle, Loader2, Info, ChevronDown } from 'lucide-react';
+import {
+  CheckCircle2,
+  XCircle,
+  CircleDashed,
+  Info,
+  AlertTriangle,
+  ChevronDown,
+} from 'lucide-react';
 
 const STATUS_CONFIG = {
   success: { icon: CheckCircle2, className: 'text-emerald-600' },
   error: { icon: XCircle, className: 'text-red-500' },
-  loading: { icon: Loader2, className: 'text-amber-500 animate-spin' },
+  loading: { icon: CircleDashed, className: 'text-amber-500' },
+  warning: { icon: AlertTriangle, className: 'text-amber-600' },
   info: { icon: Info, className: 'text-blue-500' },
 } as const;
 
