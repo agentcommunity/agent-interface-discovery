@@ -1,5 +1,11 @@
 # @agentcommunity/aid
 
+## 1.2.0
+
+### Minor Changes
+
+- Add `ucp` protocol token support in generated constants and parser validation.
+
 ## 1.1.0
 
 ### Minor Changes

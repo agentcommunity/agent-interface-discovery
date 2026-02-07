@@ -1,5 +1,14 @@
 # @agentcommunity/aid-engine
 
+## 0.2.2
+
+### Patch Changes
+
+- Handle non-OK discovery results in `runCheck()` before dereferencing the success value.
+
+- Updated dependencies
+  - @agentcommunity/aid@1.2.0
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-name: Release (npm + PyPI)
+name: Release (npm OIDC + PyPI OIDC)
 
 on:
   push:
@@ -16,11 +16,8 @@ jobs:
     environment: pypi
 
     permissions:
-      id-token: write # required for PyPI OIDC
+      id-token: write # required for npm + PyPI OIDC trusted publishing
       contents: read
-
-    env:
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -31,15 +28,26 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org/
+
+      - name: Show tool versions
+        run: |
+          node --version
+          npm --version
+          pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Publish npm packages
+        # Requires npm Trusted Publisher entries for each package:
+        # @agentcommunity/aid, @agentcommunity/aid-conformance,
+        # @agentcommunity/aid-doctor, @agentcommunity/aid-engine
         run: pnpm changeset publish
+        env:
+          NPM_CONFIG_PROVENANCE: true
 
       - name: Set up Python for PyPI publishing
         uses: actions/setup-python@v4
