@@ -43,11 +43,23 @@ esac
 EOF
 chmod +x "$fake_git_directory/git"
 
-assert_no_tag_push() {
-  if grep -Fxq 'push origin refs/tags/packages/aid-go/v2.1.1' "$command_log"; then
-    echo 'a rejected release input reached the tag push' >&2
+assert_no_git_push() {
+  if grep -Eq '^push([[:space:]]|$)' "$command_log"; then
+    echo 'a rejected release input reached git push' >&2
+    return 1
+  fi
+}
+
+prove_push_matcher_rejects_any_push() {
+  : > "$command_log"
+  printf '%s\n' 'push --force different-remote refs/tags/other:refs/tags/other' >> "$command_log"
+
+  if assert_no_git_push >/dev/null 2>&1; then
+    echo 'the push matcher accepted an option-bearing, destination-qualified push' >&2
     exit 1
   fi
+
+  : > "$command_log"
 }
 
 run_rejected_case() {
@@ -69,8 +81,10 @@ run_rejected_case() {
     exit 1
   fi
 
-  assert_no_tag_push
+  assert_no_git_push
 }
+
+prove_push_matcher_rejects_any_push
 
 run_rejected_case \
   'target that is not origin/main' \
