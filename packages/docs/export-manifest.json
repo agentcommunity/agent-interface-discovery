@@ -114,8 +114,8 @@
     },
     {
       "path": "quickstart/quickstart_go.md",
-      "bytes": 2452,
-      "sha256": "7439cc19aa96c4ccb3c87a94a8de87a01276f78ea3427d6101ffdbb7881516dc"
+      "bytes": 2595,
+      "sha256": "3650dbf750d5f35c04008effd65193c7394cf0c224b3a9d510d9344736649683"
     },
     {
       "path": "quickstart/quickstart_java.md",
@@ -158,5 +158,5 @@
       "sha256": "984e7f27479642c67427b58c3502631b27817ba76823059c51fa6148114934c3"
     }
   ],
-  "aggregateSha256": "e8133765d535fa74525abc0a695f5e9409730471618c6507e760eb4fd1f81300"
+  "aggregateSha256": "35770df9f0a59dec51047dd0de9241d4c3027c1663819564db6c0f8ee3b30864"
 }

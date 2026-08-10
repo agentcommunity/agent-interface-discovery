@@ -24,6 +24,25 @@ Below is a **slow-step, no-surprises checklist** for a staged v1.0.0 release.
 1. **Phase 1:** Prepare everything, run the v1.0.0 Changeset, and publish all **npm packages**.
 2. **Phase 2:** Once the PyPI project is approved, publish the already-versioned **Python package**.
 
+## Go module release (manual, after merge)
+
+The Go SDK is a nested v2 module. Do not tag it from a feature branch and do
+not use a repository-root tag. After the module-path change has merged, select
+the approved shared release version, fetch `origin`, and require the tag target
+to equal the intended `origin/main` commit before creating the immutable tag:
+
+```bash
+git fetch origin --tags
+tag=packages/aid-go/vX.Y.Z
+target=$(git rev-parse origin/main)
+git tag "$tag" "$target"
+test "$(git rev-parse "$tag^{commit}")" = "$target"
+```
+
+Only then verify immutable readback from `proxy.golang.org` and `pkg.go.dev`.
+The correct module and import path is
+`github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2`.
+
 ---
 
 ## 0 . 5-second refresher: what the tokens are

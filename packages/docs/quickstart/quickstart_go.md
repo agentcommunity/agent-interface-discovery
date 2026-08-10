@@ -8,11 +8,13 @@ icon: material/language-go
 
 ## Install
 
-> **Not yet published as a standalone Go module.** Consume the SDK from source (`packages/aid-go`) until the `github.com/agentcommunity/aid-go` module repository and tags are published.
+> **Not yet published as a standalone Go module.** The first release must use a
+> `packages/aid-go/vX.Y.Z` tag after this change has merged. Until then, consume
+> the SDK from source with its canonical v2 module path.
 
 ```bash
-go mod edit -require=github.com/agentcommunity/aid-go@v0.0.0
-go mod edit -replace=github.com/agentcommunity/aid-go=../agent-identity-discovery/packages/aid-go
+go mod edit -require=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2@v2.0.0
+go mod edit -replace=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2=../agent-identity-discovery/packages/aid-go
 ```
 
 ## Discover by Domain
@@ -25,7 +27,7 @@ import (
     "log"
     "time"
 
-    aid "github.com/agentcommunity/aid-go"
+    aid "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 func main() {
