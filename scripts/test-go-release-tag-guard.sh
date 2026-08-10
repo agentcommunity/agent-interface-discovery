@@ -20,16 +20,52 @@ cat > "$fake_git_directory/git" <<'EOF'
 
 set -euo pipefail
 
-printf '%s\n' "$*" >> "$GO_RELEASE_GIT_LOG"
+while (( $# > 0 )); do
+  case "$1" in
+    -c|-C|--config-env|--exec-path|--git-dir|--work-tree|--namespace|--super-prefix)
+      (( $# >= 2 )) || {
+        echo "missing value for Git global option: $1" >&2
+        exit 98
+      }
+      shift 2
+      ;;
+    -c?*|-C?*|--config-env=*|--exec-path=*|--git-dir=*|--work-tree=*|--namespace=*|--super-prefix=*)
+      shift
+      ;;
+    -p|-P|-v|-h|--version|--help|--paginate|--no-pager|--no-replace-objects|--bare|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-optional-locks)
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      echo "unsupported Git global option in fake recorder: $1" >&2
+      exit 98
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
-case "$1" in
+(( $# > 0 )) || {
+  echo 'missing Git subcommand in fake recorder' >&2
+  exit 98
+}
+
+subcommand=$1
+shift
+printf 'subcommand=%s\n' "$subcommand" >> "$GO_RELEASE_GIT_LOG"
+
+case "$subcommand" in
   fetch)
     ;;
   rev-parse)
-    if [[ "$2" == 'origin/main^{commit}' ]]; then
+    if [[ "${1-}" == 'origin/main^{commit}' ]]; then
       printf '%s\n' "$GO_RELEASE_ORIGIN_MAIN"
     else
-      printf '%s\n' "${2%\^\{commit\}}"
+      printf '%s\n' "${1%\^\{commit\}}"
     fi
     ;;
   show)
@@ -44,22 +80,25 @@ EOF
 chmod +x "$fake_git_directory/git"
 
 assert_no_git_push() {
-  if grep -Eq '^push([[:space:]]|$)' "$command_log"; then
+  if grep -Fxq 'subcommand=push' "$command_log"; then
     echo 'a rejected release input reached git push' >&2
     return 1
   fi
 }
 
 prove_push_matcher_rejects_any_push() {
+  local name=$1
+  shift
   : > "$command_log"
-  printf '%s\n' 'push --force different-remote refs/tags/other:refs/tags/other' >> "$command_log"
 
-  if assert_no_git_push >/dev/null 2>&1; then
-    echo 'the push matcher accepted an option-bearing, destination-qualified push' >&2
+  if GO_RELEASE_GIT_LOG="$command_log" "$fake_git_directory/git" "$@" >/dev/null 2>&1; then
+    echo "the fake git recorder unexpectedly accepted $name" >&2
     exit 1
   fi
-
-  : > "$command_log"
+  if assert_no_git_push >/dev/null 2>&1; then
+    echo "the push matcher accepted $name" >&2
+    exit 1
+  fi
 }
 
 run_rejected_case() {
@@ -84,7 +123,15 @@ run_rejected_case() {
   assert_no_git_push
 }
 
-prove_push_matcher_rejects_any_push
+prove_push_matcher_rejects_any_push \
+  'an option-bearing, destination-qualified push' \
+  push --force different-remote refs/tags/other:refs/tags/other
+prove_push_matcher_rejects_any_push \
+  'a -c global option before push' \
+  -c protocol.version=2 push different-remote refs/tags/other
+prove_push_matcher_rejects_any_push \
+  'a -C global option before push' \
+  -C repository push different-remote refs/tags/other
 
 run_rejected_case \
   'target that is not origin/main' \
