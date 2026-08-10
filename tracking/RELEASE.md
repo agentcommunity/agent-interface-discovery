@@ -27,21 +27,87 @@ Below is a **slow-step, no-surprises checklist** for a staged v1.0.0 release.
 ## Go module release (manual, after merge)
 
 The Go SDK is a nested v2 module. Do not tag it from a feature branch and do
-not use a repository-root tag. After the module-path change has merged, select
-the approved shared release version, fetch `origin`, and require the tag target
-to equal the intended `origin/main` commit before creating the immutable tag:
+not use a repository-root tag. A local tag is not a publication. After the
+module-path change has merged, select the approved shared release version and
+the exact intended `origin/main` SHA. Run this from a clean release checkout.
+The placeholder SHA deliberately fails until the operator replaces it with the
+approved full 40-character commit:
 
 ```bash
+git fetch --prune origin
 git fetch origin --tags
-tag=packages/aid-go/vX.Y.Z
-target=$(git rev-parse origin/main)
-git tag "$tag" "$target"
-test "$(git rev-parse "$tag^{commit}")" = "$target"
+
+# Current shared SDK release; change only if the owner approves a newer version.
+version=v2.1.1
+target='<approved 40-character origin/main SHA>'
+module=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2
+tag="packages/aid-go/$version"
+
+printf '%s\n' "$version" | grep -Eq '^v2\.[0-9]+\.[0-9]+$'
+test "$(git rev-parse 'origin/main^{commit}')" = "$target"
+test "$(git rev-parse "$target^{commit}")" = "$target"
+test "$(git show "$target:packages/aid-go/go.mod" | sed -n 's/^module //p')" = "$module"
+
+remote_direct=$(git ls-remote --tags origin "refs/tags/$tag" | awk 'NR == 1 { print $1 }')
+remote_peeled=$(git ls-remote --tags origin "refs/tags/$tag^{}" | awk 'NR == 1 { print $1 }')
+publish_tag=yes
+
+if test -n "$remote_direct"; then
+  test -n "$remote_peeled" || {
+    echo "refusing unexpected lightweight remote tag: $tag" >&2
+    exit 1
+  }
+  test "$remote_peeled" = "$target" || {
+    echo "refusing mismatched remote tag: $tag" >&2
+    exit 1
+  }
+  echo "exact annotated remote tag already exists; do not recreate it: $tag"
+  publish_tag=no
+else
+  test -z "$remote_peeled"
+fi
+
+if test "$publish_tag" = yes; then
+  ! git show-ref --verify --quiet "refs/tags/$tag" || {
+    echo "refusing unexpected local tag: $tag" >&2
+    exit 1
+  }
+  git tag -a "$tag" "$target" -m "Release Go SDK $version"
+  test "$(git cat-file -t "$tag")" = tag
+  test "$(git rev-parse "$tag^{commit}")" = "$target"
+  git push origin "refs/tags/$tag:refs/tags/$tag"
+fi
+
+test "$(git ls-remote --tags origin "refs/tags/$tag^{}" | awk 'NR == 1 { print $1 }')" = "$target"
 ```
 
-Only then verify immutable readback from `proxy.golang.org` and `pkg.go.dev`.
-The correct module and import path is
-`github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2`.
+The explicit `refs/tags/...` push is the publication step. Never force, delete,
+or move this tag. If either local or remote state is unexpected, stop and choose
+a new version after review. These rules follow Go's
+[publishing guidance](https://go.dev/doc/modules/publishing) and
+[subdirectory-tag mapping](https://go.dev/ref/mod#mapping-versions-to-commits).
+
+Only after the remote annotated tag is exact, request and verify immutable
+readback through the public Go proxy. The exact `GOPROXY` value intentionally
+has no `direct` fallback:
+
+```bash
+GOPROXY=https://proxy.golang.org GOSUMDB=sum.golang.org \
+  go list -m -json "$module@$version" > /tmp/aid-go-module.json
+jq -e --arg module "$module" --arg version "$version" \
+  '.Path == $module and .Version == $version' /tmp/aid-go-module.json
+
+curl -fsSL "https://pkg.go.dev/$module@$version" > /tmp/aid-go-pkg.html
+grep -Fq "$module" /tmp/aid-go-pkg.html
+grep -Fq "$version" /tmp/aid-go-pkg.html
+```
+
+Inspect the pkg.go.dev page for the exact module/version, repository, license,
+and rendered package documentation. A proxy success with a missing or stale
+pkg.go.dev page is not complete publication evidence; wait for indexing and
+repeat the readback. PAGE must not add or advertise the Go package until both
+readbacks pass. No Go tag or module publication has occurred merely because
+this checklist or the module-path source change exists.
 
 ---
 
