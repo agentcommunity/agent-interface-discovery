@@ -8,13 +8,15 @@ AID enables you to discover AI agents by domain name using DNS TXT records. Type
 
 ## Installation
 
-> **Not yet published as a standalone Go module.** Consume the SDK from source (`packages/aid-go`) until the `github.com/agentcommunity/aid-go` module repository and tags are published.
+> **Not yet published as a standalone Go module.** The first release must use a
+> `packages/aid-go/vX.Y.Z` tag after this change has merged. Until then, consume
+> the SDK from source with its canonical v2 module path.
 
 For local source use, add a temporary replace in your consuming module:
 
 ```bash
-go mod edit -require=github.com/agentcommunity/aid-go@v0.0.0
-go mod edit -replace=github.com/agentcommunity/aid-go=../agent-identity-discovery/packages/aid-go
+go mod edit -require=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2@v2.0.0
+go mod edit -replace=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2=../agent-identity-discovery/packages/aid-go
 ```
 
 ## Quick Start
@@ -27,7 +29,7 @@ import (
     "log"
     "time"
 
-    "github.com/agentcommunity/aid-go"
+    "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 func main() {
@@ -190,7 +192,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/agentcommunity/aid-go"
+    "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 func main() {
@@ -225,7 +227,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/agentcommunity/aid-go"
+    "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 func main() {
@@ -249,7 +251,7 @@ package main
 import (
     "fmt"
 
-    "github.com/agentcommunity/aid-go"
+    "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 func main() {
@@ -281,7 +283,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/agentcommunity/aid-go"
+    "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 func main() {

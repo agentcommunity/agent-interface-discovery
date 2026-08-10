@@ -24,6 +24,68 @@ Below is a **slow-step, no-surprises checklist** for a staged v1.0.0 release.
 1. **Phase 1:** Prepare everything, run the v1.0.0 Changeset, and publish all **npm packages**.
 2. **Phase 2:** Once the PyPI project is approved, publish the already-versioned **Python package**.
 
+## Go module release (manual, after merge)
+
+The Go SDK is a nested v2 module. Do not tag it from a feature branch and do
+not use a repository-root tag. A local tag is not a publication. After the
+module-path change has merged, select the approved shared release version and
+the exact intended `origin/main` SHA. Run this from a clean release checkout.
+The placeholder SHA deliberately fails until the operator replaces it with the
+approved full 40-character commit:
+
+```bash
+set -euo pipefail
+
+# Current shared SDK release; change only if the owner approves a newer version.
+version=v2.1.1
+target='<approved 40-character origin/main SHA>'
+module=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2
+tag="packages/aid-go/$version"
+
+bash scripts/go-release-tag.sh "$version" "$target" "$module" "$tag"
+```
+
+The explicit `refs/tags/...` push is the publication step. Never force, delete,
+or move this tag. If either local or remote state is unexpected, stop and choose
+a new version after review. These rules follow Go's
+[publishing guidance](https://go.dev/doc/modules/publishing) and
+[subdirectory-tag mapping](https://go.dev/ref/mod#mapping-versions-to-commits).
+`scripts/go-release-tag.sh` repeats every target, canonical-module, tag, local,
+and remote check before it can create or push a tag. Its negative-path harness,
+`bash scripts/test-go-release-tag-guard.sh`, proves that a mismatched target or
+target `go.mod` module declaration cannot invoke the tag push.
+
+Only after the remote annotated tag is exact, request and verify immutable
+readback through the public Go proxy. The exact `GOPROXY` value intentionally
+has no `direct` fallback:
+
+```bash
+set -euo pipefail
+
+# Repeat these values when this readback block runs separately from tag publication.
+version=v2.1.1
+module=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2
+module_readback=/tmp/aid-go-module.json
+pkg_readback=/tmp/aid-go-pkg.html
+export GOPROXY=https://proxy.golang.org
+export GOSUMDB=sum.golang.org
+
+go list -m -json "$module@$version" > "$module_readback"
+jq -e --arg module "$module" --arg version "$version" \
+  '.Path == $module and .Version == $version' "$module_readback"
+
+curl -fsSL "https://pkg.go.dev/$module@$version" > "$pkg_readback"
+grep -Fq "$module" "$pkg_readback"
+grep -Fq "$version" "$pkg_readback"
+```
+
+Inspect the pkg.go.dev page for the exact module/version, repository, license,
+and rendered package documentation. A proxy success with a missing or stale
+pkg.go.dev page is not complete publication evidence; wait for indexing and
+repeat the readback. PAGE must not add or advertise the Go package until both
+readbacks pass. No Go tag or module publication has occurred merely because
+this checklist or the module-path source change exists.
+
 ---
 
 ## 0 . 5-second refresher: what the tokens are

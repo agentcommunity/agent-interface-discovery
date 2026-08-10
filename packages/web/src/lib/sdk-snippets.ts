@@ -30,7 +30,7 @@ print(record["uri"], ttl)`,
     "fmt"
     "time"
 
-    aid "github.com/agentcommunity/aid-go"
+    aid "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 record, ttl, err := aid.Discover("${domain}", 5*time.Second)

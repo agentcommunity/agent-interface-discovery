@@ -23,7 +23,7 @@ print(record["uri"]) # https://api.example.com/mcp`,
     "fmt"
     "time"
 
-    aid "github.com/agentcommunity/aid-go"
+    aid "github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2"
 )
 
 record, _, err := aid.Discover("example.com", 5*time.Second)
