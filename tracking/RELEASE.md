@@ -34,8 +34,7 @@ The placeholder SHA deliberately fails until the operator replaces it with the
 approved full 40-character commit:
 
 ```bash
-git fetch --prune origin
-git fetch origin --tags
+set -euo pipefail
 
 # Current shared SDK release; change only if the owner approves a newer version.
 version=v2.1.1
@@ -43,42 +42,7 @@ target='<approved 40-character origin/main SHA>'
 module=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2
 tag="packages/aid-go/$version"
 
-printf '%s\n' "$version" | grep -Eq '^v2\.[0-9]+\.[0-9]+$'
-test "$(git rev-parse 'origin/main^{commit}')" = "$target"
-test "$(git rev-parse "$target^{commit}")" = "$target"
-test "$(git show "$target:packages/aid-go/go.mod" | sed -n 's/^module //p')" = "$module"
-
-remote_direct=$(git ls-remote --tags origin "refs/tags/$tag" | awk 'NR == 1 { print $1 }')
-remote_peeled=$(git ls-remote --tags origin "refs/tags/$tag^{}" | awk 'NR == 1 { print $1 }')
-publish_tag=yes
-
-if test -n "$remote_direct"; then
-  test -n "$remote_peeled" || {
-    echo "refusing unexpected lightweight remote tag: $tag" >&2
-    exit 1
-  }
-  test "$remote_peeled" = "$target" || {
-    echo "refusing mismatched remote tag: $tag" >&2
-    exit 1
-  }
-  echo "exact annotated remote tag already exists; do not recreate it: $tag"
-  publish_tag=no
-else
-  test -z "$remote_peeled"
-fi
-
-if test "$publish_tag" = yes; then
-  ! git show-ref --verify --quiet "refs/tags/$tag" || {
-    echo "refusing unexpected local tag: $tag" >&2
-    exit 1
-  }
-  git tag -a "$tag" "$target" -m "Release Go SDK $version"
-  test "$(git cat-file -t "$tag")" = tag
-  test "$(git rev-parse "$tag^{commit}")" = "$target"
-  git push origin "refs/tags/$tag:refs/tags/$tag"
-fi
-
-test "$(git ls-remote --tags origin "refs/tags/$tag^{}" | awk 'NR == 1 { print $1 }')" = "$target"
+bash scripts/go-release-tag.sh "$version" "$target" "$module" "$tag"
 ```
 
 The explicit `refs/tags/...` push is the publication step. Never force, delete,
@@ -86,20 +50,33 @@ or move this tag. If either local or remote state is unexpected, stop and choose
 a new version after review. These rules follow Go's
 [publishing guidance](https://go.dev/doc/modules/publishing) and
 [subdirectory-tag mapping](https://go.dev/ref/mod#mapping-versions-to-commits).
+`scripts/go-release-tag.sh` repeats every target, canonical-module, tag, local,
+and remote check before it can create or push a tag. Its negative-path harness,
+`bash scripts/test-go-release-tag-guard.sh`, proves that a mismatched target or
+target `go.mod` module declaration cannot invoke the tag push.
 
 Only after the remote annotated tag is exact, request and verify immutable
 readback through the public Go proxy. The exact `GOPROXY` value intentionally
 has no `direct` fallback:
 
 ```bash
-GOPROXY=https://proxy.golang.org GOSUMDB=sum.golang.org \
-  go list -m -json "$module@$version" > /tmp/aid-go-module.json
-jq -e --arg module "$module" --arg version "$version" \
-  '.Path == $module and .Version == $version' /tmp/aid-go-module.json
+set -euo pipefail
 
-curl -fsSL "https://pkg.go.dev/$module@$version" > /tmp/aid-go-pkg.html
-grep -Fq "$module" /tmp/aid-go-pkg.html
-grep -Fq "$version" /tmp/aid-go-pkg.html
+# Repeat these values when this readback block runs separately from tag publication.
+version=v2.1.1
+module=github.com/agentcommunity/agent-identity-discovery/packages/aid-go/v2
+module_readback=/tmp/aid-go-module.json
+pkg_readback=/tmp/aid-go-pkg.html
+export GOPROXY=https://proxy.golang.org
+export GOSUMDB=sum.golang.org
+
+go list -m -json "$module@$version" > "$module_readback"
+jq -e --arg module "$module" --arg version "$version" \
+  '.Path == $module and .Version == $version' "$module_readback"
+
+curl -fsSL "https://pkg.go.dev/$module@$version" > "$pkg_readback"
+grep -Fq "$module" "$pkg_readback"
+grep -Fq "$version" "$pkg_readback"
 ```
 
 Inspect the pkg.go.dev page for the exact module/version, repository, license,
